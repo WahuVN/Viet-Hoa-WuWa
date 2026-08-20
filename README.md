@@ -1,85 +1,76 @@
-# VHWuWa
+# 🎮 Wuthering Waves Vietnamese Launcher & Mod Manager
 
-**VHWuWa** là ứng dụng Windows (WPF / .NET 8) giúp người dùng cài đặt và quản lý **bản Việt hóa game**, mod, font và cấu hình đồ họa — giao diện tối giản kiểu Windows 11, có chế độ sáng/tối.
+<p align="center">
+  <img src="https://img.shields.io/badge/.NET-8.0-512BD4?style=for-the-badge&logo=dotnet&logoColor=white" alt=".NET 8" />
+  <img src="https://img.shields.io/badge/WPF-Windows_App-0078D6?style=for-the-badge&logo=windows&logoColor=white" alt="WPF" />
+  <img src="https://img.shields.io/badge/Architecture-MVVM-FF6F00?style=for-the-badge" alt="MVVM" />
+  <img src="https://img.shields.io/badge/Status-Maintained-success?style=for-the-badge" alt="Status" />
+  <img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" alt="License" />
+</p>
 
-> ⚠️ Repository công khai này **chỉ chứa mã nguồn + cấu hình mẫu + dữ liệu demo**. Không đưa file Việt hóa thật, PAK bản quyền, khóa ký hay bất kỳ tài sản game có bản quyền nào lên đây.
+Ứng dụng Windows hiện đại (WPF / .NET 8) hỗ trợ người chơi cài đặt và quản lý **Bản dịch Việt hóa**, Mod trang phục/hiệu ứng, tùy biến Font chữ và cấu hình đồ họa cho tựa game **Wuthering Waves**.
 
-## ✨ Tính năng
+---
 
-- Chọn / tự dò / kéo-thả / kiểm tra thư mục game (theo `Config/game.json`, không chỉ dựa vào tên thư mục).
-- Cài / gỡ **bản Việt hóa** có kiểm tra chữ ký + SHA-256, sao lưu và **rollback** khi lỗi.
-- Quản lý **mod** (cài/gỡ/bật-tắt, phát hiện xung đột).
-- Đổi **font**, chỉnh **đồ họa** (preset + tùy chỉnh, có backup).
-- **Sao lưu / khôi phục** file gốc theo từng thao tác.
-- **Hướng dẫn** tiếng Việt (Markdown), **Nhật ký** (Serilog, ẩn dữ liệu nhạy cảm).
-- **Tự cập nhật** qua GitHub Releases (updater riêng, có rollback).
+## ✨ Tính năng nổi bật
 
-## 🖥️ Yêu cầu hệ thống
+- 🇻🇳 **Cài đặt & Gỡ bỏ Việt hóa an toàn**:
+  - Hỗ trợ đóng gói và kiểm tra gói dịch thuật `.vhwpack` bằng chữ ký điện tử và kiểm tra mã băm SHA-256.
+  - Tự động sao lưu (Backup) file gốc và hỗ trợ khôi phục (Rollback) an toàn khi gặp sự cố.
+- 🧩 **Quản lý Mod & Tùy biến**:
+  - Bật/Tắt các mod game linh hoạt, phát hiện xung đột tệp tin.
+  - Thay đổi Font chữ và áp dụng các cấu hình Preset đồ họa (Graphics Presets) tối ưu FPS.
+- 🎨 **Giao diện Fluent chuẩn Windows 11**:
+  - Thiết kế hiện đại với hỗ trợ chế độ Sáng / Tối (Light / Dark mode).
+  - Tự động dò tìm thư mục cài đặt game từ Registry / Steam / Epic Games.
+- 🔄 **Hệ thống Auto-Updater độc lập**:
+  - Tự động kiểm tra bản cập nhật mới từ GitHub Releases và cập nhật tự động.
 
-- Windows 10 / 11 (x64).
-- Bản phát hành self-contained: **không cần cài .NET**.
+---
 
-## ⬇️ Tải bản phát hành
+## 📦 Tải về & Cài đặt
 
-Vào **[Releases](https://github.com/WahuVN/VHWuWa/releases)** → tải `VHWuWa-x.y.z-win-x64.zip` → giải nén → chạy `VHWuWa.exe`.
+1. Truy cập mục **[Releases](https://github.com/WahuVN/wuwa-vietnamese-launcher/releases)** của repository.
+2. Tải về bản phát hành mới nhất `VHWuWa-x.y.z-win-x64.zip`.
+3. Giải nén và chạy file `VHWuWa.exe` *(Bản phát hành độc lập Self-contained, không yêu cầu cài thêm .NET Runtime)*.
 
-## 🚀 Sử dụng
+---
 
-1. Mở app → **Trang chủ** → chọn/tự dò thư mục game.
-2. **Cài Việt hóa** → chọn gói `.vhwpack` → xem trước → cài.
-3. Xem **Hướng dẫn** trong app để biết chi tiết mod/font/đồ họa/sao lưu.
+## 🛠️ Hướng dẫn phát triển & Build từ mã nguồn
 
-## 🔧 Build từ mã nguồn
+### Yêu cầu môi trường
+- Windows 10 / 11 (x64)
+- .NET 8.0 SDK
+- Visual Studio 2022 hoặc VS Code với C# Dev Kit
 
+### Lệnh build
 ```bash
+# Khôi phục dependencies và build
 dotnet restore VHWuWa.sln
 dotnet build VHWuWa.sln -c Release
-dotnet test  VHWuWa.sln -c Release
+
+# Chạy unit tests
+dotnet test VHWuWa.sln -c Release
+
+# Tạo bản release đóng gói
 powershell -ExecutionPolicy Bypass -File scripts/build-release.ps1 -Version 1.0.0
 ```
 
-## 📦 Tạo gói `.vhwpack`
+---
 
-```bash
-dotnet run --project src/VHWuWa.PackageTool -- keygen --out ./mykeys
-copy .\mykeys\public_key.pem .\Config\public_key.pem
-dotnet run --project src/VHWuWa.PackageTool -- pack   --input ./PackageSource --output ./vietnamese.vhwpack --key ./mykeys/private_key.pem
-dotnet run --project src/VHWuWa.PackageTool -- verify --file ./vietnamese.vhwpack --pub ./Config/public_key.pem
+## 🏗️ Kiến trúc dự án (Architecture)
+
+```text
+src/
+├── VHWuWa.App            # Giao diện WPF (MVVM, Wpf.Ui, Dependency Injection)
+├── VHWuWa.Core           # Mô hình dữ liệu & logic nghiệp vụ thuần .NET (Hash, Signature, .vhwpack)
+├── VHWuWa.Infrastructure # Cài đặt/gỡ bỏ, sao lưu, mod, font, đồ họa, log (Serilog)
+├── VHWuWa.Updater        # Trình cập nhật độc lập an toàn
+└── VHWuWa.PackageTool    # Công cụ CLI đóng gói và ký số .vhwpack
 ```
 
-`.vhwpack` = ZIP gồm `manifest.json` + `payload/` + `signature.sig`.
+---
 
-## ⚙️ Cấu hình
-
-| Việc | File |
-|---|---|
-| Đổi tên/nhận diện game | `Config/game.json` (`gameName`, `executable`, `requiredFiles`, `possibleRegistryKeys`, `steamAppId`) |
-| Thêm bản Việt hóa | Đóng gói `.vhwpack` với `packageType: "translation"` |
-| Thêm mod | `.vhwpack` với `packageType: "mod"` |
-| Thêm font | `.vhwpack` với `packageType: "font"` |
-| Thêm preset đồ họa | `Config/graphics.json` (`options`, `presets`) |
-| Đổi public key | Thay `Config/public_key.pem` bằng public key mới |
-| Bảo quản private key | Giữ NGOÀI repo / trong GitHub Actions Secrets (`VHWUWA_SIGNING_KEY`) |
-
-## 🔄 Phát hành bản cập nhật
-
-1. Tăng `Version` trong `Directory.Build.props`.
-2. `git tag v1.1.0 && git push origin v1.1.0`.
-3. GitHub Actions tự build, tạo ZIP + `checksums.txt` + `update.json` và tạo Release.
-4. App người dùng kiểm tra `releases/latest`, tải, verify SHA-256/chữ ký, chạy updater.
-
-## 🧱 Cấu trúc
-
-```
-src/VHWuWa.App           WPF (MVVM, Wpf.Ui, DI)
-src/VHWuWa.Core          Model + service thuần .NET (hash, chữ ký, .vhwpack, path-safety)
-src/VHWuWa.Infrastructure Cài/gỡ, backup, mod, font, đồ họa, cập nhật, log
-src/VHWuWa.Updater       Trình cập nhật riêng (swap an toàn + rollback)
-src/VHWuWa.PackageTool   CLI tạo/ký/xác minh .vhwpack
-tests/                   Unit test (xUnit)
-```
-
-## 📜 Giấy phép
-
-MIT (chỉ cho mã nguồn) — xem [LICENSE](LICENSE) và [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
-Không đưa dữ liệu Việt hóa / tài sản game có bản quyền vào repository.
+## 📜 Giấy phép & Tuyên bố miễn trừ trách nhiệm
+- Mã nguồn của launcher được phân phối dưới giấy phép [MIT License](LICENSE).
+- **Lưu ý:** Repository này *chỉ chứa mã nguồn công cụ và dữ liệu mẫu*. Không chứa tài sản game có bản quyền hoặc các tệp PAK gốc của nhà phát triển.
