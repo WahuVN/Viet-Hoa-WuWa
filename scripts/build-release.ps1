@@ -1,4 +1,4 @@
-#requires -Version 5
+﻿#requires -Version 5
 <#
   Build bản phát hành VHWuWa (win-x64) vào thư mục dist/, kèm checksums + update.json.
   Dùng: powershell -ExecutionPolicy Bypass -File scripts/build-release.ps1 [-Version 1.0.0]
@@ -46,7 +46,7 @@ Compress-Archive -Path (Join-Path $dist '*') -DestinationPath $zip -Force
 $sha = (Get-FileHash $zip -Algorithm SHA256).Hash.ToLower()
 "$sha  $(Split-Path $zip -Leaf)" | Out-File (Join-Path $root "checksums.txt") -Encoding utf8
 
-@{ version = $Version; minimumVersion = "1.0.0"; releaseNotes = "Bản phát hành $Version"; downloadUrl = "https://github.com/WahuVN/wuwa-vietnamese-launcher/releases/download/v$Version/$(Split-Path $zip -Leaf)"; sha256 = $sha; signature = ""; mandatory = $false } |
+@{ version = $Version; minimumVersion = "1.0.0"; releaseNotes = "Bản phát hành $Version"; downloadUrl = "https://github.com/WahuVN/Viet-Hoa-WuWa/releases/download/v$Version/$(Split-Path $zip -Leaf)"; sha256 = $sha; signature = ""; mandatory = $false } |
   ConvertTo-Json | Out-File (Join-Path $root "update.json") -Encoding utf8
 
 Write-Host "XONG. Thư mục: $dist" -ForegroundColor Green

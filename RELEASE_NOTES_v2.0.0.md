@@ -1,4 +1,4 @@
-Bản cập nhật **VHWuWa v2.0.0** dành cho **Wuthering Waves 3.6**.
+﻿Bản cập nhật **VHWuWa v2.0.0** dành cho **Wuthering Waves 3.6**.
 
 Bản này cập nhật dữ liệu Việt hóa mới, bổ sung nội dung 3.6, cải thiện cách dịch và xưng hô, đồng thời cập nhật bộ cài và tool dành cho cộng đồng.
 
@@ -22,10 +22,10 @@ Bản này cập nhật dữ liệu Việt hóa mới, bổ sung nội dung 3.6,
 ## 📸 Hình ảnh minh họa
 
 ### 🎮 Việt hóa trong game (Wuthering Waves 3.6)
-![Việt Hóa Wuthering Waves In-Game](https://raw.githubusercontent.com/WahuVN/wuwa-vietnamese-launcher/main/docs/images/vh_ingame.png)
+![Việt Hóa Wuthering Waves In-Game](https://raw.githubusercontent.com/WahuVN/Viet-Hoa-WuWa/main/docs/images/vh_ingame.png)
 
 ### 👥 Công cụ dịch WAHU Community v2.0.0
-![Công cụ dịch WAHU Community](https://raw.githubusercontent.com/WahuVN/wuwa-vietnamese-launcher/main/docs/images/app_dich.png)
+![Công cụ dịch WAHU Community](https://raw.githubusercontent.com/WahuVN/Viet-Hoa-WuWa/main/docs/images/app_dich.png)
 
 ---
 
@@ -75,7 +75,7 @@ Nếu gặp:
 - Lỗi cài đặt;
 - Lỗi font;
 
-Có thể báo trực tiếp trên mục **[Issues](https://github.com/WahuVN/wuwa-vietnamese-launcher/issues)** của GitHub hoặc vào Discord:  
+Có thể báo trực tiếp trên mục **[Issues](https://github.com/WahuVN/Viet-Hoa-WuWa/issues)** của GitHub hoặc vào Discord:  
 - 🎮 **Discord VHWuWa — Windows:** [https://discord.gg/c9ws4q9U7](https://discord.gg/c9ws4q9U7)
 
 > 📱 **Việt hóa Android:** Đây là dự án riêng do Dangdev phụ trách.  

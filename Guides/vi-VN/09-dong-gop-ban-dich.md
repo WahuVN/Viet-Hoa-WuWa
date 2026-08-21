@@ -1,4 +1,4 @@
-# Đóng góp bản dịch với WAHU Community
+﻿# Đóng góp bản dịch với WAHU Community
 
 WAHU Community là tool cho người muốn góp cốt truyện, giao diện, tên nhân vật, xưng hô, vật phẩm và thuật ngữ HP, ATK, DEF. Tool đặt việc đọc ngữ cảnh, sửa và thử bản dịch trong cùng một quy trình.
 
@@ -21,4 +21,4 @@ WAHU Community là tool cho người muốn góp cốt truyện, giao diện, t�
 - Chỉ đánh dấu **Đã duyệt** khi đã đối chiếu kỹ.
 - Không chắc nghĩa thì để lại chưa dịch và báo người phụ trách.
 
-Tải bản mới nhất tại [Releases](https://github.com/WahuVN/wuwa-vietnamese-launcher/releases/latest).
+Tải bản mới nhất tại [Releases](https://github.com/WahuVN/Viet-Hoa-WuWa/releases/latest).

@@ -1,6 +1,6 @@
-# 📥 Hướng Dẫn Tải & Cài Đặt Đúng Gói VHWuWa
+﻿# 📥 Hướng Dẫn Tải & Cài Đặt Đúng Gói VHWuWa
 
-Truy cập **[Trang Phát Hành Mới Nhất (GitHub Releases)](https://github.com/WahuVN/wuwa-vietnamese-launcher/releases/latest)**, sau đó chọn đúng **1 trong 2 gói** tùy theo nhu cầu của bạn:
+Truy cập **[Trang Phát Hành Mới Nhất (GitHub Releases)](https://github.com/WahuVN/Viet-Hoa-WuWa/releases/latest)**, sau đó chọn đúng **1 trong 2 gói** tùy theo nhu cầu của bạn:
 
 ---
 

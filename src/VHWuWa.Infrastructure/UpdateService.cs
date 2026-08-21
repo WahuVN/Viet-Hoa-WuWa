@@ -1,4 +1,4 @@
-using System.Reflection;
+﻿using System.Reflection;
 using System.Text.Json;
 using VHWuWa.Core.Abstractions;
 using VHWuWa.Core.Models;
@@ -8,7 +8,7 @@ namespace VHWuWa.Infrastructure;
 
 public sealed class UpdateService : IUpdateService
 {
-    private const string ReleasesApi = "https://api.github.com/repos/WahuVN/wuwa-vietnamese-launcher/releases/latest";
+    private const string ReleasesApi = "https://api.github.com/repos/WahuVN/Viet-Hoa-WuWa/releases/latest";
     private static readonly HttpClient Http = CreateClient();
     private readonly ILogService _log;
     private readonly IHashService _hash;

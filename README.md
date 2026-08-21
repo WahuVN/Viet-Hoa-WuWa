@@ -1,10 +1,10 @@
-# 🎮 VHWuWa — Việt Hóa Wuthering Waves
+﻿# 🎮 VHWuWa — Việt Hóa Wuthering Waves
 
 VHWuWa là bộ cài và công cụ quản lý bản Việt hóa Wuthering Waves trên Windows.
 
 Hiện hỗ trợ **Wuthering Waves 3.6**, hai lựa chọn tên nhân vật **Tên Anh / Hán Việt**, thay đổi font tiếng Việt và một số công cụ hỗ trợ cài đặt, gỡ bỏ và chỉnh sửa bản dịch.
 
-[📥 Tải bản mới nhất](https://github.com/WahuVN/wuwa-vietnamese-launcher/releases/latest) · [💬 Discord Windows](https://discord.gg/c9ws4q9U7) · [📱 Discord Android](https://discord.gg/3t5NSyJEz) · [🐛 Báo lỗi](https://github.com/WahuVN/wuwa-vietnamese-launcher/issues)
+[📥 Tải bản mới nhất](https://github.com/WahuVN/Viet-Hoa-WuWa/releases/latest) · [💬 Discord Windows](https://discord.gg/c9ws4q9U7) · [📱 Discord Android](https://discord.gg/3t5NSyJEz) · [🐛 Báo lỗi](https://github.com/WahuVN/Viet-Hoa-WuWa/issues)
 
 ---
 
@@ -48,7 +48,7 @@ Bản hiện tại hỗ trợ nội dung Wuthering Waves 3.6, bao gồm:
 - Hai biến thể Tên Anh (*Jinhsi, Changli, Yangyang...*) / Hán Việt (*Kim Tịch, Trường Ly, Ương Ương...*).
 - Có 70+ font hỗ trợ tiếng Việt.
 
-Chi tiết thay đổi của từng phiên bản xem tại [Releases](https://github.com/WahuVN/wuwa-vietnamese-launcher/releases) hoặc [CHANGELOG.md](CHANGELOG.md).
+Chi tiết thay đổi của từng phiên bản xem tại [Releases](https://github.com/WahuVN/Viet-Hoa-WuWa/releases) hoặc [CHANGELOG.md](CHANGELOG.md).
 
 ## 📸 Hình ảnh / Screenshots
 
@@ -92,7 +92,7 @@ Hướng dẫn chi tiết: [HUONG_DAN_TAI_DUNG_GOI.md](HUONG_DAN_TAI_DUNG_GOI.md
 Gặp lỗi dịch, lỗi font hoặc lỗi cài đặt:
 
 - 🎮 **Discord VHWuWa — Windows:** [https://discord.gg/c9ws4q9U7](https://discord.gg/c9ws4q9U7)
-- 🐛 **Báo lỗi:** [GitHub Issues](https://github.com/WahuVN/wuwa-vietnamese-launcher/issues)
+- 🐛 **Báo lỗi:** [GitHub Issues](https://github.com/WahuVN/Viet-Hoa-WuWa/issues)
 
 > 📱 **Việt hóa Android:** Đây là dự án riêng do Dangdev phụ trách.  
 > 👉 **Discord:** [https://discord.gg/3t5NSyJEz](https://discord.gg/3t5NSyJEz)

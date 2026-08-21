@@ -1,4 +1,4 @@
-name: build
+﻿name: build
 
 on:
   push:
@@ -55,7 +55,7 @@ jobs:
           Compress-Archive -Path dist/* -DestinationPath $zip -Force
           $sha = (Get-FileHash $zip -Algorithm SHA256).Hash.ToLower()
           "$sha  $zip" | Out-File checksums.txt -Encoding utf8
-          @{ version = $ver; minimumVersion = "1.0.0"; releaseNotes = "Bản phát hành $ver"; downloadUrl = "https://github.com/WahuVN/wuwa-vietnamese-launcher/releases/download/${{ github.ref_name }}/$zip"; sha256 = $sha; signature = ""; mandatory = $false } | ConvertTo-Json | Out-File update.json -Encoding utf8
+          @{ version = $ver; minimumVersion = "1.0.0"; releaseNotes = "Bản phát hành $ver"; downloadUrl = "https://github.com/WahuVN/Viet-Hoa-WuWa/releases/download/${{ github.ref_name }}/$zip"; sha256 = $sha; signature = ""; mandatory = $false } | ConvertTo-Json | Out-File update.json -Encoding utf8
         shell: pwsh
 
       - name: Upload artifact
