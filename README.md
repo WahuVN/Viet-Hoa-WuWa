@@ -1,23 +1,27 @@
-# 🎮 VHWuWa — Launcher & Trình Quản Lý Việt Hóa Wuthering Waves
+# 🎮 VHWuWa — Launcher & Quản Lý Việt Hóa Wuthering Waves
 
-[![.NET 8](https://img.shields.io/badge/.NET-8.0_WPF-512BD4?logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/)
-[![Platform](https://img.shields.io/badge/Platform-Windows_10%2F11_x64-0078D6?logo=windows&logoColor=white)](https://github.com/WahuVN/wuwa-vietnamese-launcher)
-[![Game Version](https://img.shields.io/badge/Wuthering_Waves-v3.6_Ready-FFB800)](https://wutheringwaves.kurogames.com/)
-[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![GitHub Release](https://img.shields.io/github/v/release/WahuVN/wuwa-vietnamese-launcher?color=blue&label=Latest%20Release)](https://github.com/WahuVN/wuwa-vietnamese-launcher/releases/latest)
+<p align="center">
+  <img src="https://img.shields.io/badge/.NET-8.0_WPF-512BD4?style=for-the-badge&logo=dotnet&logoColor=white" alt=".NET 8" />
+  <img src="https://img.shields.io/badge/Platform-Windows_10%2F11_x64-0078D6?style=for-the-badge&logo=windows&logoColor=white" alt="Windows" />
+  <img src="https://img.shields.io/badge/Game_Version-v3.6_Ready-FFB800?style=for-the-badge" alt="Game 3.6" />
+  <img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" alt="License" />
+  <a href="https://github.com/WahuVN/wuwa-vietnamese-launcher/releases/latest">
+    <img src="https://img.shields.io/github/v/release/WahuVN/wuwa-vietnamese-launcher?style=for-the-badge&color=blue&label=Latest%20Release" alt="Latest Release" />
+  </a>
+</p>
 
 **VHWuWa** là ứng dụng Windows hiện đại (WPF / .NET 8) hỗ trợ người chơi tự động cài đặt, gỡ bỏ và quản lý **Bản dịch Việt hóa Wuthering Waves**, tùy biến kiểu **Tên Nhân Vật (Tên Anh / Hán Việt)**, chuyển đổi hơn **70+ Font chữ tiếng Việt** sắc nét, quản lý Mod an toàn và áp dụng các cấu hình tối ưu đồ họa (Graphics Presets).
 
 > ### ⚠️ CẢNH BÁO QUAN TRỌNG VỀ TÀI KHOẢN & RỦI RO ANTI-CHEAT (VUI LÒNG ĐỌC KỸ)
 > * **Bản Việt hóa và công cụ mod là dự án phi lợi nhuận do cộng đồng tự phát triển**, hoàn toàn **KHÔNG** thuộc bản quyền hay được bảo đảm/ủy quyền bởi **Kuro Games**.
-> * Việc can thiệp vào tệp trò chơi hoặc chèn tệp ngôn ngữ/font ngoài **vẫn luôn có khả năng bị hệ thống Anti-cheat của nhà phát hành quét trúng và dẫn đến việc KHÓA TÀI KHOẢN (BAN NICK)**.
+> * Việc can thiệp vào tệp trò chơi hoặc chèn tệp ngôn ngữ/font ngoài **vẫn luôn có khả năng bị hệ thống chống gian lận (Anti-cheat) của nhà phát hành quét trúng và dẫn đến việc KHÓA TÀI KHOẢN (BAN NICK)**.
 > * Vui lòng **tự cân nhắc kỹ lưỡng và tự chịu trách nhiệm** về mọi rủi ro tài khoản khi sử dụng. Nếu bạn lo ngại, khuyến khích nên trải nghiệm thử trên **tài khoản phụ (clone)** trước.
 
 ---
 
 ## 📥 Tải Về Bản Mới Nhất
 
-👉 Truy cập trang **[GitHub Releases](https://github.com/WahuVN/wuwa-vietnamese-launcher/releases/latest)** và chọn gói phù hợp:
+👉 Truy cập trang **[GitHub Releases](https://github.com/WahuVN/wuwa-vietnamese-launcher/releases/latest)** và chọn đúng gói phù hợp:
 
 | Tệp tải về | Đối tượng & Mục đích | Nội dung bao gồm |
 | :--- | :--- | :--- |
@@ -106,14 +110,27 @@ Tab **Font chữ** trong VHWuWa cung cấp công cụ chuyển đổi font chữ
 
 ## 🛠️ WAHU Community (Dành cho Người Dịch & Đóng Góp)
 
-Gói `WAHU_Community_BanCai.zip` cung cấp giao diện dịch thuật chuyên sâu:
+Gói `02_TOOL_DICH_WAHU_COMMUNITY.zip` cung cấp giao diện dịch thuật chuyên sâu:
 - Duyệt cốt truyện theo khu vực, tuyến nhiệm vụ và từng Part.
 - Đối chiếu song song 4 ngôn ngữ: **Trung (CN) - Anh (EN) - Việt (VI) - Hán Việt (HV)**.
 - Tra cứu danh tính người nói, người nghe và quy chuẩn xưng hô ngữ cảnh.
 - Sửa giao diện UI, tên nhân vật, vật phẩm, chỉ số thuộc tính (HP/ATK/DEF).
 - Tích hợp bộ kiểm tra chất lượng (QA), tự động đóng gói PAK thử nghiệm và xuất gói đóng góp.
 
-👉 Xem chi tiết tại: [Hướng dẫn đóng góp bản dịch](Guides/vi-VN/09-dong-gop-ban-dich.md).
+👉 Xem chi tiết tại: [HUONG_DAN_TAI_DUNG_GOI.md](HUONG_DAN_TAI_DUNG_GOI.md).
+
+---
+
+## 🏗️ Kiến Trúc Dự Án (Architecture)
+
+```text
+src/
+├── VHWuWa.App            # Giao diện WPF hiện đại (MVVM, Wpf.Ui, Dependency Injection)
+├── VHWuWa.Core           # Mô hình dữ liệu & logic nghiệp vụ thuần .NET (Hash, Signature, .vhwpack)
+├── VHWuWa.Infrastructure # Cài đặt/gỡ bỏ, sao lưu, mod, font, đồ họa, log (Serilog)
+├── VHWuWa.Updater        # Trình cập nhật độc lập an toàn
+└── VHWuWa.PackageTool    # Công cụ CLI đóng gói và ký số .vhwpack
+```
 
 ---
 
@@ -138,5 +155,4 @@ dotnet build VHWuWa.sln -c Release
 
 * Mã nguồn công cụ được phát hành theo giấy phép **[MIT License](LICENSE)**.
 * **Tuyên bố miễn trừ:** Dự án này là công cụ mã nguồn mở phi thương mại do cộng đồng phát triển. Repository chỉ chứa mã nguồn công cụ và dữ liệu mẫu, không chứa tài sản game có bản quyền hoặc các tệp PAK gốc của nhà phát triển (Kuro Games).
-
 
