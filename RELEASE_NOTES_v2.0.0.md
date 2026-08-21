@@ -70,7 +70,8 @@ Nếu gặp:
 - Lỗi font;
 
 Có thể báo trực tiếp trên mục Issues của GitHub hoặc vào Discord:  
-👉 **Discord:** [https://discord.gg/c9ws4q9U7](https://discord.gg/c9ws4q9U7)
+- 🎮 **Discord VHWuWa (Bản PC):** [https://discord.gg/c9ws4q9U7](https://discord.gg/c9ws4q9U7)
+- 📱 **Discord Dangdev (Bản Việt hóa Android):** [https://discord.gg/3t5NSyJEz](https://discord.gg/3t5NSyJEz)
 
 ---
 
