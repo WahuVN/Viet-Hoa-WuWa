@@ -27,5 +27,8 @@
 
 ## Cài đặt
 
-Tải `VHWuWa_BanCai.zip`, giải nén toàn bộ và chạy `Chay VHWuWa.bat`.
-Không tải **Source code** nếu chỉ muốn cài chơi.
+- Chơi game: tải `VHWuWa_BanCai.zip`, giải nén toàn bộ và chạy `Chay VHWuWa.bat`.
+- Tham gia dịch: tải `WAHU_Community_BanCai.zip`, giải nén toàn bộ và chạy `WAHU Community.exe`.
+- Có thể đối chiếu hai file tải bằng `checksums-v2.0.0.txt`.
+
+Không tải **Source code** nếu chỉ muốn cài chơi hoặc dùng tool dịch.
