@@ -1,5 +1,3 @@
-# VHWuWa v2.0.0 — Việt Hóa Wuthering Waves 3.6
-
 Bản cập nhật **VHWuWa v2.0.0** dành cho **Wuthering Waves 3.6**.
 
 Bản này cập nhật dữ liệu Việt hóa mới, bổ sung nội dung 3.6, cải thiện cách dịch và xưng hô, đồng thời cập nhật bộ cài và tool dành cho cộng đồng.
