@@ -151,8 +151,23 @@ dotnet build VHWuWa.sln -c Release
 
 ---
 
+## 💬 Báo Lỗi / Góp Ý / Tham Gia Dịch
+
+Nếu bạn gặp bất kỳ vấn đề nào trong quá trình trải nghiệm:
+- Câu dịch chưa tự nhiên hoặc sai ngữ cảnh;
+- Lệch chuẩn xưng hô nhân vật;
+- Sai tên nhân vật, địa danh hoặc thuật ngữ;
+- Còn đoạn văn bản chưa được dịch;
+- Gặp sự cố cài đặt hoặc lỗi font chữ;
+
+👉 Có thể mở báo cáo tại mục **[Issues](https://github.com/WahuVN/wuwa-vietnamese-launcher/issues)** hoặc tham gia cộng đồng **Discord**:  
+🎮 **Discord:** **[https://discord.gg/c9ws4q9U7](https://discord.gg/c9ws4q9U7)**
+
+---
+
 ## ⚖️ Giấy Phép & Bản Quyền
 
 * Mã nguồn công cụ được phát hành theo giấy phép **[MIT License](LICENSE)**.
 * **Tuyên bố miễn trừ:** Dự án này là công cụ mã nguồn mở phi thương mại do cộng đồng phát triển. Repository chỉ chứa mã nguồn công cụ và dữ liệu mẫu, không chứa tài sản game có bản quyền hoặc các tệp PAK gốc của nhà phát triển (Kuro Games).
+
 
