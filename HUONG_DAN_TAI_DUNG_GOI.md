@@ -1,4 +1,4 @@
-﻿# 📥 Hướng Dẫn Tải & Cài Đặt Đúng Gói VHWuWa
+# 📥 Hướng Dẫn Tải & Cài Đặt Đúng Gói VHWuWa
 
 Truy cập **[Trang Phát Hành Mới Nhất (GitHub Releases)](https://github.com/WahuVN/Viet-Hoa-WuWa/releases/latest)**, sau đó chọn đúng **1 trong 2 gói** tùy theo nhu cầu của bạn:
 
@@ -33,8 +33,9 @@ Truy cập **[Trang Phát Hành Mới Nhất (GitHub Releases)](https://github.c
 
 ### 📂 Mẫu Đường Dẫn Game Hợp Lệ:
 ```text
-C:\Wuthering Waves\Wuthering Waves Game
+D:\Game\Wuthering Waves Game
 D:\Games\Wuthering Waves\Wuthering Waves Game
+C:\Wuthering Waves\Wuthering Waves Game
 D:\SteamLibrary\steamapps\common\Wuthering Waves
 ```
 *(Thư mục bạn chọn phải thấy ngay thư mục con `Client`. Tuyệt đối không chọn sâu vào `Client`, `Saved` hoặc `Paks`)*.

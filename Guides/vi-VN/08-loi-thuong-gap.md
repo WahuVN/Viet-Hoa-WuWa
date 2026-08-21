@@ -5,11 +5,11 @@
 Chọn thư mục ngay phía trên `Client`, ví dụ:
 
 ```text
-E:\Games\Wuthering Waves\Wuthering Waves Game
+D:\Game\Wuthering Waves Game
+hoặc E:\Games\Wuthering Waves\Wuthering Waves Game
 ```
 
-Không chọn `...\Client`, `...\Client\Content\Paks` hoặc thư mục launcher bên
-ngoài. Bấm **Kiểm tra file** sau khi chọn.
+Không chọn `...\Client`, `...\Client\Content\Paks` hoặc thư mục launcher bên ngoài. Bấm **Kiểm tra file** sau khi chọn.
 
 ## Cài xong vẫn còn tiếng Anh
 

@@ -50,9 +50,19 @@ public sealed class GameDetectionService : IGameDetectionService
         }
         r.IsValid = r.MissingFiles.Count == 0;
         r.DetectedVersion = r.IsValid ? DetectVersion(gamePath) : null;
-        r.Message = r.IsValid
-            ? "Đường dẫn game hợp lệ."
-            : "Không tìm thấy file " + string.Join(", ", r.MissingFiles);
+        if (r.IsValid)
+        {
+            r.Message = "Đường dẫn game hợp lệ.";
+        }
+        else if (File.Exists(Path.Combine(gamePath, "Binaries", "Win64", "Client-Win64-Shipping.exe")))
+        {
+            var parent = Directory.GetParent(gamePath)?.FullName ?? "";
+            r.Message = $"Bạn đang chọn vào thư mục 'Client'. Hãy chọn thư mục game cấp ngoài: '{parent}' (ví dụ: D:\\Game\\Wuthering Waves Game).";
+        }
+        else
+        {
+            r.Message = "Không tìm thấy file game. Hãy chọn thư mục 'Wuthering Waves Game' (thư mục chứa 'Client', ví dụ: D:\\Game\\Wuthering Waves Game).";
+        }
         return r;
     }
 

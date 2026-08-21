@@ -23,14 +23,14 @@ C:\Program Files (x86)\Steam\steamapps\common\Wuthering Waves
 D:\SteamLibrary\steamapps\common\Wuthering Waves
 ```
 
-Ví dụ máy cài ở ổ E:
+Ví dụ máy cài ở ổ D (mẫu chuẩn):
 
 ```text
-Chọn:       E:\Games\Wuthering Waves\Wuthering Waves Game
-Phải có:    E:\Games\Wuthering Waves\Wuthering Waves Game\Client
-Không chọn: E:\Games\Wuthering Waves
-Không chọn: E:\Games\Wuthering Waves\Wuthering Waves Game\Client
-Không chọn: ...\Client\Content\Paks
+Chọn đúng:   D:\Game\Wuthering Waves Game (hoặc E:\Games\Wuthering Waves Game)
+Phải có:     D:\Game\Wuthering Waves Game\Client
+KHÔNG chọn:  D:\Game\Wuthering Waves (thư mục launcher ngoài)
+KHÔNG chọn:  D:\Game\Wuthering Waves Game\Client
+KHÔNG chọn:  ...\Client\Content\Paks
 ```
 
 Sau khi chọn, bấm **Kiểm tra file**. Chỉ chuyển sang cài khi app xác nhận đúng

@@ -45,8 +45,10 @@
 
             <ui:Card Padding="18" Margin="0,0,0,14">
                 <StackPanel>
-                    <TextBlock Text="🎮 Thư mục game" FontWeight="SemiBold" FontSize="16" Margin="0,0,0,10" />
-                    <TextBox Text="{Binding GamePath}" IsReadOnly="True" Margin="0,0,0,10" />
+                    <TextBlock Text="🎮 Thư mục game" FontWeight="SemiBold" FontSize="16" Margin="0,0,0,6" />
+                    <TextBlock Text="💡 Mẫu chuẩn: D:\Game\Wuthering Waves Game (chọn thư mục chứa thư mục con 'Client')"
+                               FontSize="12" Opacity="0.75" Margin="0,0,0,8" TextWrapping="Wrap" />
+                    <ui:TextBox Text="{Binding GamePath}" PlaceholderText="Ví dụ: D:\Game\Wuthering Waves Game" IsReadOnly="True" Margin="0,0,0,10" />
                     <WrapPanel>
                         <ui:Button Content="🔍 Tự tìm game" Appearance="Primary" Command="{Binding AutoDetectCommand}" Margin="0,0,8,8" />
                         <Button Content="📁 Chọn thư mục" Command="{Binding ChooseFolderCommand}" Margin="0,0,8,8" />
