@@ -8,9 +8,9 @@ Truy cập **[Trang Phát Hành Mới Nhất (GitHub Releases)](https://github.c
 
 | Nhu cầu của bạn | Tệp cần tải về | Thao tác sau khi giải nén |
 | :--- | :--- | :--- |
-| 🎮 **Chỉ muốn cài và chơi game** | `01_CAI_VIET_HOA_WUWA.zip` (~94.7 MB) | Mở thư mục $\rightarrow$ Chạy file `00_BAT_DAU_CAI.bat` |
-| 👥 **Muốn dịch, duyệt hoặc đóng góp** | `02_TOOL_DICH_WAHU_COMMUNITY.zip` (~490 MB) | Mở thư mục $\rightarrow$ Chạy file `00_MO_TOOL_DICH.bat` |
-| 🛡️ **Kiểm tra mã băm bảo mật** | `03_KIEM_TRA_SHA256.txt` | Dùng để đối chiếu mã SHA-256 nguyên bản |
+| 🎮 **Chỉ muốn cài và chơi game** | `VHWuWa-v2.0.0-Windows.zip` (~94.7 MB) | Mở thư mục $\rightarrow$ Chạy file `00_BAT_DAU_CAI.bat` hoặc `app\VHWuWa.exe` |
+| 👥 **Muốn dịch, duyệt hoặc đóng góp** | `WAHU-Community-v2.0.0.zip` (~490 MB) | Mở thư mục $\rightarrow$ Chạy file `00_MO_TOOL_DICH.bat` |
+| 🛡️ **Kiểm tra mã băm bảo mật** | `SHA256SUMS.txt` | Dùng để đối chiếu mã SHA-256 nguyên bản |
 
 > ⚠️ **Lưu ý:** Người chơi thông thường **không cần tải** tool dịch, file checksum hay mục **Source code**.
 
@@ -25,7 +25,7 @@ Truy cập **[Trang Phát Hành Mới Nhất (GitHub Releases)](https://github.c
 
 ## ⚡ Hướng Dẫn Cài Đặt 4 Bước (Cho Người Chơi)
 
-1. Tải về tệp **`01_CAI_VIET_HOA_WUWA.zip`** và **giải nén toàn bộ** ra một thư mục riêng (không chạy trực tiếp trong file nén).
+1. Tải về tệp **`VHWuWa-v2.0.0-Windows.zip`** và **giải nén toàn bộ** ra một thư mục riêng (không chạy trực tiếp trong file nén).
 2. Mở thư mục vừa giải nén và chạy file **`00_BAT_DAU_CAI.bat`** (hoặc `app\VHWuWa.exe`).
 3. Bấm **🔍 Tự tìm game** (hoặc bấm **📁 Chọn thư mục** và trỏ đến thư mục chứa game có thư mục con `Client`).
 4. Chọn kiểu tên nhân vật (**Tên Anh** hoặc **Hán Việt**), giữ tùy chọn cài font tiếng Việt rồi bấm **✅ Cài Việt hóa**.
@@ -43,6 +43,7 @@ D:\SteamLibrary\steamapps\common\Wuthering Waves
 
 ## 🔤 Về Font Chữ Tiếng Việt
 
-* **Font mặc định:** Đã được tích hợp sẵn trong gói cài đặt `01_CAI_VIET_HOA_WUWA.zip` (chỉ khoảng 0.82 MB), không cần phải tải font riêng từ bên ngoài.
+* **Font mặc định:** Đã được tích hợp sẵn trong gói cài đặt `VHWuWa-v2.0.0-Windows.zip` (chỉ khoảng 0.82 MB), không cần phải tải font riêng từ bên ngoài.
 * **Tùy biến 70+ Font:** Trong ứng dụng VHWuWa, bạn có thể chuyển sang tab **Font chữ** để tìm kiếm, xem trước chữ mẫu có dấu tiếng Việt và đổi sang hơn 70 kiểu font khác nhau tùy thích.
+
 

@@ -1,40 +1,78 @@
-# VHWuWa 2.0.0 — Cài chơi & Tool dịch
+# VHWuWa v2.0.0 — Việt Hóa Wuthering Waves 3.6
 
-## Chọn đúng gói
+Bản cập nhật **VHWuWa v2.0.0** dành cho **Wuthering Waves 3.6**.
 
-### `01_CAI_VIET_HOA_WUWA.zip` — chỉ để chơi
+Bản này cập nhật dữ liệu Việt hóa mới, bổ sung nội dung 3.6, cải thiện cách dịch và xưng hô, đồng thời cập nhật bộ cài và tool dành cho cộng đồng.
 
-1. Tải và giải nén toàn bộ file.
-2. Mở thư mục `01_CAI_VIET_HOA_WUWA`.
-3. Chạy `00_BAT_DAU_CAI.bat`.
-4. Chọn thư mục `Wuthering Waves Game`, chọn **Tên Anh** hoặc **Hán Việt**, rồi cài.
+---
 
-Font tiếng Việt mặc định đã có sẵn trong gói. Không cần tải font riêng.
+## 📌 Nội dung chính
 
-### `02_TOOL_DICH_WAHU_COMMUNITY.zip` — muốn tham gia dịch
+- **Hoàn thành 1.827 / 1.827 câu** cốt truyện chính 3.6.
+- Bổ sung thoại NPC ngoài thế giới của phiên bản 3.6.
+- Rà lại xưng hô theo nhân vật và ngữ cảnh hội thoại.
+- Sửa các câu dịch còn cứng, sai ngữ cảnh hoặc mang cấu trúc dịch máy.
+- Đồng bộ tên nhân vật, địa danh và thuật ngữ.
+- Dịch bổ sung một số chú thích nhỏ còn sót trong hội thoại.
+- Tiếp tục hỗ trợ 2 bản:
+  - **Tên Anh:** Jinhsi, Changli, Yangyang...
+  - **Hán Việt:** Kim Tịch, Trường Ly, Ương Ương...
+- Có **70+ font tiếng Việt** để lựa chọn trong bộ cài.
 
-1. Tải và giải nén toàn bộ file.
-2. Mở thư mục `02_TOOL_DICH_WAHU_COMMUNITY`.
-3. Chạy `00_MO_TOOL_DICH.bat`.
-4. Giữ nguyên `project.db` và `build_support` khi làm việc.
+---
 
-Tool dùng để xem, tìm và sửa CN / EN / VI / HV; đánh dấu đã dịch / đã duyệt; quản lý thoại, NPC, UI, kỹ năng và tạo PAK thử nghiệm.
+## 📥 Tải xuống
 
-## Nội dung hiện có
+### 🎮 `VHWuWa-v2.0.0-Windows.zip`
+> Dành cho người chơi muốn cài bản Việt hóa.
 
-- 3.6: **1.827 câu cốt truyện chính**.
-- 3.6: **280 thoại NPC** đã được nhập và rà soát bổ sung.
-- Có hai biến thể tên nhân vật: **Tên Anh** và **Hán Việt**.
-- Đã bổ sung UI, thuật ngữ và mô tả kỹ năng ở các phần dữ liệu hiện có.
-- Vẫn có thể còn text sót theo phiên bản game hoặc ngữ cảnh. Khi báo lỗi, hãy gửi ảnh chụp kèm phiên bản game để cộng đồng bổ sung đúng chỗ.
+Giải nén rồi chạy `00_BAT_DAU_CAI.bat` hoặc `app\VHWuWa.exe`.
 
-## Lưu ý
+### 👥 `WAHU-Community-v2.0.0.zip`
+> Dành cho người muốn sửa, kiểm tra hoặc đóng góp bản dịch.
 
-- Trong game, chọn ngôn ngữ hiển thị **English** trước khi cài Việt hóa.
-- `03_KIEM_TRA_SHA256.txt` dùng để kiểm tra file tải về khi cần.
-- Không cần tải mục `Source code` của GitHub để chơi.
-- Đây là dự án cộng đồng, không phải sản phẩm chính thức của Kuro Games.
+Tool hỗ trợ xem và chỉnh sửa nội dung CN / EN / VI / HV, tìm câu thoại, NPC, kỹ năng, UI và đóng gói dữ liệu để thử trong game.
 
-Báo lỗi hoặc góp ý tại [GitHub Issues](https://github.com/WahuVN/wuwa-vietnamese-launcher/issues) hoặc Discord PC: https://discord.gg/c9ws4q9U7
+> 📌 *Nếu chỉ muốn chơi bản Việt hóa, bạn không cần tải `Source code` do GitHub tự tạo.*
 
+---
 
+## ⚡ Cách cài
+
+1. Tải **`VHWuWa-v2.0.0-Windows.zip`**.
+2. Giải nén toàn bộ.
+3. Chạy **`00_BAT_DAU_CAI.bat`**.
+4. Bấm **Tự tìm game** (hoặc chọn đúng thư mục game có chứa `Client`).
+5. Chọn bản **Tên Anh** hoặc **Hán Việt**.
+6. Bấm **Cài Việt hóa**.
+7. Trong game, để ngôn ngữ hiển thị là **English** (và chạy bằng **DirectX 11**).
+
+---
+
+## ⚠️ Lưu ý
+
+- **VHWuWa là dự án Việt hóa do cộng đồng thực hiện**, không phải sản phẩm chính thức của Kuro Games.
+- Bản Việt hóa có chỉnh sửa một số tệp của game nên dự án **không thể bảo đảm an toàn tuyệt đối đối với tài khoản hoặc hệ thống anti-cheat**.
+- Hãy tự cân nhắc trước khi sử dụng.
+
+---
+
+## 💬 Báo lỗi / Góp ý / Tham gia dịch
+
+Nếu gặp:
+- Câu dịch chưa tự nhiên;
+- Sai xưng hô;
+- Sai tên hoặc thuật ngữ;
+- Nội dung còn sót chưa dịch;
+- Lỗi cài đặt;
+- Lỗi font;
+
+Có thể báo trực tiếp trên mục **[Issues](https://github.com/WahuVN/wuwa-vietnamese-launcher/issues)** của GitHub hoặc vào Discord:  
+- 🎮 **Discord VHWuWa — Windows:** [https://discord.gg/c9ws4q9U7](https://discord.gg/c9ws4q9U7)
+
+> 📱 **Việt hóa Android:** Đây là dự án riêng do Dangdev phụ trách.  
+> 👉 **Discord:** [https://discord.gg/3t5NSyJEz](https://discord.gg/3t5NSyJEz)
+
+---
+
+*Cảm ơn mọi người đã sử dụng và hỗ trợ dự án!*
