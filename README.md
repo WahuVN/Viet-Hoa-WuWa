@@ -50,6 +50,14 @@ Bản hiện tại hỗ trợ nội dung Wuthering Waves 3.6, bao gồm:
 
 Chi tiết thay đổi của từng phiên bản xem tại [Releases](https://github.com/WahuVN/wuwa-vietnamese-launcher/releases) hoặc [CHANGELOG.md](CHANGELOG.md).
 
+## 📸 Hình ảnh / Screenshots
+
+### 🎮 Trải nghiệm Việt hóa trong game
+![Việt Hóa Wuthering Waves In-Game](docs/images/vh_ingame.png)
+
+### 👥 Công cụ dịch WAHU Community
+![Công cụ dịch WAHU Community](docs/images/app_dich.png)
+
 ---
 
 ## 🔤 Font

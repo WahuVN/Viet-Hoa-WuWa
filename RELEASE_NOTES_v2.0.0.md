@@ -21,6 +21,16 @@ Bản này cập nhật dữ liệu Việt hóa mới, bổ sung nội dung 3.6,
 
 ---
 
+## 📸 Hình ảnh minh họa
+
+### 🎮 Việt hóa trong game (Wuthering Waves 3.6)
+![Việt Hóa Wuthering Waves In-Game](https://raw.githubusercontent.com/WahuVN/wuwa-vietnamese-launcher/main/docs/images/vh_ingame.png)
+
+### 👥 Công cụ dịch WAHU Community v2.0.0
+![Công cụ dịch WAHU Community](https://raw.githubusercontent.com/WahuVN/wuwa-vietnamese-launcher/main/docs/images/app_dich.png)
+
+---
+
 ## 📥 Tải xuống
 
 ### 🎮 `VHWuWa-v2.0.0-Windows.zip`
