@@ -24,9 +24,11 @@ public partial class FontViewModel : ObservableObject
     [ObservableProperty] private ImageSource? _previewImage;
     [ObservableProperty] private string _previewMessage = "Chọn file font (.ttf/.otf/.ttc) để xem trước.";
 
+    private readonly List<FontLibraryItem> _allFonts = new();
     public ObservableCollection<FontLibraryItem> Library { get; } = new();
     [ObservableProperty] private FontLibraryItem? _selectedLibraryFont;
     [ObservableProperty] private string _libraryMessage = "";
+    [ObservableProperty] private string _searchText = "";
 
     private static string FontDir => Path.Combine(AppContext.BaseDirectory, "Fonts");
 
@@ -38,6 +40,7 @@ public partial class FontViewModel : ObservableObject
 
     private void LoadLibrary()
     {
+        _allFonts.Clear();
         Library.Clear();
         var catalog = Path.Combine(FontDir, "fonts.json");
         if (!File.Exists(catalog))
@@ -51,15 +54,42 @@ public partial class FontViewModel : ObservableObject
             var doc = System.Text.Json.JsonDocument.Parse(fs);
             foreach (var e in doc.RootElement.GetProperty("fonts").EnumerateArray())
             {
-                Library.Add(new FontLibraryItem(
+                var item = new FontLibraryItem(
                     e.GetProperty("name").GetString() ?? "",
                     e.TryGetProperty("pak", out var p) ? p.GetString() ?? "" : "",
                     e.TryGetProperty("src", out var s) ? s.GetString() ?? "" : "",
-                    e.TryGetProperty("sizeKb", out var k) ? k.GetDouble() : 0));
+                    e.TryGetProperty("sizeKb", out var k) ? k.GetDouble() : 0);
+                _allFonts.Add(item);
+                Library.Add(item);
             }
-            LibraryMessage = $"Thư viện có {Library.Count} font tiếng Việt.";
+            LibraryMessage = $"Thư viện có {Library.Count} font tiếng Việt sẵn sàng áp dụng.";
         }
         catch (Exception ex) { LibraryMessage = "Lỗi đọc thư viện font: " + ex.Message; }
+    }
+
+    partial void OnSearchTextChanged(string value)
+    {
+        ApplyFilter();
+    }
+
+    private void ApplyFilter()
+    {
+        var term = SearchText.Trim().ToLowerInvariant();
+        Library.Clear();
+        foreach (var font in _allFonts)
+        {
+            if (string.IsNullOrWhiteSpace(term) || font.Name.ToLowerInvariant().Contains(term))
+            {
+                Library.Add(font);
+            }
+        }
+        if (Library.Count > 0 && (SelectedLibraryFont == null || !Library.Contains(SelectedLibraryFont)))
+        {
+            SelectedLibraryFont = Library[0];
+        }
+        LibraryMessage = string.IsNullOrWhiteSpace(term)
+            ? $"Thư viện có {_allFonts.Count} font tiếng Việt."
+            : $"Tìm thấy {Library.Count} / {_allFonts.Count} font phù hợp với '{term}'.";
     }
 
     public void OnActivated()

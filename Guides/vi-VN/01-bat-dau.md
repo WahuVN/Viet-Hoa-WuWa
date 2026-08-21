@@ -17,5 +17,6 @@
 
 Muốn gỡ: tắt game → **Cài Việt hóa** → **Gỡ Việt hóa**.
 
-> Bản dịch/mod không chính thức có thể bị anti-cheat chú ý. Hãy tự cân nhắc và
-> ưu tiên tài khoản phụ khi thử nghiệm.
+> ### ⚠️ Cảnh báo an toàn tài khoản & Anti-cheat
+> Bản Việt hóa và công cụ tùy biến font/mod là nội dung không chính thức do cộng đồng phát triển, không thuộc Kuro Games. Việc can thiệp vào tệp game **vẫn có khả năng bị hệ thống chống gian lận (Anti-cheat) quét và khóa tài khoản**. Người dùng vui lòng tự cân nhắc và tự chịu trách nhiệm khi sử dụng, nên thử nghiệm trước trên **tài khoản phụ (clone)**.
+

@@ -5,8 +5,8 @@
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel Margin="28,22,28,22">
             <TextBlock Text="VHWuWa" FontSize="28" FontWeight="Bold" />
-            <TextBlock Text="Công cụ cài &amp; quản lý bản Việt hóa Wuthering Waves" Opacity="0.75" Margin="0,2,0,4" />
-            <TextBlock Text="Bản dịch v1.0.0  ·  dành cho game 3.5" Opacity="0.6" FontSize="13" Margin="0,0,0,18" />
+            <TextBlock Text="Công cụ cài đặt &amp; quản lý bản Việt hóa Wuthering Waves" Opacity="0.75" Margin="0,2,0,4" />
+            <TextBlock Text="Bản dịch v2.0.0  ·  Tương thích Wuthering Waves 3.6" Opacity="0.6" FontSize="13" Margin="0,0,0,18" />
 
             <ui:Card Padding="18" Margin="0,0,0,14">
                 <StackPanel>
