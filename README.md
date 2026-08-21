@@ -34,7 +34,7 @@ Tool hỗ trợ xem và chỉnh sửa nội dung CN / EN / VI / HV, tìm câu th
 6. Bấm **Cài Việt hóa**.
 7. Trong game, đặt ngôn ngữ hiển thị là **English** (và chạy bằng **DirectX 11**).
 
-*Nếu tự tìm game không hoạt động, hãy chọn thư mục game có chứa thư mục con `Client` (ví dụ: `D:\Game\Wuthering Waves Game`). Tuyệt đối không chọn vào thư mục `Client` hoặc `Paks`.*
+*Nếu tự tìm game không hoạt động, hãy chọn thư mục game có chứa thư mục con `Client` (ví dụ: `D:\Game\Wuthering Waves Game`).*
 
 ---
 

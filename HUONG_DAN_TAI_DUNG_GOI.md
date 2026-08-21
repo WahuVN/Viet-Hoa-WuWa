@@ -38,7 +38,7 @@ D:\Games\Wuthering Waves\Wuthering Waves Game
 C:\Wuthering Waves\Wuthering Waves Game
 D:\SteamLibrary\steamapps\common\Wuthering Waves
 ```
-*(Thư mục bạn chọn phải thấy ngay thư mục con `Client`. Tuyệt đối không chọn sâu vào `Client`, `Saved` hoặc `Paks`)*.
+*(Đảm bảo thư mục được chọn có chứa thư mục con `Client`)*.
 
 ---
 

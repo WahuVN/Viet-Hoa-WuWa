@@ -2,14 +2,15 @@
 
 ## App báo không thấy game
 
-Chọn thư mục ngay phía trên `Client`, ví dụ:
+Chọn thư mục game (thư mục chứa `Client`), ví dụ:
 
 ```text
 D:\Game\Wuthering Waves Game
-hoặc E:\Games\Wuthering Waves\Wuthering Waves Game
+D:\Games\Wuthering Waves\Wuthering Waves Game
+C:\Wuthering Waves\Wuthering Waves Game
 ```
 
-Không chọn `...\Client`, `...\Client\Content\Paks` hoặc thư mục launcher bên ngoài. Bấm **Kiểm tra file** sau khi chọn.
+Sau khi chọn xong, bấm **Kiểm tra file** để xác nhận.
 
 ## Cài xong vẫn còn tiếng Anh
 
