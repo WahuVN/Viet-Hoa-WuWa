@@ -100,7 +100,7 @@ Gặp lỗi dịch, lỗi font hoặc cần hướng dẫn cài đặt trực ti
 > *(Kênh chính thức trao đổi, giải đáp và hỗ trợ kỹ thuật trực tiếp)*
 >
 > 📱 **Discord Android (Dangdev):** [https://discord.gg/3t5NSyJEz](https://discord.gg/3t5NSyJEz)  
-> 🐛 **Báo lỗi trên GitHub:** [GitHub Issues](https://github.com/WahuVN/Viet-Hoa-WuWa/issues)
+> ⚠️ **Báo lỗi trên GitHub:** [GitHub Issues](https://github.com/WahuVN/Viet-Hoa-WuWa/issues)
 
 Đóng góp mã nguồn và bản dịch đều được chào đón.
 
