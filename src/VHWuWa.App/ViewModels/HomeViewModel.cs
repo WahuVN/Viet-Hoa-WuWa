@@ -13,6 +13,8 @@ public partial class HomeViewModel : ObservableObject
     private readonly ISettingsService _settings;
     private readonly IGameDetectionService _detect;
     private readonly IPackageInstallerService _installer;
+    private readonly IViethoaInstaller _viet;
+    private readonly IFontService _fonts;
     private readonly ILogService _log;
     private readonly MainViewModel _main;
 
@@ -21,16 +23,18 @@ public partial class HomeViewModel : ObservableObject
     [ObservableProperty] private string _detectedVersion = "Chưa xác định";
     [ObservableProperty] private string _translationStatus = "Chưa cài";
     [ObservableProperty] private string _translationVersion = "-";
+    [ObservableProperty] private string _currentVariant = "-";
+    [ObservableProperty] private string _currentFont = "-";
     [ObservableProperty] private string _pathStatus = "Chưa chọn";
     [ObservableProperty] private bool _pathOk;
     [ObservableProperty] private string _message = "";
     [ObservableProperty] private bool _busy;
 
     public HomeViewModel(ISettingsService settings, IGameDetectionService detect,
-        IPackageInstallerService installer, ILogService log, MainViewModel main)
+        IPackageInstallerService installer, IViethoaInstaller viet, IFontService fonts, ILogService log, MainViewModel main)
     {
-        _settings = settings; _detect = detect; _installer = installer; _log = log; _main = main;
-        GameName = string.IsNullOrWhiteSpace(detect.GameConfig.GameName) ? "Game" : detect.GameConfig.GameName;
+        _settings = settings; _detect = detect; _installer = installer; _viet = viet; _fonts = fonts; _log = log; _main = main;
+        GameName = string.IsNullOrWhiteSpace(detect.GameConfig.GameName) ? "Wuthering Waves" : detect.GameConfig.GameName;
         OnActivated();
     }
 
@@ -50,8 +54,21 @@ public partial class HomeViewModel : ObservableObject
 
         var state = _settings.LoadState();
         var tr = state.InstalledPackages.FirstOrDefault(p => p.PackageType == PackageType.Translation);
-        TranslationStatus = tr is null ? "Chưa cài" : "Đã cài";
-        TranslationVersion = tr?.Version ?? "-";
+        var vst = (PathOk) ? _viet.GetStatus(GamePath) : null;
+        if (vst is { Installed: true })
+        {
+            TranslationStatus = "Đã cài";
+            TranslationVersion = "v2.0.0";
+            CurrentVariant = vst.VariantLabel;
+            CurrentFont = (PathOk ? _fonts.CurrentFontPak(GamePath) : null) ?? "Mặc định";
+        }
+        else
+        {
+            TranslationStatus = tr is null ? "Chưa cài" : "Đã cài";
+            TranslationVersion = tr is null ? "-" : "v2.0.0";
+            CurrentVariant = "-";
+            CurrentFont = "-";
+        }
         _main.RefreshStatus();
     }
 

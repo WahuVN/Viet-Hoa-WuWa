@@ -16,9 +16,10 @@ public partial class GuideViewModel : ObservableObject
 
     [ObservableProperty] private string _search = "";
     [ObservableProperty] private string? _selected;
-    [ObservableProperty] private string _content = "Chọn một mục hướng dẫn ở bên trái.";
 
     public ObservableCollection<string> Guides { get; } = new();
+    /// <summary>Các khối nội dung đã định dạng (tiêu đề / gạch đầu dòng / đoạn) để hiển thị rõ ràng.</summary>
+    public ObservableCollection<GuideBlock> Blocks { get; } = new();
 
     public void OnActivated()
     {
@@ -26,6 +27,7 @@ public partial class GuideViewModel : ObservableObject
             ? Directory.GetFiles(_guidesDir, "*.md").Select(Path.GetFileName).OfType<string>().OrderBy(x => x).ToList()
             : new();
         ApplyFilter();
+        if (Selected is null && Guides.Count > 0) Selected = Guides[0];   // mở sẵn mục đầu
     }
 
     partial void OnSearchChanged(string value) => ApplyFilter();
@@ -40,13 +42,52 @@ public partial class GuideViewModel : ObservableObject
 
     partial void OnSelectedChanged(string? value)
     {
+        Blocks.Clear();
         if (string.IsNullOrWhiteSpace(value)) return;
         try
         {
             var path = Path.Combine(_guidesDir, value);
-            Content = File.Exists(path) ? File.ReadAllText(path, Encoding.UTF8) : "(Không đọc được nội dung.)";
+            if (!File.Exists(path)) { Blocks.Add(new GuideBlock("p", "(Không đọc được nội dung.)")); return; }
+            foreach (var b in ParseMarkdown(File.ReadAllText(path, Encoding.UTF8))) Blocks.Add(b);
         }
-        catch (Exception ex) { Content = "Lỗi đọc hướng dẫn: " + ex.Message; }
+        catch (Exception ex) { Blocks.Add(new GuideBlock("p", "Lỗi đọc hướng dẫn: " + ex.Message)); }
+    }
+
+    private static string Clean(string s)
+    {
+        s = s.Replace("**", "").Replace("`", "");
+        // [text](url) -> text
+        int i;
+        while ((i = s.IndexOf('[')) >= 0)
+        {
+            int j = s.IndexOf(']', i);
+            if (j < 0) break;
+            int k = (j + 1 < s.Length && s[j + 1] == '(') ? s.IndexOf(')', j) : -1;
+            var text = s.Substring(i + 1, j - i - 1);
+            if (k > 0) s = s.Remove(i, k - i + 1).Insert(i, text);
+            else s = s.Remove(j, 1).Remove(i, 1);
+        }
+        return s.Trim();
+    }
+
+    private static IEnumerable<GuideBlock> ParseMarkdown(string md)
+    {
+        foreach (var raw in md.Replace("\r", "").Split('\n'))
+        {
+            var line = raw.TrimEnd();
+            var t = line.TrimStart();
+            if (t.Length == 0) { yield return new GuideBlock("space", ""); continue; }
+            if (t.StartsWith("### ")) { yield return new GuideBlock("h3", Clean(t[4..])); continue; }
+            if (t.StartsWith("## ")) { yield return new GuideBlock("h2", Clean(t[3..])); continue; }
+            if (t.StartsWith("# ")) { yield return new GuideBlock("h1", Clean(t[2..])); continue; }
+            if (t.StartsWith("- ") || t.StartsWith("* ")) { yield return new GuideBlock("li", "•  " + Clean(t[2..])); continue; }
+            if (t.Length > 2 && char.IsDigit(t[0]) && (t[1] == '.' || (t.Length > 2 && t[1] == ')' )))
+            { yield return new GuideBlock("li", Clean(t)); continue; }
+            if (t.StartsWith("> ")) { yield return new GuideBlock("quote", Clean(t[2..])); continue; }
+            if (t.StartsWith("|")) { yield return new GuideBlock("p", Clean(t.Trim('|').Replace("|", "   "))); continue; }
+            if (t.StartsWith("---")) { yield return new GuideBlock("space", ""); continue; }
+            yield return new GuideBlock("p", Clean(t));
+        }
     }
 
     [RelayCommand]
@@ -55,6 +96,9 @@ public partial class GuideViewModel : ObservableObject
         if (Directory.Exists(_guidesDir)) Process.Start(new ProcessStartInfo(_guidesDir) { UseShellExecute = true });
     }
 }
+
+/// <summary>Một khối nội dung hướng dẫn đã phân loại (h1/h2/h3/li/quote/p/space).</summary>
+public sealed record GuideBlock(string Kind, string Text);
 
 public partial class SettingsViewModel : ObservableObject
 {
@@ -121,56 +165,6 @@ public partial class SettingsViewModel : ObservableObject
 
     [RelayCommand]
     private void OpenLogFolder()
-    {
-        if (Directory.Exists(_log.LogDirectory))
-            Process.Start(new ProcessStartInfo(_log.LogDirectory) { UseShellExecute = true });
-    }
-}
-
-public partial class LogViewModel : ObservableObject
-{
-    private readonly ILogService _log;
-
-    [ObservableProperty] private string _levelFilter = "Tất cả";
-    [ObservableProperty] private string _search = "";
-    [ObservableProperty] private string _message = "";
-
-    public ObservableCollection<Core.Models.LogEntry> Entries { get; } = new();
-    public string[] Levels { get; } = { "Tất cả", "Info", "Warn", "Error" };
-
-    public LogViewModel(ILogService log) => _log = log;
-
-    public void OnActivated() => Refresh();
-
-    [RelayCommand]
-    private void Refresh()
-    {
-        Entries.Clear();
-        foreach (var e in _log.ReadRecent(500, LevelFilter, Search)) Entries.Add(e);
-        Message = $"{Entries.Count} dòng.";
-    }
-
-    [RelayCommand]
-    private void Clear()
-    {
-        _log.Clear();
-        Refresh();
-    }
-
-    [RelayCommand]
-    private void Export()
-    {
-        var dlg = new SaveFileDialog { FileName = "vhwuwa-log.txt", Filter = "Text (*.txt)|*.txt" };
-        if (dlg.ShowDialog() != true) return;
-        var sb = new StringBuilder();
-        foreach (var e in _log.ReadRecent(5000, LevelFilter, Search))
-            sb.AppendLine($"{e.Timestamp:yyyy-MM-dd HH:mm:ss} [{e.Level}] {e.Message}");
-        File.WriteAllText(dlg.FileName, sb.ToString(), Encoding.UTF8);
-        Message = "Đã xuất log.";
-    }
-
-    [RelayCommand]
-    private void OpenFolder()
     {
         if (Directory.Exists(_log.LogDirectory))
             Process.Start(new ProcessStartInfo(_log.LogDirectory) { UseShellExecute = true });

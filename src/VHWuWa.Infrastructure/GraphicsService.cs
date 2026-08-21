@@ -67,6 +67,13 @@ public sealed class GraphicsService : IGraphicsService
         try
         {
             Directory.CreateDirectory(Path.GetDirectoryName(file)!);
+            // Nếu file đang khóa (read-only) → bỏ khóa để ghi được
+            if (File.Exists(file))
+            {
+                var attr = File.GetAttributes(file);
+                if ((attr & FileAttributes.ReadOnly) != 0)
+                    File.SetAttributes(file, attr & ~FileAttributes.ReadOnly);
+            }
             // Backup file cấu hình
             _backup.CreateBackup(gamePath, "graphics", "graphics-config", "", new[] { Config.ConfigPath });
 
@@ -91,6 +98,30 @@ public sealed class GraphicsService : IGraphicsService
             p.Name.Equals(presetName, StringComparison.OrdinalIgnoreCase));
         if (preset is null) return Result.Fail("Không tìm thấy preset: " + presetName);
         return Apply(gamePath, new Dictionary<string, string>(preset.Values));
+    }
+
+    public bool IsReadOnly(string gamePath)
+    {
+        var f = ConfigFilePath(gamePath);
+        return f is not null && File.Exists(f) && (File.GetAttributes(f) & FileAttributes.ReadOnly) != 0;
+    }
+
+    public Result SetReadOnly(string gamePath, bool readOnly)
+    {
+        var f = ConfigFilePath(gamePath);
+        if (f is null || !File.Exists(f)) return Result.Fail("Chưa có file cấu hình (hãy Áp dụng một thiết lập trước).");
+        try
+        {
+            var attr = File.GetAttributes(f);
+            File.SetAttributes(f, readOnly ? attr | FileAttributes.ReadOnly : attr & ~FileAttributes.ReadOnly);
+            _log.Info("Graphics", readOnly ? "Đã khóa Engine.ini (read-only)." : "Đã mở khóa Engine.ini.");
+            return Result.Ok();
+        }
+        catch (Exception ex)
+        {
+            _log.Error("Graphics", "Đổi thuộc tính file lỗi: " + ex.Message, ex);
+            return Result.Fail("Không đổi được thuộc tính file: " + ex.Message, ex);
+        }
     }
 
     // ---- INI helpers ----

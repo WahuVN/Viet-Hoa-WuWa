@@ -1,19 +1,69 @@
 {
   "configFormat": "ini",
-  "configPath": "Saved/Config/WindowsNoEditor/Engine.ini",
+  "configPath": "Client/Saved/Config/WindowsNoEditor/Engine.ini",
   "options": [
-    { "key": "r.ScreenPercentage", "label": "Độ phân giải render (%)", "section": "SystemSettings", "choices": ["50", "67", "75", "100"] },
-    { "key": "r.MotionBlurQuality", "label": "Motion Blur", "section": "SystemSettings", "choices": ["0", "1", "4"] },
-    { "key": "sg.ShadowQuality", "label": "Chất lượng bóng", "section": "SystemSettings", "choices": ["0", "1", "2", "3"] },
-    { "key": "sg.TextureQuality", "label": "Chất lượng texture", "section": "SystemSettings", "choices": ["0", "1", "2", "3"] },
+    { "key": "r.ScreenPercentage", "label": "Tỉ lệ render (%) — thấp = nhẹ", "section": "SystemSettings", "choices": ["50", "67", "75", "85", "100"] },
+    { "key": "sg.ViewDistanceQuality", "label": "Tầm nhìn xa", "section": "SystemSettings", "choices": ["0", "1", "2", "3"] },
+    { "key": "sg.ShadowQuality", "label": "Bóng đổ (chất lượng)", "section": "SystemSettings", "choices": ["0", "1", "2", "3"] },
+    { "key": "r.Shadow.DistanceScale", "label": "Khoảng cách đổ bóng", "section": "SystemSettings", "choices": ["0.25", "0.5", "1"] },
+    { "key": "sg.TextureQuality", "label": "Texture (chất lượng)", "section": "SystemSettings", "choices": ["0", "1", "2", "3"] },
+    { "key": "r.MaxAnisotropy", "label": "Lọc dị hướng texture", "section": "SystemSettings", "choices": ["1", "4", "8", "16"] },
     { "key": "sg.EffectsQuality", "label": "Hiệu ứng", "section": "SystemSettings", "choices": ["0", "1", "2", "3"] },
+    { "key": "sg.PostProcessQuality", "label": "Hậu xử lý (post-process)", "section": "SystemSettings", "choices": ["0", "1", "2", "3"] },
+    { "key": "sg.AntiAliasingQuality", "label": "Khử răng cưa (AA)", "section": "SystemSettings", "choices": ["0", "1", "2", "3"] },
+    { "key": "sg.FoliageQuality", "label": "Cỏ/Lá (chất lượng)", "section": "SystemSettings", "choices": ["0", "1", "2", "3"] },
+    { "key": "foliage.CullAll", "label": "XÓA SẠCH cỏ/lá (1 = xóa hết)", "section": "SystemSettings", "choices": ["0", "1"] },
+    { "key": "r.Kuro.Foliage.GrassCullDistanceMax", "label": "Khoảng cách hiện cỏ (0 = gần như tắt)", "section": "SystemSettings", "choices": ["0", "500", "1000", "2000"] },
+    { "key": "r.MotionBlurQuality", "label": "Nhòe chuyển động (0 = tắt)", "section": "SystemSettings", "choices": ["0", "1", "4"] },
+    { "key": "r.DepthOfFieldQuality", "label": "Mờ hậu cảnh — DoF (0 = tắt)", "section": "SystemSettings", "choices": ["0", "1", "2"] },
+    { "key": "r.BloomQuality", "label": "Bloom / lóa sáng", "section": "SystemSettings", "choices": ["0", "1", "4", "5"] },
+    { "key": "r.SceneColorFringeQuality", "label": "Quang sai màu (0 = tắt)", "section": "SystemSettings", "choices": ["0", "1"] },
+    { "key": "r.KuroVolumeCloudEnable", "label": "Mây thể tích (0 = tắt, nhẹ hơn)", "section": "SystemSettings", "choices": ["0", "1"] },
+    { "key": "r.LightShaftDownSampleFactor", "label": "Tia sáng/God-ray (cao = nhẹ)", "section": "SystemSettings", "choices": ["1", "2", "4"] },
+    { "key": "fx.Niagara.QualityLevel", "label": "Hạt hiệu ứng Niagara", "section": "SystemSettings", "choices": ["0", "1", "2", "3"] },
+    { "key": "r.StaticMeshLODDistanceScale", "label": "LOD vật thể (thấp = nhẹ)", "section": "SystemSettings", "choices": ["0.5", "0.7", "1"] },
     { "key": "r.VSync", "label": "V-Sync", "section": "SystemSettings", "choices": ["0", "1"] },
-    { "key": "t.MaxFPS", "label": "Giới hạn FPS", "section": "SystemSettings", "choices": ["0", "30", "60", "120", "144"] }
+    { "key": "t.MaxFPS", "label": "Giới hạn FPS (0 = không giới hạn)", "section": "SystemSettings", "choices": ["0", "30", "60", "120", "144"] }
   ],
   "presets": [
-    { "name": "Mặc định", "values": { "r.ScreenPercentage": "100", "r.MotionBlurQuality": "4", "sg.ShadowQuality": "3", "sg.TextureQuality": "3", "sg.EffectsQuality": "3", "r.VSync": "1", "t.MaxFPS": "60" } },
-    { "name": "Máy yếu", "values": { "r.ScreenPercentage": "67", "r.MotionBlurQuality": "0", "sg.ShadowQuality": "0", "sg.TextureQuality": "1", "sg.EffectsQuality": "1", "r.VSync": "0", "t.MaxFPS": "60" } },
-    { "name": "Cân bằng", "values": { "r.ScreenPercentage": "85", "r.MotionBlurQuality": "1", "sg.ShadowQuality": "1", "sg.TextureQuality": "2", "sg.EffectsQuality": "2", "r.VSync": "0", "t.MaxFPS": "120" } },
-    { "name": "Chất lượng cao", "values": { "r.ScreenPercentage": "100", "r.MotionBlurQuality": "4", "sg.ShadowQuality": "3", "sg.TextureQuality": "3", "sg.EffectsQuality": "3", "r.VSync": "1", "t.MaxFPS": "0" } }
+    { "name": "Mặc định", "values": {
+      "r.ScreenPercentage": "100", "sg.ViewDistanceQuality": "3", "sg.ShadowQuality": "3", "r.Shadow.DistanceScale": "1",
+      "sg.TextureQuality": "3", "r.MaxAnisotropy": "16", "sg.EffectsQuality": "3", "sg.PostProcessQuality": "3",
+      "sg.AntiAliasingQuality": "2", "sg.FoliageQuality": "3", "foliage.CullAll": "0", "r.Kuro.Foliage.GrassCullDistanceMax": "2000",
+      "r.MotionBlurQuality": "4", "r.DepthOfFieldQuality": "2", "r.BloomQuality": "4", "r.SceneColorFringeQuality": "1",
+      "r.KuroVolumeCloudEnable": "1", "r.LightShaftDownSampleFactor": "2", "fx.Niagara.QualityLevel": "3",
+      "r.StaticMeshLODDistanceScale": "1", "r.VSync": "1", "t.MaxFPS": "60" } },
+
+    { "name": "Xóa cỏ / Max FPS", "values": {
+      "r.ScreenPercentage": "75", "sg.ViewDistanceQuality": "1", "sg.ShadowQuality": "0", "r.Shadow.DistanceScale": "0.25",
+      "sg.TextureQuality": "2", "r.MaxAnisotropy": "4", "sg.EffectsQuality": "1", "sg.PostProcessQuality": "0",
+      "sg.AntiAliasingQuality": "1", "sg.FoliageQuality": "0", "foliage.CullAll": "1", "r.Kuro.Foliage.GrassCullDistanceMax": "0",
+      "r.MotionBlurQuality": "0", "r.DepthOfFieldQuality": "0", "r.BloomQuality": "0", "r.SceneColorFringeQuality": "0",
+      "r.KuroVolumeCloudEnable": "0", "r.LightShaftDownSampleFactor": "4", "fx.Niagara.QualityLevel": "0",
+      "r.StaticMeshLODDistanceScale": "0.5", "r.VSync": "0", "t.MaxFPS": "0" } },
+
+    { "name": "Máy yếu", "values": {
+      "r.ScreenPercentage": "67", "sg.ViewDistanceQuality": "0", "sg.ShadowQuality": "0", "r.Shadow.DistanceScale": "0.25",
+      "sg.TextureQuality": "1", "r.MaxAnisotropy": "1", "sg.EffectsQuality": "0", "sg.PostProcessQuality": "0",
+      "sg.AntiAliasingQuality": "0", "sg.FoliageQuality": "0", "foliage.CullAll": "1", "r.Kuro.Foliage.GrassCullDistanceMax": "0",
+      "r.MotionBlurQuality": "0", "r.DepthOfFieldQuality": "0", "r.BloomQuality": "0", "r.SceneColorFringeQuality": "0",
+      "r.KuroVolumeCloudEnable": "0", "r.LightShaftDownSampleFactor": "4", "fx.Niagara.QualityLevel": "0",
+      "r.StaticMeshLODDistanceScale": "0.5", "r.VSync": "0", "t.MaxFPS": "60" } },
+
+    { "name": "Cân bằng", "values": {
+      "r.ScreenPercentage": "85", "sg.ViewDistanceQuality": "2", "sg.ShadowQuality": "1", "r.Shadow.DistanceScale": "0.5",
+      "sg.TextureQuality": "2", "r.MaxAnisotropy": "8", "sg.EffectsQuality": "2", "sg.PostProcessQuality": "1",
+      "sg.AntiAliasingQuality": "2", "sg.FoliageQuality": "1", "foliage.CullAll": "0", "r.Kuro.Foliage.GrassCullDistanceMax": "1000",
+      "r.MotionBlurQuality": "0", "r.DepthOfFieldQuality": "1", "r.BloomQuality": "1", "r.SceneColorFringeQuality": "0",
+      "r.KuroVolumeCloudEnable": "0", "r.LightShaftDownSampleFactor": "2", "fx.Niagara.QualityLevel": "2",
+      "r.StaticMeshLODDistanceScale": "0.7", "r.VSync": "0", "t.MaxFPS": "120" } },
+
+    { "name": "Chất lượng cao", "values": {
+      "r.ScreenPercentage": "100", "sg.ViewDistanceQuality": "3", "sg.ShadowQuality": "3", "r.Shadow.DistanceScale": "1",
+      "sg.TextureQuality": "3", "r.MaxAnisotropy": "16", "sg.EffectsQuality": "3", "sg.PostProcessQuality": "3",
+      "sg.AntiAliasingQuality": "3", "sg.FoliageQuality": "3", "foliage.CullAll": "0", "r.Kuro.Foliage.GrassCullDistanceMax": "2000",
+      "r.MotionBlurQuality": "4", "r.DepthOfFieldQuality": "2", "r.BloomQuality": "5", "r.SceneColorFringeQuality": "1",
+      "r.KuroVolumeCloudEnable": "1", "r.LightShaftDownSampleFactor": "1", "fx.Niagara.QualityLevel": "3",
+      "r.StaticMeshLODDistanceScale": "1", "r.VSync": "1", "t.MaxFPS": "0" } }
   ]
 }

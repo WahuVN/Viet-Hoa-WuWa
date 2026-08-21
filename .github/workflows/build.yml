@@ -55,7 +55,7 @@ jobs:
           Compress-Archive -Path dist/* -DestinationPath $zip -Force
           $sha = (Get-FileHash $zip -Algorithm SHA256).Hash.ToLower()
           "$sha  $zip" | Out-File checksums.txt -Encoding utf8
-          @{ version = $ver; minimumVersion = "1.0.0"; releaseNotes = "Bản phát hành $ver"; downloadUrl = "https://github.com/WahuVN/VHWuWa/releases/download/${{ github.ref_name }}/$zip"; sha256 = $sha; signature = ""; mandatory = $false } | ConvertTo-Json | Out-File update.json -Encoding utf8
+          @{ version = $ver; minimumVersion = "1.0.0"; releaseNotes = "Bản phát hành $ver"; downloadUrl = "https://github.com/WahuVN/wuwa-vietnamese-launcher/releases/download/${{ github.ref_name }}/$zip"; sha256 = $sha; signature = ""; mandatory = $false } | ConvertTo-Json | Out-File update.json -Encoding utf8
         shell: pwsh
 
       - name: Upload artifact
@@ -67,12 +67,6 @@ jobs:
             checksums.txt
             update.json
 
-      - name: Tạo GitHub Release (khi push tag v*)
-        if: startsWith(github.ref, 'refs/tags/v')
-        uses: softprops/action-gh-release@v2
-        with:
-          files: |
-            VHWuWa-*-win-x64.zip
-            checksums.txt
-            update.json
-          generate_release_notes: true
+      # Bản public đầy đủ còn kèm PAK/font/loader và WAHU Community được dựng
+      # trên máy phát hành bằng scripts/build-dist.ps1 + build-community.ps1.
+      # Workflow chỉ kiểm tra mã nguồn; không tự tạo Release thiếu dữ liệu game.

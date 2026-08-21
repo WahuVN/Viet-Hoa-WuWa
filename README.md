@@ -1,85 +1,94 @@
-# VHWuWa
+# VHWuWa — cài Việt hóa Wuthering Waves
 
-**VHWuWa** là ứng dụng Windows (WPF / .NET 8) giúp người dùng cài đặt và quản lý **bản Việt hóa game**, mod, font và cấu hình đồ họa — giao diện tối giản kiểu Windows 11, có chế độ sáng/tối.
+VHWuWa là ứng dụng Windows giúp cài/gỡ bản Việt hóa Wuthering Waves, chọn tên
+nhân vật kiểu **Tên Anh** hoặc **Hán Việt**, cài font tiếng Việt và kiểm tra đủ
+file sau khi cài.
 
-> ⚠️ Repository công khai này **chỉ chứa mã nguồn + cấu hình mẫu + dữ liệu demo**. Không đưa file Việt hóa thật, PAK bản quyền, khóa ký hay bất kỳ tài sản game có bản quyền nào lên đây.
+## Tải bản mới nhất
 
-## ✨ Tính năng
+Vào **[GitHub Releases](https://github.com/WahuVN/wuwa-vietnamese-launcher/releases/latest)**
+và tải một trong hai file:
 
-- Chọn / tự dò / kéo-thả / kiểm tra thư mục game (theo `Config/game.json`, không chỉ dựa vào tên thư mục).
-- Cài / gỡ **bản Việt hóa** có kiểm tra chữ ký + SHA-256, sao lưu và **rollback** khi lỗi.
-- Quản lý **mod** (cài/gỡ/bật-tắt, phát hiện xung đột).
-- Đổi **font**, chỉnh **đồ họa** (preset + tùy chỉnh, có backup).
-- **Sao lưu / khôi phục** file gốc theo từng thao tác.
-- **Hướng dẫn** tiếng Việt (Markdown), **Nhật ký** (Serilog, ẩn dữ liệu nhạy cảm).
-- **Tự cập nhật** qua GitHub Releases (updater riêng, có rollback).
+- `VHWuWa_BanCai.zip`: dành cho người chơi, có sẵn app và dữ liệu Việt hóa.
+- `WAHU_Community_BanCai.zip`: tool đọc/sửa/dịch, duyệt cốt truyện và tạo PAK
+  dành cho cộng tác viên.
 
-## 🖥️ Yêu cầu hệ thống
+Không tải mục **Source code** nếu chỉ muốn cài chơi.
 
-- Windows 10 / 11 (x64).
-- Bản phát hành self-contained: **không cần cài .NET**.
+## Cài nhanh cho người chơi
 
-## ⬇️ Tải bản phát hành
+1. Tải `VHWuWa_BanCai.zip` và **giải nén toàn bộ** ra một thư mục riêng.
+2. Chạy `Chay VHWuWa.bat` hoặc `app\VHWuWa.exe`.
+3. Ở **Thư mục game**, bấm **Tự tìm game**. Nếu app không tìm thấy, bấm
+   **Chọn thư mục** và chọn đúng thư mục có thư mục con `Client`.
+4. Mở **Cài Việt hóa**, chọn **Tên Anh** hoặc **Hán Việt**.
+5. Giữ tùy chọn cài font tiếng Việt, sau đó bấm **Cài Việt hóa**.
+6. Chỉ mở game khi app báo cài thành công và kiểm tra đủ file.
+7. Trong game đặt ngôn ngữ chữ là **English** và chạy bằng **DirectX 11**.
 
-Vào **[Releases](https://github.com/WahuVN/VHWuWa/releases)** → tải `VHWuWa-x.y.z-win-x64.zip` → giải nén → chạy `VHWuWa.exe`.
+### Mẫu đường dẫn đúng
 
-## 🚀 Sử dụng
+Bản Kuro/Launcher thường có dạng:
 
-1. Mở app → **Trang chủ** → chọn/tự dò thư mục game.
-2. **Cài Việt hóa** → chọn gói `.vhwpack` → xem trước → cài.
-3. Xem **Hướng dẫn** trong app để biết chi tiết mod/font/đồ họa/sao lưu.
+```text
+C:\Wuthering Waves\Wuthering Waves Game
+D:\Games\Wuthering Waves\Wuthering Waves Game
+E:\Games\Wuthering Waves\Wuthering Waves Game
+```
 
-## 🔧 Build từ mã nguồn
+Bản Steam thường có dạng:
 
-```bash
+```text
+D:\SteamLibrary\steamapps\common\Wuthering Waves
+```
+
+Thư mục bạn chọn phải mở ra và thấy ngay `Client`, ví dụ:
+
+```text
+E:\Games\Wuthering Waves\Wuthering Waves Game\Client
+```
+
+Hãy chọn `...\Wuthering Waves Game`, **không chọn** `Client`, `Saved`, `Paks`
+hoặc thư mục chỉ chứa launcher.
+
+## Đổi bản và gỡ
+
+- Đổi Tên Anh ↔ Hán Việt: chọn kiểu tên khác và bấm **Cài Việt hóa** lại.
+- Gỡ sạch: tắt game, mở **Cài Việt hóa** và bấm **Gỡ Việt hóa**.
+- Nếu đang có mod khác, app sẽ cảnh báo để tránh xung đột trước khi cài.
+
+## Nội dung bản 2.0.0
+
+- Cốt truyện chính 3.6: 1.827/1.827 câu đã cập nhật VI/HV.
+- Mô tả kỹ năng: 3.4 = 1.766/1.766, 3.5 = 93/93, 3.6 = 97/97.
+- Hai PAK riêng cho Tên Anh và Hán Việt.
+- Ẩn UID bằng ký tự trắng.
+- Bộ 85 DB đã kiểm tra, có hậu kiểm PAK/SIG/font/loader sau khi cài.
+
+## WAHU Community
+
+Tool cộng đồng cho phép:
+
+- Duyệt cốt truyện 3.4/3.5/3.6 theo khu vực, tuyến và Part.
+- Xem Trung/Anh/Việt/Hán Việt, người nói, người nghe và ngữ cảnh.
+- Dịch tay nhiều dòng, đánh dấu **Dịch tay** và **Đã duyệt**.
+- Tìm và sửa giao diện, tên, HP/ATK/DEF, kỹ năng, vật phẩm và thuật ngữ.
+- Chạy QA, tạo PAK thử nghiệm và xuất gói đóng góp.
+
+Xem [hướng dẫn đóng góp](Guides/vi-VN/09-dong-gop-ban-dich.md).
+
+## Build từ mã nguồn
+
+```powershell
 dotnet restore VHWuWa.sln
-dotnet build VHWuWa.sln -c Release
-dotnet test  VHWuWa.sln -c Release
-powershell -ExecutionPolicy Bypass -File scripts/build-release.ps1 -Version 1.0.0
+dotnet test VHWuWa.sln -c Release
+powershell -ExecutionPolicy Bypass -File .\scripts\build-dist.ps1
 ```
 
-## 📦 Tạo gói `.vhwpack`
+Mã nguồn công khai không chứa PAK/game asset. Máy phát hành phải có dữ liệu được
+phép phân phối tại `wuwavh_tool/Wahu/dist` trước khi chạy `build-dist.ps1`.
 
-```bash
-dotnet run --project src/VHWuWa.PackageTool -- keygen --out ./mykeys
-copy .\mykeys\public_key.pem .\Config\public_key.pem
-dotnet run --project src/VHWuWa.PackageTool -- pack   --input ./PackageSource --output ./vietnamese.vhwpack --key ./mykeys/private_key.pem
-dotnet run --project src/VHWuWa.PackageTool -- verify --file ./vietnamese.vhwpack --pub ./Config/public_key.pem
-```
+## Giấy phép và lưu ý
 
-`.vhwpack` = ZIP gồm `manifest.json` + `payload/` + `signature.sig`.
-
-## ⚙️ Cấu hình
-
-| Việc | File |
-|---|---|
-| Đổi tên/nhận diện game | `Config/game.json` (`gameName`, `executable`, `requiredFiles`, `possibleRegistryKeys`, `steamAppId`) |
-| Thêm bản Việt hóa | Đóng gói `.vhwpack` với `packageType: "translation"` |
-| Thêm mod | `.vhwpack` với `packageType: "mod"` |
-| Thêm font | `.vhwpack` với `packageType: "font"` |
-| Thêm preset đồ họa | `Config/graphics.json` (`options`, `presets`) |
-| Đổi public key | Thay `Config/public_key.pem` bằng public key mới |
-| Bảo quản private key | Giữ NGOÀI repo / trong GitHub Actions Secrets (`VHWUWA_SIGNING_KEY`) |
-
-## 🔄 Phát hành bản cập nhật
-
-1. Tăng `Version` trong `Directory.Build.props`.
-2. `git tag v1.1.0 && git push origin v1.1.0`.
-3. GitHub Actions tự build, tạo ZIP + `checksums.txt` + `update.json` và tạo Release.
-4. App người dùng kiểm tra `releases/latest`, tải, verify SHA-256/chữ ký, chạy updater.
-
-## 🧱 Cấu trúc
-
-```
-src/VHWuWa.App           WPF (MVVM, Wpf.Ui, DI)
-src/VHWuWa.Core          Model + service thuần .NET (hash, chữ ký, .vhwpack, path-safety)
-src/VHWuWa.Infrastructure Cài/gỡ, backup, mod, font, đồ họa, cập nhật, log
-src/VHWuWa.Updater       Trình cập nhật riêng (swap an toàn + rollback)
-src/VHWuWa.PackageTool   CLI tạo/ký/xác minh .vhwpack
-tests/                   Unit test (xUnit)
-```
-
-## 📜 Giấy phép
-
-MIT (chỉ cho mã nguồn) — xem [LICENSE](LICENSE) và [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
-Không đưa dữ liệu Việt hóa / tài sản game có bản quyền vào repository.
+Mã nguồn dùng giấy phép MIT. Bản Việt hóa/mod là nội dung không chính thức; hãy
+tắt game trước khi cài/gỡ và tự cân nhắc rủi ro anti-cheat.

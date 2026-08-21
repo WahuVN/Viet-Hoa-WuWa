@@ -27,7 +27,8 @@ public static class ServiceCollectionExtensions
             sp.GetRequiredService<ILogService>(),
             configDir));
         services.AddSingleton<IModService, ModService>();
-        services.AddSingleton<IFontService, FontService>();
+        services.AddSingleton<IViethoaInstaller>(sp =>
+            new ViethoaInstaller(sp.GetRequiredService<ILogService>()));        services.AddSingleton<IFontService, FontService>();
         services.AddSingleton<IFontPreviewService, FontPreviewService>();
         services.AddSingleton<IGraphicsService>(sp => new GraphicsService(
             sp.GetRequiredService<IBackupService>(), sp.GetRequiredService<ILogService>(), configDir));

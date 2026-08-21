@@ -51,9 +51,12 @@
                 <TextBlock Text="Chữ mẫu:" Opacity="0.7" Margin="0,0,0,4" />
                 <ui:TextBox Text="{Binding SampleText, UpdateSourceTrigger=PropertyChanged}"
                             PlaceholderText="Nhập chữ mẫu để xem trước" Margin="0,0,0,10" />
-                <Border Background="#151B29" CornerRadius="8" Padding="6" MinHeight="120">
-                    <Image Source="{Binding PreviewImage}" Stretch="Uniform"
-                           HorizontalAlignment="Left" />
+                <Border Background="#1C1E26" CornerRadius="8" Padding="8" MinHeight="150">
+                    <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+                        <Image Source="{Binding PreviewImage}" Stretch="None"
+                               RenderOptions.BitmapScalingMode="HighQuality"
+                               SnapsToDevicePixels="True" HorizontalAlignment="Left" />
+                    </ScrollViewer>
                 </Border>
                 <TextBlock Text="{Binding PreviewMessage}" TextWrapping="Wrap"
                            Opacity="0.75" Margin="0,8,0,0" />

@@ -1,7 +1,9 @@
-# 06 — Cách đổi font
+# Đổi font chữ
 
-1. Trang **Font chữ** → **🔤 Áp dụng font (.vhwpack)**.
-2. Ứng dụng sao lưu font hiện tại, áp font mới và xác minh file.
-3. **↩ Khôi phục font mặc định** để trả lại font gốc.
+Vào tab **Font chữ**:
 
-> Ứng dụng chỉ thay file font trong game, không cài font vào toàn bộ Windows.
+- Chọn font trong danh sách → **Đổi sang font này**.
+- Hoặc **Chọn font ngoài** (.ttf/.otf) để **xem trước** trước khi dùng.
+- **Bỏ font:** quay về font mặc định của bản Việt hóa.
+
+Gõ vào ô "Chữ mẫu" để xem font hiển thị tiếng Việt có dấu ra sao.

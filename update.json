@@ -1,9 +1,9 @@
-﻿{
-    "sha256":  "2030572e4e9a0160e8f158a0f6396d0e4b5b28e3459e31286c496c6f55309273",
-    "version":  "1.0.0",
-    "releaseNotes":  "Báº£n phÃ¡t hÃ nh 1.0.0",
-    "signature":  "",
-    "downloadUrl":  "https://github.com/WahuVN/VHWuWa/releases/download/v1.0.0/VHWuWa-1.0.0-win-x64.zip",
-    "minimumVersion":  "1.0.0",
-    "mandatory":  false
+{
+  "version": "2.0.0",
+  "downloadUrl": "https://github.com/WahuVN/wuwa-vietnamese-launcher/releases/download/v2.0.0/VHWuWa_BanCai.zip",
+  "sha256": "810d9687b7c53ea0a352794236494adb05d254639c81c40ffc8af6d045ade6c5",
+  "releaseNotes": "Bản 2.0.0: cốt truyện 3.6 đầy đủ 1.827 câu VI/HV; kỹ năng 3.4/3.5/3.6; kiểm tra xung đột, file cài và hướng dẫn đường dẫn game rõ ràng.",
+  "signature": "",
+  "minimumVersion": "1.0.0",
+  "mandatory": false
 }

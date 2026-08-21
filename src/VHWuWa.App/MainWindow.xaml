@@ -27,9 +27,8 @@
                     <StackPanel DockPanel.Dock="Bottom" Margin="6,10,6,6">
                         <Separator Margin="0,6" />
                         <TextBlock Text="{Binding AppVersion}" Opacity="0.7" FontSize="12" />
-                        <TextBlock Text="{Binding GameStatus}" Opacity="0.7" FontSize="12" Margin="0,2,0,0"
-                                   TextWrapping="Wrap" />
-                        <TextBlock Text="{Binding UpdateStatus}" Opacity="0.7" FontSize="12" Margin="0,2,0,6"
+                        <TextBlock Text="{Binding VhVersion}" Opacity="0.7" FontSize="12" Margin="0,2,0,0" />
+                        <TextBlock Text="{Binding GameStatus}" Opacity="0.7" FontSize="12" Margin="0,2,0,6"
                                    TextWrapping="Wrap" />
                         <Button Content="🌓 Sáng / Tối" Command="{Binding ToggleThemeCommand}"
                                 HorizontalAlignment="Stretch" />
@@ -42,10 +41,8 @@
                         <ListBoxItem Tag="mod" Content="🧩  Quản lý mod" />
                         <ListBoxItem Tag="font" Content="🔤  Font chữ" />
                         <ListBoxItem Tag="graphics" Content="🎮  Đồ họa" />
-                        <ListBoxItem Tag="backup" Content="🗄️  Sao lưu" />
                         <ListBoxItem Tag="guide" Content="📖  Hướng dẫn" />
                         <ListBoxItem Tag="settings" Content="⚙️  Cài đặt" />
-                        <ListBoxItem Tag="log" Content="📝  Nhật ký" />
                     </ListBox>
                 </DockPanel>
             </Border>

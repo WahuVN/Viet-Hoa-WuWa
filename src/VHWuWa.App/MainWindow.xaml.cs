@@ -28,10 +28,8 @@ public partial class MainWindow : FluentWindow
             "mod" => _sp.GetRequiredService<ModPage>(),
             "font" => _sp.GetRequiredService<FontPage>(),
             "graphics" => _sp.GetRequiredService<GraphicsPage>(),
-            "backup" => _sp.GetRequiredService<BackupPage>(),
             "guide" => _sp.GetRequiredService<GuidePage>(),
             "settings" => _sp.GetRequiredService<SettingsPage>(),
-            "log" => _sp.GetRequiredService<LogPage>(),
             _ => null
         };
         if (page is null) return;

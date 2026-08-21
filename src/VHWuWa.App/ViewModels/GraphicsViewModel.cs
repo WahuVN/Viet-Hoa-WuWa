@@ -22,6 +22,7 @@ public partial class GraphicsViewModel : ObservableObject
 
     [ObservableProperty] private bool _isSupported;
     [ObservableProperty] private string _message = "";
+    [ObservableProperty] private string _lockStatus = "";
 
     public ObservableCollection<string> Presets { get; } = new();
     public ObservableCollection<GraphicsOptionVm> Options { get; } = new();
@@ -53,6 +54,34 @@ public partial class GraphicsViewModel : ObservableObject
             Options.Add(vm);
         }
         Message = "Đọc cấu hình hiện tại xong.";
+        RefreshLock();
+    }
+
+    private void RefreshLock()
+    {
+        try
+        {
+            LockStatus = _graphics.IsReadOnly(_settings.Settings.GamePath)
+                ? "🔒 Engine.ini đang KHÓA — game không ghi đè được (tinh chỉnh được giữ)."
+                : "🔓 Engine.ini chưa khóa — game có thể ghi đè khi khởi động.";
+        }
+        catch { LockStatus = ""; }
+    }
+
+    [RelayCommand]
+    private void Lock()
+    {
+        var r = _graphics.SetReadOnly(_settings.Settings.GamePath, true);
+        Message = r.Success ? "Đã khóa Engine.ini (chống game ghi đè)." : "Lỗi: " + r.Error;
+        RefreshLock();
+    }
+
+    [RelayCommand]
+    private void Unlock()
+    {
+        var r = _graphics.SetReadOnly(_settings.Settings.GamePath, false);
+        Message = r.Success ? "Đã mở khóa Engine.ini." : "Lỗi: " + r.Error;
+        RefreshLock();
     }
 
     private Dictionary<string, string> ReadCurrentSafe()
@@ -76,6 +105,7 @@ public partial class GraphicsViewModel : ObservableObject
         var values = Options.ToDictionary(o => o.Key, o => o.Selected);
         var r = _graphics.Apply(_settings.Settings.GamePath, values);
         Message = r.Success ? "Đã áp cấu hình tùy chỉnh." : "Lỗi: " + r.Error;
+        RefreshLock();
     }
 
     [RelayCommand]

@@ -29,10 +29,8 @@ public partial class App : Application
         services.AddSingleton<ModViewModel>();
         services.AddSingleton<FontViewModel>();
         services.AddSingleton<GraphicsViewModel>();
-        services.AddSingleton<BackupViewModel>();
         services.AddSingleton<GuideViewModel>();
         services.AddSingleton<SettingsViewModel>();
-        services.AddSingleton<LogViewModel>();
 
         // Pages
         services.AddSingleton<HomePage>();
@@ -40,10 +38,8 @@ public partial class App : Application
         services.AddSingleton<ModPage>();
         services.AddSingleton<FontPage>();
         services.AddSingleton<GraphicsPage>();
-        services.AddSingleton<BackupPage>();
         services.AddSingleton<GuidePage>();
         services.AddSingleton<SettingsPage>();
-        services.AddSingleton<LogPage>();
 
         services.AddSingleton<MainWindow>();
         Services = services.BuildServiceProvider();

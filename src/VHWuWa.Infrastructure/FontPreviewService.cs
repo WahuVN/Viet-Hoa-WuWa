@@ -36,26 +36,30 @@ public sealed class FontPreviewService : IFontPreviewService
         pfc.AddFontFile(fontFilePath);
         var family = pfc.Families[0];
 
-        const int width = 780;
-        const int height = 240;
+        const int width = 1040;
+        const int height = 300;
         using var bmp = new Bitmap(width, height);
+        bmp.SetResolution(120, 120);
         using var g = Graphics.FromImage(bmp);
-        g.Clear(Color.FromArgb(21, 27, 41));      // nền navy khớp theme
-        g.SmoothingMode = SmoothingMode.AntiAlias;
-        g.TextRenderingHint = TextRenderingHint.AntiAliasGridFit;
+        g.Clear(Color.FromArgb(28, 30, 38));      // nền tối dịu, tương phản cao với chữ trắng
+        g.SmoothingMode = SmoothingMode.HighQuality;
+        g.InterpolationMode = InterpolationMode.HighQualityBicubic;
+        g.TextRenderingHint = TextRenderingHint.ClearTypeGridFit;
 
-        using var title = new Font(family, fontSize, FontStyle.Bold, GraphicsUnit.Pixel);
-        using var body = new Font(family, fontSize * 0.7f, FontStyle.Regular, GraphicsUnit.Pixel);
-        using var small = new Font(family, fontSize * 0.55f, FontStyle.Regular, GraphicsUnit.Pixel);
+        int big = Math.Clamp(fontSize + 8, 24, 96);
+        using var title = new Font(family, big, FontStyle.Bold, GraphicsUnit.Pixel);
+        using var body = new Font(family, big * 0.62f, FontStyle.Regular, GraphicsUnit.Pixel);
+        using var small = new Font(family, big * 0.42f, FontStyle.Regular, GraphicsUnit.Pixel);
         using var white = new SolidBrush(Color.White);
-        using var accent = new SolidBrush(Color.FromArgb(124, 107, 255)); // #7c6bff
+        using var soft = new SolidBrush(Color.FromArgb(210, 214, 224));
+        using var accent = new SolidBrush(Color.FromArgb(150, 135, 255)); // tím sáng
 
-        g.DrawString(family.Name, small, accent, new PointF(16, 12));
-        g.DrawString(sampleText, title, white, new RectangleF(16, 44, width - 32, 70));
-        g.DrawString("Tiếng Việt có dấu: ăâđêôơư ÀÁẢÃẠ Ệ Ỡ Ự Ýỳỷ",
-            body, white, new RectangleF(16, 116, width - 32, 50));
-        g.DrawString("0123456789 — Wuthering Waves — nWaVzZ",
-            body, white, new RectangleF(16, 168, width - 32, 50));
+        g.DrawString(family.Name, small, accent, new PointF(20, 14));
+        g.DrawString(sampleText, title, white, new RectangleF(20, 46, width - 40, big + 20));
+        g.DrawString("Tiếng Việt đủ dấu: ăâđêôơư — À Á Ả Ã Ạ · Ệ Ỡ Ự · ýỳỷỹỵ",
+            body, soft, new RectangleF(20, 46 + big + 26, width - 40, big));
+        g.DrawString("0123456789  ·  Wuthering Waves  ·  Kim Tịch / Jinhsi",
+            body, soft, new RectangleF(20, 46 + big + 26 + (int)(big * 0.9f), width - 40, big));
 
         using var ms = new MemoryStream();
         bmp.Save(ms, ImageFormat.Png);

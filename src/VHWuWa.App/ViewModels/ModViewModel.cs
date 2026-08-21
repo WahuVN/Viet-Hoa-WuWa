@@ -14,27 +14,39 @@ public partial class ModViewModel : ObservableObject
     private readonly ISettingsService _settings;
     private readonly IModService _mods;
     private readonly IPackageInstallerService _installer;
+    private readonly IViethoaInstaller _viet;
+    private readonly IFontService _fonts;
 
     [ObservableProperty] private ModInfo? _selectedMod;
     [ObservableProperty] private string _message = "";
+    [ObservableProperty] private string _statusLine = "";
     [ObservableProperty] private bool _busy;
 
     public ObservableCollection<ModInfo> Mods { get; } = new();
 
-    public ModViewModel(ISettingsService settings, IModService mods, IPackageInstallerService installer)
+    public ModViewModel(ISettingsService settings, IModService mods, IPackageInstallerService installer,
+        IViethoaInstaller viet, IFontService fonts)
     {
-        _settings = settings; _mods = mods; _installer = installer;
+        _settings = settings; _mods = mods; _installer = installer; _viet = viet; _fonts = fonts;
     }
 
     public void OnActivated() => Refresh();
 
+    [RelayCommand]
     private void Refresh()
     {
         Mods.Clear();
         var path = _settings.Settings.GamePath;
-        if (string.IsNullOrWhiteSpace(path)) { Message = "Chưa chọn thư mục game."; return; }
+        if (string.IsNullOrWhiteSpace(path)) { Message = "Chưa chọn thư mục game (vào Trang chủ)."; StatusLine = ""; return; }
         foreach (var m in _mods.ListInstalled(path)) Mods.Add(m);
-        Message = Mods.Count == 0 ? "Chưa có mod nào." : $"{Mods.Count} mod đã cài.";
+        Message = Mods.Count == 0 ? "Chưa có mod .vhwpack nào." : $"{Mods.Count} mod đã cài.";
+
+        // Trạng thái Việt hóa hiện tại: biến thể tên + font
+        var st = _viet.GetStatus(path);
+        var font = _fonts.CurrentFontPak(path);
+        StatusLine = st.Installed
+            ? $"● Việt hóa: ĐÃ CÀI · Kiểu tên: {st.VariantLabel} · Font: {font ?? "mặc định"}"
+            : "○ Việt hóa: CHƯA CÀI";
     }
 
     [RelayCommand]
@@ -69,15 +81,6 @@ public partial class ModViewModel : ObservableObject
             Message = r.Success ? "Đã gỡ mod." : "Lỗi: " + r.Error;
         }
         finally { Busy = false; Refresh(); }
-    }
-
-    [RelayCommand]
-    private void Toggle()
-    {
-        if (SelectedMod is null) { Message = "Chọn một mod."; return; }
-        var r = _mods.SetEnabled(_settings.Settings.GamePath, SelectedMod.PackageId, !SelectedMod.Enabled);
-        Message = r.Success ? "Đã đổi trạng thái mod." : "Lỗi: " + r.Error;
-        Refresh();
     }
 
     [RelayCommand]

@@ -17,11 +17,14 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty] private string _updateStatus = "Chưa kiểm tra cập nhật";
     [ObservableProperty] private bool _isDark = true;
 
+    /// <summary>Bản dịch đi kèm: v1.0.0, dành cho game 3.5.</summary>
+    public string VhVersion => "Bản dịch v2.0.0 · game 3.6";
+
     public MainViewModel(ISettingsService settings, IGameDetectionService detect)
     {
         _settings = settings;
         _detect = detect;
-        _appVersion = "v" + (Assembly.GetEntryAssembly()?.GetName().Version?.ToString(3) ?? "1.0.0");
+        _appVersion = "VHWuWa v" + (Assembly.GetEntryAssembly()?.GetName().Version?.ToString(3) ?? "2.0.0");
         _isDark = !settings.Settings.Theme.Equals("Light", StringComparison.OrdinalIgnoreCase);
         RefreshStatus();
     }

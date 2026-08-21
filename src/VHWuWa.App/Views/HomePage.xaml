@@ -5,56 +5,61 @@
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel Margin="28,22,28,22">
             <TextBlock Text="VHWuWa" FontSize="28" FontWeight="Bold" />
-            <TextBlock Text="Công cụ cài &amp; quản lý bản Việt hóa" Opacity="0.7" Margin="0,2,0,18" />
+            <TextBlock Text="Công cụ cài &amp; quản lý bản Việt hóa Wuthering Waves" Opacity="0.75" Margin="0,2,0,4" />
+            <TextBlock Text="Bản dịch v1.0.0  ·  dành cho game 3.5" Opacity="0.6" FontSize="13" Margin="0,0,0,18" />
 
             <ui:Card Padding="18" Margin="0,0,0,14">
                 <StackPanel>
-                    <TextBlock Text="Thông tin game" FontWeight="SemiBold" Margin="0,0,0,10" />
+                    <TextBlock Text="📋 Thông tin" FontWeight="SemiBold" FontSize="16" Margin="0,0,0,12" />
                     <Grid>
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="150" />
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
                         <Grid.RowDefinitions>
-                            <RowDefinition /><RowDefinition /><RowDefinition /><RowDefinition /><RowDefinition />
+                            <RowDefinition /><RowDefinition /><RowDefinition />
+                            <RowDefinition Height="10" />
+                            <RowDefinition /><RowDefinition /><RowDefinition /><RowDefinition />
                         </Grid.RowDefinitions>
-                        <TextBlock Grid.Row="0" Text="Tên game:" Opacity="0.7" Margin="0,2" />
-                        <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding GameName}" Margin="12,2" />
-                        <TextBlock Grid.Row="1" Text="Phiên bản game:" Opacity="0.7" Margin="0,2" />
-                        <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding DetectedVersion}" Margin="12,2" />
-                        <TextBlock Grid.Row="2" Text="Trạng thái Việt hóa:" Opacity="0.7" Margin="0,2" />
-                        <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding TranslationStatus}" Margin="12,2" />
-                        <TextBlock Grid.Row="3" Text="Phiên bản Việt hóa:" Opacity="0.7" Margin="0,2" />
-                        <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding TranslationVersion}" Margin="12,2" />
-                        <TextBlock Grid.Row="4" Text="Đường dẫn game:" Opacity="0.7" Margin="0,2" />
-                        <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding PathStatus}" Margin="12,2" />
+
+                        <TextBlock Grid.Row="0" Text="Tên game" Opacity="0.7" Margin="0,3" />
+                        <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding GameName}" Margin="12,3" FontWeight="SemiBold" />
+                        <TextBlock Grid.Row="1" Text="Phiên bản game" Opacity="0.7" Margin="0,3" />
+                        <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding DetectedVersion}" Margin="12,3" />
+                        <TextBlock Grid.Row="2" Text="Đường dẫn" Opacity="0.7" Margin="0,3" />
+                        <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding PathStatus}" Margin="12,3" TextWrapping="Wrap" />
+
+                        <Separator Grid.Row="3" Grid.ColumnSpan="2" VerticalAlignment="Center" />
+
+                        <TextBlock Grid.Row="4" Text="Trạng thái Việt hóa" Opacity="0.7" Margin="0,3" />
+                        <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding TranslationStatus}" Margin="12,3" FontWeight="SemiBold" />
+                        <TextBlock Grid.Row="5" Text="Phiên bản Việt hóa" Opacity="0.7" Margin="0,3" />
+                        <TextBlock Grid.Row="5" Grid.Column="1" Text="{Binding TranslationVersion}" Margin="12,3" />
+                        <TextBlock Grid.Row="6" Text="Kiểu tên nhân vật" Opacity="0.7" Margin="0,3" />
+                        <TextBlock Grid.Row="6" Grid.Column="1" Text="{Binding CurrentVariant}" Margin="12,3" />
+                        <TextBlock Grid.Row="7" Text="Font đang dùng" Opacity="0.7" Margin="0,3" />
+                        <TextBlock Grid.Row="7" Grid.Column="1" Text="{Binding CurrentFont}" Margin="12,3" />
                     </Grid>
                 </StackPanel>
             </ui:Card>
 
             <ui:Card Padding="18" Margin="0,0,0,14">
                 <StackPanel>
-                    <TextBlock Text="Thư mục game" FontWeight="SemiBold" Margin="0,0,0,10" />
+                    <TextBlock Text="🎮 Thư mục game" FontWeight="SemiBold" FontSize="16" Margin="0,0,0,10" />
                     <TextBox Text="{Binding GamePath}" IsReadOnly="True" Margin="0,0,0,10" />
                     <WrapPanel>
+                        <ui:Button Content="🔍 Tự tìm game" Appearance="Primary" Command="{Binding AutoDetectCommand}" Margin="0,0,8,8" />
                         <Button Content="📁 Chọn thư mục" Command="{Binding ChooseFolderCommand}" Margin="0,0,8,8" />
-                        <Button Content="🔍 Tự tìm game" Command="{Binding AutoDetectCommand}" Margin="0,0,8,8" />
                         <Button Content="📂 Mở thư mục" Command="{Binding OpenFolderCommand}" Margin="0,0,8,8" />
                         <Button Content="✔ Kiểm tra file" Command="{Binding CheckFilesCommand}" Margin="0,0,8,8" />
                     </WrapPanel>
                 </StackPanel>
             </ui:Card>
 
-            <WrapPanel Margin="0,0,0,10">
-                <ui:Button Content="⬇ Cài Việt hóa" Appearance="Primary"
-                        Command="{Binding InstallCommand}" IsEnabled="{Binding PathOk}"
-                        MinWidth="150" Margin="0,0,10,10" />
-                <Button Content="🗑 Gỡ Việt hóa" Command="{Binding UninstallCommand}"
-                        MinWidth="150" Margin="0,0,10,10" />
-            </WrapPanel>
+            <ui:InfoBar IsOpen="True" Severity="Informational" Margin="0,0,0,10"
+                        Title="Cài Việt hóa"
+                        Message="Vào tab '🌐 Cài Việt hóa' bên trái để chọn kiểu tên (Hán Việt / Tiếng Anh) và cài. Nhớ TẮT GAME trước." />
 
-            <ProgressBar IsIndeterminate="True" Height="4"
-                         Visibility="{Binding Busy, Converter={StaticResource BoolToVis}}" Margin="0,4" />
             <TextBlock Text="{Binding Message}" TextWrapping="Wrap" Opacity="0.85" Margin="0,6,0,0" />
         </StackPanel>
     </ScrollViewer>

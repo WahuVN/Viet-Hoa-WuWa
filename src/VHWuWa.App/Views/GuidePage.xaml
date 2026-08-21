@@ -20,11 +20,52 @@
                         Command="{Binding OpenFolderCommand}" Margin="0,8,0,0" HorizontalAlignment="Stretch" />
                 <ListBox ItemsSource="{Binding Guides}" SelectedItem="{Binding Selected}" />
             </DockPanel>
-            <ui:Card Grid.Column="1" Padding="14">
+            <ui:Card Grid.Column="1" Padding="20">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
-                    <TextBox Text="{Binding Content, Mode=OneWay}" IsReadOnly="True"
-                             TextWrapping="Wrap" BorderThickness="0" Background="Transparent"
-                             FontFamily="Consolas" />
+                    <ItemsControl ItemsSource="{Binding Blocks}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Text}" TextWrapping="Wrap"
+                                           Foreground="{DynamicResource TextFillColorPrimaryBrush}">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="FontSize" Value="14" />
+                                            <Setter Property="Margin" Value="0,2,0,2" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Kind}" Value="h1">
+                                                    <Setter Property="FontSize" Value="22" />
+                                                    <Setter Property="FontWeight" Value="Bold" />
+                                                    <Setter Property="Margin" Value="0,6,0,8" />
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding Kind}" Value="h2">
+                                                    <Setter Property="FontSize" Value="18" />
+                                                    <Setter Property="FontWeight" Value="Bold" />
+                                                    <Setter Property="Margin" Value="0,12,0,4" />
+                                                    <Setter Property="Foreground" Value="{DynamicResource AccentTextFillColorPrimaryBrush}" />
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding Kind}" Value="h3">
+                                                    <Setter Property="FontSize" Value="15" />
+                                                    <Setter Property="FontWeight" Value="SemiBold" />
+                                                    <Setter Property="Margin" Value="0,8,0,2" />
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding Kind}" Value="li">
+                                                    <Setter Property="Margin" Value="14,2,0,2" />
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding Kind}" Value="quote">
+                                                    <Setter Property="FontStyle" Value="Italic" />
+                                                    <Setter Property="Opacity" Value="0.85" />
+                                                    <Setter Property="Margin" Value="10,4,0,4" />
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding Kind}" Value="space">
+                                                    <Setter Property="MinHeight" Value="6" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
                 </ScrollViewer>
             </ui:Card>
         </Grid>

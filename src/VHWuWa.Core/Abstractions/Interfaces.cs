@@ -46,6 +46,23 @@ public interface IBackupService
     string BackupsDirectory { get; }
 }
 
+/// <summary>Cài Việt hóa TRỰC TIẾP từ nội dung dựng sẵn (content\): chọn pak tên Hán Việt / EN,
+/// kèm font + loader — sao chép vào Win64\wuwaVietHoa\ (giống cách tool dịch Wahu cài), có backup version.dll.</summary>
+public interface IViethoaInstaller
+{
+    /// <summary>Kiểm tra nội dung Việt hóa dựng sẵn đi kèm app.</summary>
+    ViethoaContent InspectContent();
+    /// <summary>Trạng thái đã cài trong thư mục game.</summary>
+    ViethoaStatus GetStatus(string gamePath);
+    /// <summary>Dò PAK/mod/loader khác có thể xung đột với bản Việt hóa tích hợp.</summary>
+    IReadOnlyList<string> FindConflicts(string gamePath);
+    /// <summary>Cài bản Việt hóa theo biến thể tên nhân vật.</summary>
+    Task<Result> InstallAsync(string gamePath, NameVariant variant, bool withFont,
+        IProgress<InstallProgress>? progress = null, CancellationToken ct = default);
+    /// <summary>Gỡ Việt hóa và khôi phục file gốc.</summary>
+    Task<Result> UninstallAsync(string gamePath, CancellationToken ct = default);
+}
+
 /// <summary>Cài / gỡ gói .vhwpack (Việt hóa hoặc mod) — có kiểm tra, backup, rollback.</summary>
 public interface IPackageInstallerService
 {
@@ -96,6 +113,10 @@ public interface IGraphicsService
     Result Apply(string gamePath, Dictionary<string, string> values);
     Result ApplyPreset(string gamePath, string presetName);
     string? ConfigFilePath(string gamePath);
+    /// <summary>File cấu hình có đang ở chế độ chỉ-đọc (khóa chống game ghi đè) không.</summary>
+    bool IsReadOnly(string gamePath);
+    /// <summary>Đặt/bỏ chế độ chỉ-đọc cho file cấu hình.</summary>
+    Result SetReadOnly(string gamePath, bool readOnly);
 }
 
 /// <summary>Kiểm tra &amp; tải cập nhật ứng dụng từ GitHub Releases.</summary>
