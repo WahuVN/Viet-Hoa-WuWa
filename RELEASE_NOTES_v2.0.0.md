@@ -69,9 +69,11 @@ Nếu gặp:
 - Lỗi cài đặt;
 - Lỗi font;
 
-Có thể báo trực tiếp trên mục Issues của GitHub hoặc vào Discord:  
+Có thể báo trực tiếp trên mục **Issues** của GitHub hoặc vào Discord:  
 - 🎮 **Discord VHWuWa (Bản PC):** [https://discord.gg/c9ws4q9U7](https://discord.gg/c9ws4q9U7)
-- 📱 **Discord Dangdev (Bản Việt hóa Android):** [https://discord.gg/3t5NSyJEz](https://discord.gg/3t5NSyJEz)
+
+> 📱 **Bản Việt hóa cho Android:** Nếu bạn muốn tìm và cài đặt bản Việt hóa Wuthering Waves dành riêng cho thiết bị **Android**, vui lòng tham gia server Discord của **Dangdev**:  
+> 👉 [https://discord.gg/3t5NSyJEz](https://discord.gg/3t5NSyJEz)
 
 ---
 

@@ -83,13 +83,15 @@ Hướng dẫn chi tiết: [HUONG_DAN_TAI_DUNG_GOI.md](HUONG_DAN_TAI_DUNG_GOI.md
 
 ## 💬 Hỗ trợ & đóng góp
 
-Gặp lỗi dịch, lỗi font hoặc lỗi cài đặt:
+Nếu gặp lỗi dịch, lỗi font hoặc sự cố cài đặt:
 
 - 🎮 **Discord VHWuWa (Bản PC):** [https://discord.gg/c9ws4q9U7](https://discord.gg/c9ws4q9U7)
-- 📱 **Discord Dangdev (Bản Việt hóa Android):** [https://discord.gg/3t5NSyJEz](https://discord.gg/3t5NSyJEz)
-- 🐛 **GitHub Issues:** [https://github.com/WahuVN/wuwa-vietnamese-launcher/issues](https://github.com/WahuVN/wuwa-vietnamese-launcher/issues)
+- 🐛 **Báo lỗi:** [GitHub Issues](https://github.com/WahuVN/wuwa-vietnamese-launcher/issues)
 
-Đóng góp mã nguồn và bản dịch đều được chào đón.
+> 📱 **Bản Việt hóa cho Android:** Nếu bạn muốn tìm và cài đặt bản Việt hóa Wuthering Waves dành riêng cho thiết bị **Android**, vui lòng tham gia server Discord của **Dangdev**:  
+> 👉 [https://discord.gg/3t5NSyJEz](https://discord.gg/3t5NSyJEz)
+
+Đóng góp mã nguồn và dữ liệu bản dịch đều luôn được chào đón.
 
 ---
 
