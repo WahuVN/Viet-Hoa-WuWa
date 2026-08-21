@@ -1,8 +1,8 @@
 {
   "version": "2.0.0",
-  "downloadUrl": "https://github.com/WahuVN/wuwa-vietnamese-launcher/releases/download/v2.0.0/VHWuWa_BanCai.zip",
-  "sha256": "810d9687b7c53ea0a352794236494adb05d254639c81c40ffc8af6d045ade6c5",
-  "releaseNotes": "Bản 2.0.0: cốt truyện 3.6 đầy đủ 1.827 câu VI/HV; kỹ năng 3.4/3.5/3.6; kiểm tra xung đột, file cài và hướng dẫn đường dẫn game rõ ràng.",
+  "downloadUrl": "https://github.com/WahuVN/wuwa-vietnamese-launcher/releases/download/v2.0.0/01_CAI_VIET_HOA_WUWA.zip",
+  "sha256": "948a3463dbfa76a8520761e8964eab6d64f8462638a08493b1111ad5ff4f8335",
+  "releaseNotes": "Bản 2.0.0: gói tải được đặt lại tên dễ chọn; font Việt mặc định đã kèm sẵn. Cốt truyện chính 3.6 đủ 1.827 câu VI/HV; kỹ năng 3.4/3.5/3.6; có kiểm tra xung đột và file cài.",
   "signature": "",
   "minimumVersion": "1.0.0",
   "mandatory": false
