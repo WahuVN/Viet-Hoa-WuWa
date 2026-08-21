@@ -4,7 +4,12 @@ VHWuWa là bộ cài và công cụ quản lý bản Việt hóa Wuthering Waves
 
 Hiện hỗ trợ **Wuthering Waves 3.6**, hai lựa chọn tên nhân vật **Tên Anh / Hán Việt**, thay đổi font tiếng Việt và một số công cụ hỗ trợ cài đặt, gỡ bỏ và chỉnh sửa bản dịch.
 
-[📥 Tải bản mới nhất](https://github.com/WahuVN/Viet-Hoa-WuWa/releases/latest) · [💬 Discord Windows](https://discord.gg/c9ws4q9U7) · [📱 Discord Android](https://discord.gg/3t5NSyJEz) · [🐛 Báo lỗi](https://github.com/WahuVN/Viet-Hoa-WuWa/issues)
+[![Discord VHWuWa](https://img.shields.io/badge/Discord-Tham_Gia_Server_VHWuWa-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/c9ws4q9U7)
+[![Tải Bản Mới Nhất](https://img.shields.io/badge/Releases-Tải_Bản_Mới_Nhất-2ea44f?style=for-the-badge&logo=github&logoColor=white)](https://github.com/WahuVN/Viet-Hoa-WuWa/releases/latest)
+
+> ### 💬 Tham Gia Server Discord VHWuWa
+> 👉 **Server Discord VHWuWa (Windows):** **[https://discord.gg/c9ws4q9U7](https://discord.gg/c9ws4q9U7)** *(Giao lưu, nhận thông báo update sớm nhất và hỗ trợ kỹ thuật)*  
+> 📱 **Discord Android (Dangdev):** [https://discord.gg/3t5NSyJEz](https://discord.gg/3t5NSyJEz)
 
 ---
 
@@ -87,15 +92,15 @@ Hướng dẫn chi tiết: [HUONG_DAN_TAI_DUNG_GOI.md](HUONG_DAN_TAI_DUNG_GOI.md
 
 ---
 
-## 💬 Hỗ trợ & đóng góp
+## 💬 Hỗ trợ & Cộng đồng (Discord)
 
-Gặp lỗi dịch, lỗi font hoặc lỗi cài đặt:
+Gặp lỗi dịch, lỗi font hoặc cần hướng dẫn cài đặt trực tiếp, mời bạn tham gia:
 
-- 🎮 **Discord VHWuWa — Windows:** [https://discord.gg/c9ws4q9U7](https://discord.gg/c9ws4q9U7)
-- 🐛 **Báo lỗi:** [GitHub Issues](https://github.com/WahuVN/Viet-Hoa-WuWa/issues)
-
-> 📱 **Việt hóa Android:** Đây là dự án riêng do Dangdev phụ trách.  
-> 👉 **Discord:** [https://discord.gg/3t5NSyJEz](https://discord.gg/3t5NSyJEz)
+> 🎮 **Server Discord VHWuWa (Windows):** **[https://discord.gg/c9ws4q9U7](https://discord.gg/c9ws4q9U7)**  
+> *(Kênh chính thức trao đổi, giải đáp và hỗ trợ kỹ thuật trực tiếp)*
+>
+> 📱 **Discord Android (Dangdev):** [https://discord.gg/3t5NSyJEz](https://discord.gg/3t5NSyJEz)  
+> 🐛 **Báo lỗi trên GitHub:** [GitHub Issues](https://github.com/WahuVN/Viet-Hoa-WuWa/issues)
 
 Đóng góp mã nguồn và bản dịch đều được chào đón.
 

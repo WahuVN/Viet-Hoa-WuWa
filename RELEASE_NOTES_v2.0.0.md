@@ -1,4 +1,9 @@
-﻿Bản cập nhật **VHWuWa v2.0.0** dành cho **Wuthering Waves 3.6**.
+Bản cập nhật **VHWuWa v2.0.0** dành cho **Wuthering Waves 3.6**.
+
+[![Discord Server](https://img.shields.io/badge/Discord-Tham_Gia_Server_VHWuWa-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/c9ws4q9U7)
+
+> 💬 **Server Discord VHWuWa (Windows):** **[https://discord.gg/c9ws4q9U7](https://discord.gg/c9ws4q9U7)** — Nhận thông báo cập nhật, thảo luận và hỗ trợ kỹ thuật nhanh nhất!  
+> 📱 **Discord Android (Dangdev):** [https://discord.gg/3t5NSyJEz](https://discord.gg/3t5NSyJEz)
 
 Bản này cập nhật dữ liệu Việt hóa mới, bổ sung nội dung 3.6, cải thiện cách dịch và xưng hô, đồng thời cập nhật bộ cài và tool dành cho cộng đồng.
 
@@ -65,21 +70,15 @@ Tool hỗ trợ xem và chỉnh sửa nội dung CN / EN / VI / HV, tìm câu th
 
 ---
 
-## 💬 Báo lỗi / Góp ý / Tham gia dịch
+## 💬 Tham Gia Server Discord & Hỗ Trợ
 
-Nếu gặp:
-- Câu dịch chưa tự nhiên;
-- Sai xưng hô;
-- Sai tên hoặc thuật ngữ;
-- Nội dung còn sót chưa dịch;
-- Lỗi cài đặt;
-- Lỗi font;
+Gặp lỗi dịch, sai xưng hô, lỗi font hoặc cần hỗ trợ cài đặt, mời bạn tham gia:
 
-Có thể báo trực tiếp trên mục **[Issues](https://github.com/WahuVN/Viet-Hoa-WuWa/issues)** của GitHub hoặc vào Discord:  
-- 🎮 **Discord VHWuWa — Windows:** [https://discord.gg/c9ws4q9U7](https://discord.gg/c9ws4q9U7)
-
-> 📱 **Việt hóa Android:** Đây là dự án riêng do Dangdev phụ trách.  
-> 👉 **Discord:** [https://discord.gg/3t5NSyJEz](https://discord.gg/3t5NSyJEz)
+> 🎮 **Server Discord VHWuWa (Windows):** **[https://discord.gg/c9ws4q9U7](https://discord.gg/c9ws4q9U7)**  
+> *(Kênh chính thức trao đổi, báo lỗi, góp ý và hỗ trợ kỹ thuật trực tiếp)*
+>
+> 📱 **Discord Android (Dangdev):** [https://discord.gg/3t5NSyJEz](https://discord.gg/3t5NSyJEz)  
+> 🐛 **Báo lỗi trên GitHub:** [GitHub Issues](https://github.com/WahuVN/Viet-Hoa-WuWa/issues)
 
 ---
 
