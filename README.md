@@ -1,126 +1,56 @@
-# 🎮 VHWuWa — Việt Hóa Wuthering Waves
+﻿# 🎮 VHWuWa — Việt Hóa Wuthering Waves
 
-VHWuWa là bộ cài và công cụ quản lý bản Việt hóa Wuthering Waves trên Windows.
-
-Hiện hỗ trợ **Wuthering Waves 3.6**, hai lựa chọn tên nhân vật **Tên Anh / Hán Việt**, thay đổi font tiếng Việt và một số công cụ hỗ trợ cài đặt, gỡ bỏ và chỉnh sửa bản dịch.
-
-[![Discord VHWuWa](https://img.shields.io/badge/Discord-Tham_Gia_Server_VHWuWa-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/c9ws4q9U7)
-[![Tải Bản Mới Nhất](https://img.shields.io/badge/Releases-Tải_Bản_Mới_Nhất-2ea44f?style=for-the-badge&logo=github&logoColor=white)](https://github.com/WahuVN/Viet-Hoa-WuWa/releases/latest)
-
-> ### 💬 Tham Gia Server Discord VHWuWa
-> 👉 **Server Discord VHWuWa (Windows):** **[https://discord.gg/c9ws4q9U7](https://discord.gg/c9ws4q9U7)** *(Giao lưu, nhận thông báo update sớm nhất và hỗ trợ kỹ thuật)*  
-> 📱 **Discord Android (DangDev):** [https://discord.gg/3t5NSyJEz](https://discord.gg/3t5NSyJEz)
+Bộ cài đặt và công cụ quản lý bản dịch tiếng Việt cho **Wuthering Waves (PC - Windows)**.
 
 ---
 
-## 📥 Tải xuống
+## 📥 Tải xuống Bản Mới Nhất
 
-### 🎮 `VHWuWa-v2.0.0-Windows.zip`
-> Dành cho người chơi muốn cài bản Việt hóa.
+| Tệp tải về | Mục đích |
+| :--- | :--- |
+| 🎮 [**VHWuWa-v2.0.0-Windows.zip**](https://github.com/WahuVN/Viet-Hoa-WuWa/releases/download/v2.0.0/VHWuWa-v2.0.0-Windows.zip) | Dành cho người chơi muốn cài bản Việt hóa trên Windows |
+| 👥 [**WAHU-Community-v2.0.0.zip**](https://github.com/WahuVN/Viet-Hoa-WuWa/releases/download/v2.0.0/WAHU-Community-v2.0.0.zip) | Dành cho người muốn kiểm tra hoặc đóng góp bản dịch |
 
-Giải nén rồi chạy `Chay VHWuWa.bat` hoặc `app\VHWuWa.exe`.
-
-### 👥 `WAHU-Community-v2.0.0.zip`
-> Dành cho người muốn sửa, kiểm tra hoặc đóng góp bản dịch.
-
-Tool hỗ trợ xem và chỉnh sửa nội dung CN / EN / VI / HV, tìm câu thoại, NPC, kỹ năng, UI và đóng gói dữ liệu để thử trong game.
-
-> 📌 *Nếu chỉ muốn chơi bản Việt hóa, bạn không cần tải `Source code` do GitHub tự tạo.*
+> 📌 *Tải bản mới nhất tại: **[GitHub Releases](https://github.com/WahuVN/Viet-Hoa-WuWa/releases/latest)***
 
 ---
 
-## 🎮 Cài đặt
+## ⚡ Hướng dẫn cài đặt nhanh
 
-1. Tải **`VHWuWa-v2.0.0-Windows.zip`**.
-2. Giải nén ra thư mục riêng.
-3. Chạy **`Chay VHWuWa.bat`**.
-4. Bấm **Tự tìm game**.
-5. Chọn **Tên Anh** hoặc **Hán Việt**.
-6. Bấm **Cài Việt hóa**.
-7. Trong game, đặt ngôn ngữ hiển thị là **English** (và chạy bằng **DirectX 11**).
-
-*Nếu tự tìm game không hoạt động, hãy chọn thư mục game có chứa thư mục con `Client` (ví dụ: `D:\Game\Wuthering Waves Game`).*
+1. Tải file **`VHWuWa-v2.0.0-Windows.zip`** và giải nén ra một thư mục riêng.
+2. Mở file **`Chay VHWuWa.bat`** (hoặc `app\VHWuWa.exe`).
+3. Chọn **Tự tìm game** (hoặc chọn thư mục game có chứa thư mục con `Client`).
+4. Chọn kiểu tên nhân vật (**Hán Việt** hoặc **Tên Tiếng Anh**).
+5. Bấm **Cài Việt hóa**.
+6. Vào game: Cài đặt ngôn ngữ hiển thị **Text Language = English** (Khuyến nghị chạy game bằng **DirectX 11**).
 
 ---
 
-## 📖 Bản Việt hóa
+## 📸 Hình ảnh
 
-Bản hiện tại hỗ trợ nội dung Wuthering Waves 3.6, bao gồm:
-
-- Cốt truyện chính 3.6 (1.827/1.827 câu).
-- Thoại NPC ngoài thế giới.
-- Kỹ năng, UI, vật phẩm và thuật ngữ.
-- Hai biến thể Tên Anh (*Jinhsi, Changli, Yangyang...*) / Hán Việt (*Kim Tịch, Trường Ly, Ương Ương...*).
-- Có 70+ font hỗ trợ tiếng Việt.
-
-Chi tiết thay đổi của từng phiên bản xem tại [Releases](https://github.com/WahuVN/Viet-Hoa-WuWa/releases) hoặc [CHANGELOG.md](CHANGELOG.md).
-
-## 📸 Hình ảnh / Screenshots
-
-### 🎮 Trải nghiệm Việt hóa trong game
-![Việt Hóa Wuthering Waves In-Game](docs/images/vh_ingame.png)
-
-### 👥 Công cụ dịch WAHU Community
-![Công cụ dịch WAHU Community](docs/images/app_dich.png)
+| 🎮 Việt hóa trong game (Wuthering Waves 3.6) | 👥 WAHU Community Tool |
+| :---: | :---: |
+| ![Việt hóa trong game](https://raw.githubusercontent.com/WahuVN/Viet-Hoa-WuWa/main/docs/images/vh_ingame.png) | ![WAHU Community Tool](https://raw.githubusercontent.com/WahuVN/Viet-Hoa-WuWa/main/docs/images/app_dich.png) |
 
 ---
 
-## 🔤 Font
+## 💬 Hỗ trợ & Cộng đồng
 
-Có thể đổi font trực tiếp trong VHWuWa, xem trước trước khi cài hoặc sử dụng font ngoài `.ttf`, `.otf`, `.ttc`.
-
----
-
-## 👥 WAHU Community
-
-Tool dành cho người muốn tham gia chỉnh sửa bản dịch:
-
-- Đối chiếu song song CN / EN / VI / HV.
-- Xem người nói và ngữ cảnh hội thoại.
-- Sửa cốt truyện, NPC, UI, kỹ năng và thuật ngữ.
-- Kiểm tra dữ liệu và tạo bản thử nghiệm.
-
-Hướng dẫn chi tiết: [HUONG_DAN_TAI_DUNG_GOI.md](HUONG_DAN_TAI_DUNG_GOI.md).
+* 🎮 **Discord VHWuWa (Windows):** [https://discord.gg/c9ws4q9U7](https://discord.gg/c9ws4q9U7) — Kênh chính thức nhận thông báo cập nhật, thảo luận và hỗ trợ kỹ thuật trên PC.
+* 📱 **Android:** Bạn đang tìm bản Android? Tham gia server [Discord Android (DangDev)](https://discord.gg/3t5NSyJEz) để được hướng dẫn và tải bản dành riêng cho Android.
+* ⚠️ **GitHub Issues:** [Báo lỗi trên GitHub](https://github.com/WahuVN/Viet-Hoa-WuWa/issues)
 
 ---
 
 ## ⚠️ Lưu ý
 
-- **VHWuWa là dự án cộng đồng**, không phải sản phẩm chính thức của Kuro Games và không được Kuro Games bảo trợ hoặc ủy quyền.
-- Bản Việt hóa có thay đổi một số tệp của game. Dự án **không thể bảo đảm hoàn toàn về rủi ro tài khoản hoặc anti-cheat** khi sử dụng.
-- Hãy tự cân nhắc trước khi cài.
-
----
-
-## 💬 Hỗ trợ & Cộng đồng (Discord)
-
-Gặp lỗi dịch, lỗi font hoặc cần hướng dẫn cài đặt trực tiếp, mời bạn tham gia:
-
-> 🎮 **Server Discord VHWuWa (Windows):** **[https://discord.gg/c9ws4q9U7](https://discord.gg/c9ws4q9U7)**  
-> *(Kênh chính thức trao đổi, giải đáp và hỗ trợ kỹ thuật trực tiếp)*
->
-> 📱 **Discord Android (DangDev):** [https://discord.gg/3t5NSyJEz](https://discord.gg/3t5NSyJEz)  
-> ⚠️ **Báo lỗi trên GitHub:** [GitHub Issues](https://github.com/WahuVN/Viet-Hoa-WuWa/issues)
-
-Đóng góp mã nguồn và bản dịch đều được chào đón.
-
----
-
-## 🔧 Build từ mã nguồn
-
-Yêu cầu: Windows 10/11 x64 và .NET 8 SDK.
-
-```bash
-dotnet restore VHWuWa.sln
-dotnet test VHWuWa.sln -c Release
-dotnet build VHWuWa.sln -c Release
-```
+> [!WARNING]
+> * Hãy **tắt hoàn toàn game và launcher** trước khi cài hoặc gỡ Việt hóa.
+> * **VHWuWa là dự án cộng đồng**, không phải sản phẩm chính thức của Kuro Games và không được Kuro Games bảo trợ hoặc ủy quyền.
+> * Bản Việt hóa có thay đổi một số tệp của game nên không thể đảm bảo an toàn tuyệt đối đối với tài khoản hoặc hệ thống anti-cheat. Hãy tự cân nhắc trước khi sử dụng.
 
 ---
 
 ## ⚖️ Giấy phép
 
 Mã nguồn được phân phối theo giấy phép [MIT License](LICENSE).
-
-
-
