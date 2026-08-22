@@ -39,7 +39,7 @@ Bản này cập nhật dữ liệu Việt hóa mới, bổ sung nội dung 3.6,
 ### 🎮 `VHWuWa-v2.0.0-Windows.zip`
 > Dành cho người chơi muốn cài bản Việt hóa.
 
-Giải nén rồi chạy `00_BAT_DAU_CAI.bat` hoặc `app\VHWuWa.exe`.
+Giải nén rồi chạy `Chay VHWuWa.bat` hoặc `app\VHWuWa.exe`.
 
 ### 👥 `WAHU-Community-v2.0.0.zip`
 > Dành cho người muốn sửa, kiểm tra hoặc đóng góp bản dịch.
@@ -54,7 +54,7 @@ Tool hỗ trợ xem và chỉnh sửa nội dung CN / EN / VI / HV, tìm câu th
 
 1. Tải **`VHWuWa-v2.0.0-Windows.zip`**.
 2. Giải nén toàn bộ.
-3. Chạy **`00_BAT_DAU_CAI.bat`**.
+3. Chạy **`Chay VHWuWa.bat`**.
 4. Bấm **Tự tìm game** (hoặc chọn đúng thư mục game có chứa `Client`).
 5. Chọn bản **Tên Anh** hoặc **Hán Việt**.
 6. Bấm **Cài Việt hóa**.
