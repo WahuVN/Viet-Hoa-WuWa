@@ -116,9 +116,13 @@ public sealed class ViethoaInstaller : IViethoaInstaller
         try
         {
             var mods = ModsOf(gamePath);
-            st.Installed = File.Exists(Path.Combine(mods, PakName));
+            var win64 = Win64Of(gamePath);
+            st.Installed = File.Exists(Path.Combine(mods, PakName))
+                        || File.Exists(Path.Combine(win64, "WuWaVH.dll"))
+                        || File.Exists(Path.Combine(win64, "verorg.dll"))
+                        || (File.Exists(Path.Combine(win64, "version.dll")) && File.Exists(Path.Combine(win64, "version_goc.dll")));
             var marker = Path.Combine(mods, MarkerName);
-            if (st.Installed && File.Exists(marker))
+            if (File.Exists(marker))
             {
                 using var doc = JsonDocument.Parse(File.ReadAllText(marker));
                 if (doc.RootElement.TryGetProperty("variant", out var v)) st.Variant = v.GetString() ?? "";
@@ -259,20 +263,21 @@ public sealed class ViethoaInstaller : IViethoaInstaller
             }
 
             var win64 = Win64Of(gamePath);
+            var isWahuVersionDll = File.Exists(Path.Combine(win64, "WuWaVH.dll"))
+                                || File.Exists(Path.Combine(win64, "verorg.dll"))
+                                || File.Exists(Path.Combine(win64, "version_goc.dll"))
+                                || (File.Exists(Path.Combine(win64, "version.dll")) && File.Exists(Path.Combine(LoaderDir, "version.dll")) && SameFile(Path.Combine(win64, "version.dll"), Path.Combine(LoaderDir, "version.dll")));
+
             foreach (var name in ProxyLoaders)
             {
+                if (name.Equals("version.dll", StringComparison.OrdinalIgnoreCase) && isWahuVersionDll)
+                    continue; // version.dll là loader của Wahu, sẽ được cài đè / nâng cấp sạch sẽ
+
                 var installed = Path.Combine(win64, name);
                 if (!File.Exists(installed)) continue;
                 var ownSource = Path.Combine(LoaderDir, name);
                 if (markerExists && SameFile(installed, ownSource)) continue;
                 conflicts.Add("Loader/proxy khác: Win64\\" + name);
-            }
-            foreach (var name in new[] { "verorg.dll", "WuWaVH.dll" })
-            {
-                var installed = Path.Combine(win64, name);
-                if (!File.Exists(installed)) continue;
-                if (markerExists && SameFile(installed, Path.Combine(LoaderDir, name))) continue;
-                conflicts.Add("Loader lạ: Win64\\" + name);
             }
             foreach (var dirName in new[] { "Mods", "ue4ss", "RE-UE4SS" })
                 if (Directory.Exists(Path.Combine(win64, dirName)))
@@ -436,12 +441,11 @@ public sealed class ViethoaInstaller : IViethoaInstaller
                     if (!Directory.EnumerateFileSystemEntries(mods).Any()) Directory.Delete(mods);
                 }
 
-                // Gỡ loader
+                // Gỡ loader của WAHU (WuWaVH.dll, verorg.dll)
                 foreach (var dll in new[] { "WuWaVH.dll", "verorg.dll" })
                 {
                     var p = Path.Combine(win64, dll);
-                    var source = Path.Combine(LoaderDir, dll);
-                    if (SameFile(p, source)) { try { File.Delete(p); } catch { } }
+                    try { if (File.Exists(p)) File.Delete(p); } catch { }
                 }
                 // Khôi phục version.dll gốc nếu có backup, ngược lại xóa loader version.dll
                 var ver = Path.Combine(win64, "version.dll");
@@ -452,8 +456,7 @@ public sealed class ViethoaInstaller : IViethoaInstaller
                 }
                 else if (File.Exists(ver))
                 {
-                    if (SameFile(ver, Path.Combine(LoaderDir, "version.dll")))
-                        try { File.Delete(ver); } catch { }
+                    try { File.Delete(ver); } catch { }
                 }
             }, ct);
             _log.Info("Viethoa", "Đã gỡ Việt hóa: " + gamePath);

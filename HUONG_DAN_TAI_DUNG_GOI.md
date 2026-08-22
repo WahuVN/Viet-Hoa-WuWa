@@ -3,7 +3,7 @@
 [![Discord Server](https://img.shields.io/badge/Discord-Tham_Gia_Server_VHWuWa-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/c9ws4q9U7)
 
 > 💬 **Server Discord VHWuWa (Windows):** **[https://discord.gg/c9ws4q9U7](https://discord.gg/c9ws4q9U7)** — Nhận hỗ trợ kỹ thuật và thông báo update!  
-> 📱 **Discord Android (Dangdev):** [https://discord.gg/3t5NSyJEz](https://discord.gg/3t5NSyJEz)
+> 📱 **Discord Android (DangDev):** [https://discord.gg/3t5NSyJEz](https://discord.gg/3t5NSyJEz)
 
 Truy cập **[Trang Phát Hành Mới Nhất (GitHub Releases)](https://github.com/WahuVN/Viet-Hoa-WuWa/releases/latest)**, sau đó chọn đúng **1 trong 2 gói** tùy theo nhu cầu của bạn:
 
@@ -13,8 +13,8 @@ Truy cập **[Trang Phát Hành Mới Nhất (GitHub Releases)](https://github.c
 
 | Nhu cầu của bạn | Tệp cần tải về | Thao tác sau khi giải nén |
 | :--- | :--- | :--- |
-| 🎮 **Chỉ muốn cài và chơi game** | `VHWuWa-v2.0.0-Windows.zip` (~94.7 MB) | Mở thư mục $\rightarrow$ Chạy file `00_BAT_DAU_CAI.bat` hoặc `app\VHWuWa.exe` |
-| 👥 **Muốn dịch, duyệt hoặc đóng góp** | `WAHU-Community-v2.0.0.zip` (~490 MB) | Mở thư mục $\rightarrow$ Chạy file `00_MO_TOOL_DICH.bat` |
+| 🎮 **Chỉ muốn cài và chơi game** | `VHWuWa-v2.0.0-Windows.zip` (~94.7 MB) | Mở thư mục $\rightarrow$ Chạy file `Chay VHWuWa.bat` hoặc `app\VHWuWa.exe` |
+| 👥 **Muốn dịch, duyệt hoặc đóng góp** | `WAHU-Community-v2.0.0.zip` (~490 MB) | Mở thư mục $\rightarrow$ Chạy file `Chay WAHU Community.bat` |
 | 🛡️ **Kiểm tra mã băm bảo mật** | `SHA256SUMS.txt` | Dùng để đối chiếu mã SHA-256 nguyên bản |
 
 > ⚠️ **Lưu ý:** Người chơi thông thường **không cần tải** tool dịch, file checksum hay mục **Source code**.
@@ -31,7 +31,7 @@ Truy cập **[Trang Phát Hành Mới Nhất (GitHub Releases)](https://github.c
 ## ⚡ Hướng Dẫn Cài Đặt 4 Bước (Cho Người Chơi)
 
 1. Tải về tệp **`VHWuWa-v2.0.0-Windows.zip`** và **giải nén toàn bộ** ra một thư mục riêng (không chạy trực tiếp trong file nén).
-2. Mở thư mục vừa giải nén và chạy file **`00_BAT_DAU_CAI.bat`** (hoặc `app\VHWuWa.exe`).
+2. Mở thư mục vừa giải nén và chạy file **`Chay VHWuWa.bat`** (hoặc `app\VHWuWa.exe`).
 3. Bấm **🔍 Tự tìm game** (hoặc bấm **📁 Chọn thư mục** và trỏ đến thư mục chứa game có thư mục con `Client`).
 4. Chọn kiểu tên nhân vật (**Tên Anh** hoặc **Hán Việt**), giữ tùy chọn cài font tiếng Việt rồi bấm **✅ Cài Việt hóa**.
 5. Mở game, vào **Settings $\rightarrow$ Language $\rightarrow$ Text Language = English** và khởi chạy game ở chế độ **DirectX 11**.

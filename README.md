@@ -9,7 +9,7 @@ Hiện hỗ trợ **Wuthering Waves 3.6**, hai lựa chọn tên nhân vật **T
 
 > ### 💬 Tham Gia Server Discord VHWuWa
 > 👉 **Server Discord VHWuWa (Windows):** **[https://discord.gg/c9ws4q9U7](https://discord.gg/c9ws4q9U7)** *(Giao lưu, nhận thông báo update sớm nhất và hỗ trợ kỹ thuật)*  
-> 📱 **Discord Android (Dangdev):** [https://discord.gg/3t5NSyJEz](https://discord.gg/3t5NSyJEz)
+> 📱 **Discord Android (DangDev):** [https://discord.gg/3t5NSyJEz](https://discord.gg/3t5NSyJEz)
 
 ---
 
@@ -18,7 +18,7 @@ Hiện hỗ trợ **Wuthering Waves 3.6**, hai lựa chọn tên nhân vật **T
 ### 🎮 `VHWuWa-v2.0.0-Windows.zip`
 > Dành cho người chơi muốn cài bản Việt hóa.
 
-Giải nén rồi chạy `00_BAT_DAU_CAI.bat` hoặc `app\VHWuWa.exe`.
+Giải nén rồi chạy `Chay VHWuWa.bat` hoặc `app\VHWuWa.exe`.
 
 ### 👥 `WAHU-Community-v2.0.0.zip`
 > Dành cho người muốn sửa, kiểm tra hoặc đóng góp bản dịch.
@@ -33,7 +33,7 @@ Tool hỗ trợ xem và chỉnh sửa nội dung CN / EN / VI / HV, tìm câu th
 
 1. Tải **`VHWuWa-v2.0.0-Windows.zip`**.
 2. Giải nén ra thư mục riêng.
-3. Chạy **`00_BAT_DAU_CAI.bat`**.
+3. Chạy **`Chay VHWuWa.bat`**.
 4. Bấm **Tự tìm game**.
 5. Chọn **Tên Anh** hoặc **Hán Việt**.
 6. Bấm **Cài Việt hóa**.
@@ -99,7 +99,7 @@ Gặp lỗi dịch, lỗi font hoặc cần hướng dẫn cài đặt trực ti
 > 🎮 **Server Discord VHWuWa (Windows):** **[https://discord.gg/c9ws4q9U7](https://discord.gg/c9ws4q9U7)**  
 > *(Kênh chính thức trao đổi, giải đáp và hỗ trợ kỹ thuật trực tiếp)*
 >
-> 📱 **Discord Android (Dangdev):** [https://discord.gg/3t5NSyJEz](https://discord.gg/3t5NSyJEz)  
+> 📱 **Discord Android (DangDev):** [https://discord.gg/3t5NSyJEz](https://discord.gg/3t5NSyJEz)  
 > ⚠️ **Báo lỗi trên GitHub:** [GitHub Issues](https://github.com/WahuVN/Viet-Hoa-WuWa/issues)
 
 Đóng góp mã nguồn và bản dịch đều được chào đón.

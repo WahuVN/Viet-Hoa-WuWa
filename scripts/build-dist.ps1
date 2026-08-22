@@ -1,4 +1,4 @@
-﻿# build-dist.ps1 — Đóng gói VHWuWa thành BỘ CÀI phát cho người khác
+# build-dist.ps1 — Đóng gói VHWuWa thành BỘ CÀI phát cho người khác
 # Publish self-contained (không cần cài .NET) + gói sẵn nội dung Việt hóa (pak Hán Việt/EN + font + loader).
 #
 #   powershell -ExecutionPolicy Bypass -File scripts\build-dist.ps1
@@ -58,39 +58,38 @@ cd /d "%~dp0app"
 start "" "VHWuWa.exe"
 '@ | Set-Content -Path (Join-Path $out 'Chay VHWuWa.bat') -Encoding Ascii
 
-@'
+$docTruoc = @'
 VHWuWa — Bộ cài Việt Hóa Wuthering Waves
 ========================================
 
-BAN 2.0.0 — COT TRUYEN 3.6 + KY NANG 3.4/3.5/3.6
+BẢN 2.0.0 — CỐT TRUYỆN 3.6 + KỸ NĂNG 3.4 / 3.5 / 3.6
 
 CÁCH DÙNG
-  1. Giải nén cả thư mục "VHWuWa_BanCai" ra ổ đĩa (đừng để trong .zip).
+  1. Giải nén cả thư mục "VHWuWa_BanCai" ra ổ đĩa (đừng mở trực tiếp trong file .zip).
   2. Bấm đúp "Chay VHWuWa.bat" (hoặc app\VHWuWa.exe).
-  3. Trang chủ  -> Tự dò / Chọn thư mục game (hỗ trợ bản Launcher & Steam).
-  4. Cài Việt hóa -> chọn kiểu tên nhân vật (Hán Việt / Tiếng Anh) -> Cài.
-  5. Vào game: Text Language = English, chơi bằng DirectX 11.
+  3. Trang chủ -> Chọn thư mục game (tự dò hoặc chọn thủ công).
+  4. Cài Việt hóa -> Chọn kiểu tên nhân vật (Hán Việt hoặc Tiếng Anh) -> Bấm Cài đặt.
+  5. Vào game: Cài đặt ngôn ngữ hiển thị (Text Language) = English.
 
 MẪU ĐƯỜNG DẪN GAME ĐÚNG
-  Kuro:  E:\Games\Wuthering Waves\Wuthering Waves Game
-  Steam: D:\SteamLibrary\steamapps\common\Wuthering Waves
+  Chọn đúng:   D:\Game\Wuthering Waves Game  (hoặc E:\Games\Wuthering Waves Game)
+  Phải có:     D:\Game\Wuthering Waves Game\Client
+  Bản Steam:   ...\steamapps\common\Wuthering Waves\Wuthering Waves Game
 
-  Thư mục được chọn phải có thư mục "Client" ngay bên trong.
-  Hãy chọn "...\Wuthering Waves Game", KHÔNG chọn Client, Saved hoặc Paks.
+LƯU Ý QUAN TRỌNG
+  - Hãy TẮT HẲN GAME và launcher trước khi cài hoặc gỡ Việt Hóa.
+  - Hai lựa chọn tên là hai bản riêng: Hán Việt hoặc tên nhân vật Tiếng Anh.
+  - Đã tích hợp sẵn Font chữ tiếng Việt hiển thị sắc nét, không lỗi ô vuông.
+  - Đầy đủ 85 DB dữ liệu: Cốt truyện 3.6 (1.827 câu), Kỹ năng (3.4/3.5/3.6), UI, Nhiệm vụ.
+  - Khi cần gỡ: Mở lại App VHWuWa -> Cài Việt hóa -> Bấm Gỡ Việt hóa (khôi phục game sạch).
+  - Không cần cài đặt thêm .NET (ứng dụng đã đóng gói sẵn môi trường chạy).
 
-LƯU Ý
-  - TẮT HẲN GAME và launcher trước khi cài/gỡ; app sẽ chặn nếu vẫn còn chạy.
-  - App tự kiểm tra PAK/mod/loader khác và không cài đè để tránh xung đột.
-  - Hai lựa chọn tên là hai PAK riêng: Hán Việt hoặc tên tiếng Anh.
-  - Gồm 85 DB dịch hữu dụng đã kiểm chứng: thoại, UI, thuộc tính, kỹ năng, vật phẩm và nhiệm vụ.
-  - Cốt truyện chính 3.6: 1.827/1.827 câu VI/HV.
-  - Kỹ năng: 3.4 = 1.766/1.766; 3.5 = 93/93; 3.6 = 97/97.
-  - Không đóng các DB placeholder/rỗng hoặc DB hệ thống không có nội dung cần dịch.
-  - Dòng UID/Mã đặc trưng được để trống hoàn toàn; font Việt mặc định được cài cùng bản dịch.
-  - Mod runtime có thể bị anti-cheat đánh dấu -> nên dùng TÀI KHOẢN PHỤ.
-  - Gỡ: mở app -> Cài Việt hóa -> Gỡ Việt hóa (khôi phục file gốc).
-  - Không cần cài .NET (đã đóng gói sẵn).
-'@ | Set-Content -Path (Join-Path $out 'DOC TRUOC.txt') -Encoding UTF8
+HỖ TRỢ & BÁO LỖI
+  ⚠️ Discord Windows: https://discord.gg/c9ws4q9U7
+  ⚠️ Discord Android: https://discord.gg/3t5NSyJEz
+  ⚠️ GitHub:          https://github.com/WahuVN/Viet-Hoa-WuWa
+'@
+[System.IO.File]::WriteAllText((Join-Path $out 'DOC TRUOC.txt'), $docTruoc, [System.Text.Encoding]::UTF8)
 
 Write-Host "== 4/4  Nen ZIP de gui ==" -ForegroundColor Green
 $sz = [math]::Round(((Get-ChildItem $out -Recurse -File | Measure-Object Length -Sum).Sum)/1MB,1)
@@ -98,9 +97,9 @@ $zip = Join-Path $distRoot 'VHWuWa_BanCai.zip'
 if (Test-Path $zip) { Remove-Item $zip -Force }
 Compress-Archive -Path $out -DestinationPath $zip -CompressionLevel Optimal
 $zsz = [math]::Round((Get-Item $zip).Length/1MB,1)
-$zipAlias = Join-Path $distRoot 'VHWuWa_BanC2ai.zip'
-Copy-Item -LiteralPath $zip -Destination $zipAlias -Force
+$releaseZip = Join-Path $distRoot 'VHWuWa-v2.0.0-Windows.zip'
+Copy-Item -LiteralPath $zip -Destination $releaseZip -Force
 Write-Host "   Bo cai (thu muc): $out  ($sz MB)"
 Write-Host "   File gui (ZIP):   $zip  ($zsz MB)"
-Write-Host "   Ten viet tat dong bo: $zipAlias"
+Write-Host "   File Release:     $releaseZip"
 Write-Host "   -> Gui file VHWuWa_BanCai.zip cho nguoi khac; giai nen ra o dia roi chay 'Chay VHWuWa.bat'."

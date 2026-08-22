@@ -3,12 +3,12 @@
   Đóng gói bản Việt hóa Wuthering Waves (loader DLL + pak + font) thành 1 file .vhwpack đã ký.
 
 .DESCRIPTION
-  Nhận thư mục "Win64" chứa sẵn theo layout CallMeDangDev/Wahu:
+  Nhận thư mục "Win64" chứa sẵn:
     <Win64Dir>\version.dll
     <Win64Dir>\verorg.dll
-    <Win64Dir>\wuwaVietHoa.dll
-    <Win64Dir>\wuwaVietHoa\*.pak        (pak dịch + pak font)
-  (Ví dụ: ...\wuwavh_tool\BanVH_CuaToi\mod\Client\Binaries\Win64)
+    <Win64Dir>\WuWaVH.dll
+    <Win64Dir>\~WuWaMods\*.pak        (pak dịch + pak font)
+  (Ví dụ: ...\Client\Binaries\Win64)
 
   Script tự sinh manifest.json với đích tương đối đúng (Client/Binaries/Win64/...),
   rồi gọi VHWuWa.PackageTool để tạo + KÝ SỐ gói.
