@@ -1,0 +1,9 @@
+﻿{
+  "version": "2.0.0",
+  "downloadUrl": "https://github.com/WahuVN/Viet-Hoa-WuWa/releases/download/v2.0.0/VHWuWa-v2.0.0-Windows.zip",
+  "sha256": "ba061eb8d75448fc9d7a4c6ffc40a0817306b9b6cdd47e86dd83e38a8f5301c5",
+  "releaseNotes": "Bản 2.0.0: Cập nhật cốt truyện chính 3.6 (1.827 câu), thoại NPC 3.6, kỹ năng 3.4-3.6, kèm hơn 70 font tiếng Việt.",
+  "signature": "",
+  "minimumVersion": "1.0.0",
+  "mandatory": false
+}

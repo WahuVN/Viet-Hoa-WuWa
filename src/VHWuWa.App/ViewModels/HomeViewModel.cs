@@ -1,0 +1,181 @@
+using System.Diagnostics;
+using System.IO;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using Microsoft.Win32;
+using VHWuWa.Core.Abstractions;
+using VHWuWa.Core.Models;
+
+namespace VHWuWa.App.ViewModels;
+
+public partial class HomeViewModel : ObservableObject
+{
+    private readonly ISettingsService _settings;
+    private readonly IGameDetectionService _detect;
+    private readonly IPackageInstallerService _installer;
+    private readonly IViethoaInstaller _viet;
+    private readonly IFontService _fonts;
+    private readonly ILogService _log;
+    private readonly MainViewModel _main;
+
+    [ObservableProperty] private string _gamePath = "";
+    [ObservableProperty] private string _gameName = "";
+    [ObservableProperty] private string _detectedVersion = "Chưa xác định";
+    [ObservableProperty] private string _translationStatus = "Chưa cài";
+    [ObservableProperty] private string _translationVersion = "-";
+    [ObservableProperty] private string _currentVariant = "-";
+    [ObservableProperty] private string _currentFont = "-";
+    [ObservableProperty] private string _pathStatus = "Chưa chọn";
+    [ObservableProperty] private bool _pathOk;
+    [ObservableProperty] private string _message = "";
+    [ObservableProperty] private bool _busy;
+
+    public MainViewModel Main => _main;
+
+    public HomeViewModel(ISettingsService settings, IGameDetectionService detect,
+        IPackageInstallerService installer, IViethoaInstaller viet, IFontService fonts, ILogService log, MainViewModel main)
+    {
+        _settings = settings; _detect = detect; _installer = installer; _viet = viet; _fonts = fonts; _log = log; _main = main;
+        GameName = string.IsNullOrWhiteSpace(detect.GameConfig.GameName) ? "Wuthering Waves" : detect.GameConfig.GameName;
+        OnActivated();
+    }
+
+    public void OnActivated()
+    {
+        GamePath = _settings.Settings.GamePath;
+        Refresh();
+    }
+
+    private void Refresh()
+    {
+        var v = _detect.Validate(GamePath);
+        PathOk = v.IsValid;
+        PathStatus = string.IsNullOrWhiteSpace(GamePath) ? "Chưa chọn"
+            : v.IsValid ? "Hợp lệ" : v.Message;
+        DetectedVersion = v.DetectedVersion ?? "Chưa xác định";
+
+        var state = _settings.LoadState();
+        var tr = state.InstalledPackages.FirstOrDefault(p => p.PackageType == PackageType.Translation);
+        var vst = (PathOk) ? _viet.GetStatus(GamePath) : null;
+        if (vst is { Installed: true })
+        {
+            TranslationStatus = "Đã cài";
+            TranslationVersion = "v2.0.0";
+            CurrentVariant = vst.VariantLabel;
+            CurrentFont = (PathOk ? _fonts.CurrentFontPak(GamePath) : null) ?? "Mặc định";
+        }
+        else
+        {
+            TranslationStatus = tr is null ? "Chưa cài" : "Đã cài";
+            TranslationVersion = tr is null ? "-" : "v2.0.0";
+            CurrentVariant = "-";
+            CurrentFont = "-";
+        }
+        _main.RefreshStatus();
+    }
+
+    [RelayCommand]
+    private void ChooseFolder()
+    {
+        var dlg = new OpenFolderDialog { Title = "Chọn thư mục game (vd: D:\\Game\\Wuthering Waves Game - chứa Client)" };
+        if (dlg.ShowDialog() == true)
+        {
+            var p = NormalizeGamePath(dlg.FolderName);
+            SetPath(p);
+        }
+    }
+
+    private static string NormalizeGamePath(string path)
+    {
+        if (string.IsNullOrWhiteSpace(path)) return path;
+        path = path.Trim().TrimEnd('\\', '/');
+        // Nếu chọn nhầm Client/Content/Paks
+        if (path.EndsWith("Client\\Content\\Paks", StringComparison.OrdinalIgnoreCase) ||
+            path.EndsWith("Client/Content/Paks", StringComparison.OrdinalIgnoreCase))
+        {
+            var p3 = Directory.GetParent(Directory.GetParent(Directory.GetParent(path)?.FullName ?? "")?.FullName ?? "");
+            if (p3 != null && Directory.Exists(Path.Combine(p3.FullName, "Client")))
+                return p3.FullName;
+        }
+        // Nếu chọn nhầm Client
+        if (path.EndsWith("\\Client", StringComparison.OrdinalIgnoreCase) ||
+            path.EndsWith("/Client", StringComparison.OrdinalIgnoreCase))
+        {
+            var p1 = Directory.GetParent(path);
+            if (p1 != null && File.Exists(Path.Combine(p1.FullName, "Client", "Binaries", "Win64", "Client-Win64-Shipping.exe")))
+                return p1.FullName;
+        }
+        return path;
+    }
+
+    [RelayCommand]
+    private void AutoDetect()
+    {
+        var found = _detect.AutoDetect();
+        if (found.Count > 0) { SetPath(found[0]); Message = "Đã tự tìm thấy game."; }
+        else Message = "Không tự tìm thấy game. Hãy chọn thủ công (ví dụ: D:\\Game\\Wuthering Waves Game).";
+    }
+
+    public void SetPath(string path)
+    {
+        GamePath = NormalizeGamePath(path);
+        _settings.Settings.GamePath = GamePath;
+        _settings.Save();
+        Refresh();
+    }
+
+    [RelayCommand]
+    private void CheckFiles()
+    {
+        var v = _detect.Validate(GamePath);
+        Message = v.IsValid ? "Tất cả file bắt buộc đều có." : v.Message;
+    }
+
+    [RelayCommand]
+    private void OpenFolder()
+    {
+        if (Directory.Exists(GamePath))
+            Process.Start(new ProcessStartInfo(GamePath) { UseShellExecute = true });
+        else Message = "Thư mục game không tồn tại.";
+    }
+
+    [RelayCommand]
+    private async Task InstallAsync()
+    {
+        if (!PathOk) { Message = "Đường dẫn game chưa hợp lệ."; return; }
+        var dlg = new OpenFileDialog { Title = "Chọn gói Việt hóa", Filter = "Gói VHWuWa (*.vhwpack)|*.vhwpack" };
+        if (dlg.ShowDialog() != true) return;
+        Busy = true; Message = "Đang cài Việt hóa...";
+        try
+        {
+            var r = await _installer.InstallAsync(GamePath, dlg.FileName);
+            Message = r.Success ? "Cài Việt hóa thành công." : "Lỗi: " + r.Error;
+        }
+        finally { Busy = false; Refresh(); }
+    }
+
+    [RelayCommand]
+    private void KillGameProcesses()
+    {
+        try
+        {
+            var procs = Process.GetProcessesByName("Client-Win64-Shipping")
+                .Concat(Process.GetProcessesByName("Wuthering Waves")).ToList();
+            if (procs.Count == 0)
+            {
+                Message = "✔ Không có tiến trình game nào đang chạy hoặc treo.";
+                return;
+            }
+            int count = 0;
+            foreach (var p in procs)
+            {
+                try { p.Kill(true); count++; } catch { }
+            }
+            Message = $"✅ Đã đóng {count} tiến trình game và giải phóng bộ nhớ RAM thành công.";
+        }
+        catch (Exception ex)
+        {
+            Message = "Lỗi khi đóng game: " + ex.Message;
+        }
+    }
+}

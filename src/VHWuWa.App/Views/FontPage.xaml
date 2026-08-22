@@ -1,0 +1,146 @@
+<UserControl x:Class="VHWuWa.App.Views.FontPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="28,22,28,24">
+            <!-- Header -->
+            <TextBlock Text="Quản lý Font chữ Tiếng Việt" FontSize="24" FontWeight="Bold" Margin="0,0,0,6" />
+            <TextBlock Text="Tùy biến kiểu chữ hiển thị trong game Wuthering Waves với hơn 70+ bộ font Việt hóa tuyển chọn."
+                       Opacity="0.7" Margin="0,0,0,16" TextWrapping="Wrap" />
+
+            <!-- Card 1: Trạng thái hiện tại -->
+            <ui:Card Padding="18" Margin="0,0,0,16">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                        <TextBlock Text="FONT ĐANG SỬ DỤNG TRONG GAME" FontSize="11" FontWeight="Bold" Opacity="0.6" Margin="0,0,0,4" />
+                        <TextBlock Text="{Binding CurrentFont}" FontWeight="Bold" FontSize="17" Foreground="#4CC2FF" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                        <ui:Button Content="🔤 Cài gói font (.vhwpack)" Appearance="Secondary"
+                                   Command="{Binding ApplyCommand}" Margin="0,0,8,0" />
+                        <Button Content="↩ Khôi phục mặc định" Command="{Binding RestoreCommand}" />
+                    </StackPanel>
+                </Grid>
+            </ui:Card>
+
+            <ProgressBar IsIndeterminate="True" Height="4"
+                         Visibility="{Binding Busy, Converter={StaticResource BoolToVis}}" Margin="0,0,0,8" />
+            <TextBlock Text="{Binding Message}" TextWrapping="Wrap" Opacity="0.85" Margin="0,0,0,12" />
+
+            <!-- Card 2: Thư viện Font tích hợp -->
+            <ui:Card Padding="18" Margin="0,0,0,16">
+                <StackPanel>
+                    <Grid Margin="0,0,0,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="📚 THƯ VIỆN FONT TIẾNG VIỆT CÓ SẴN (70+ FONT)" FontSize="14" FontWeight="Bold" />
+                            <TextBlock Text="Chọn font trong danh sách bên dưới rồi bấm 'Đổi sang font này' để áp dụng ngay vào game."
+                                       Opacity="0.7" FontSize="12" Margin="0,2,0,0" />
+                        </StackPanel>
+                        <TextBlock Grid.Column="1" Text="{Binding LibraryMessage}" Opacity="0.75" VerticalAlignment="Center" FontSize="12" />
+                    </Grid>
+
+                    <!-- Search Filter Box -->
+                    <Grid Margin="0,0,0,10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="220" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <ui:TextBox Grid.Column="0" Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                                    PlaceholderText="🔍 Tìm tên font (vd: Arial, Segoe...)"
+                                    Margin="0,0,10,0" />
+                        <ComboBox Grid.Column="1" ItemsSource="{Binding Library}"
+                                  SelectedItem="{Binding SelectedLibraryFont}"
+                                  DisplayMemberPath="Display" Margin="0,0,10,0" />
+                        <StackPanel Grid.Column="2" Orientation="Horizontal">
+                            <ui:Button Content="{Binding ApplyButtonText}" Appearance="Primary"
+                                       Command="{Binding ApplyLibraryFontCommand}" Margin="0,0,8,0" />
+                            <Button Content="{Binding DownloadButtonText}" Command="{Binding DownloadFontOnlyCommand}"
+                                    Visibility="{Binding ShowDownloadButton, Converter={StaticResource BoolToVis}}" Margin="0,0,8,0" />
+                            <Button Content="🗑 Bỏ font" Command="{Binding RemoveFontCommand}" />
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+            </ui:Card>
+
+            <!-- Card 3: Xem trước Font & Thử nghiệm -->
+            <ui:Card Padding="18" Margin="0,0,0,16">
+                <StackPanel>
+                    <Grid Margin="0,0,0,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="👁️ XEM TRƯỚC FONT &amp; KIỂM TRA DẤU TIẾNG VIỆT" FontSize="14" FontWeight="Bold" />
+                            <TextBlock Text="Xem trực quan nét chữ mẫu có dấu tiếng Việt trước khi quyết định cài vào game."
+                                       Opacity="0.7" FontSize="12" Margin="0,2,0,0" />
+                        </StackPanel>
+                        <ui:Button Grid.Column="1" Content="📂 Chọn font ngoài (.ttf/.otf/.ttc)"
+                                   Command="{Binding PreviewFontCommand}" VerticalAlignment="Center" />
+                    </Grid>
+
+                    <TextBlock Text="Chữ mẫu thử nghiệm:" Opacity="0.75" FontSize="12" Margin="0,0,0,4" />
+                    <ui:TextBox Text="{Binding SampleText, UpdateSourceTrigger=PropertyChanged}"
+                                PlaceholderText="Nhập đoạn văn bản để kiểm tra dấu tiếng Việt..." Margin="0,0,0,12" />
+
+                    <!-- Preview Rendering Box -->
+                    <Border Background="#14161D" BorderBrush="#2D3139" BorderThickness="1"
+                            CornerRadius="8" Padding="12" MinHeight="140">
+                        <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+                            <Image Source="{Binding PreviewImage}" Stretch="None"
+                                   RenderOptions.BitmapScalingMode="HighQuality"
+                                   SnapsToDevicePixels="True" HorizontalAlignment="Left" />
+                        </ScrollViewer>
+                    </Border>
+                    <TextBlock Text="{Binding PreviewMessage}" TextWrapping="Wrap"
+                               Opacity="0.75" FontSize="12" Margin="0,8,0,0" />
+                </StackPanel>
+            </ui:Card>
+
+            <!-- Card 4: Gợi ý phong cách font -->
+            <ui:Card Padding="16">
+                <StackPanel>
+                    <TextBlock Text="💡 Gợi ý chọn font phù hợp cho Wuthering Waves" FontWeight="SemiBold" FontSize="13" Margin="0,0,0,8" />
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Border Grid.Column="0" Background="#181A20" CornerRadius="6" Padding="10" Margin="0,0,6,0">
+                            <StackPanel>
+                                <TextBlock Text="🔹 Không chân (Sans-Serif)" FontWeight="Bold" FontSize="12" Foreground="#4CC2FF" />
+                                <TextBlock Text="Arial, Calibri, Segoe UI, Tahoma" FontSize="11" Opacity="0.8" Margin="0,2,0,0" />
+                                <TextBlock Text="Nét chữ rõ ràng, sắc nét, dễ đọc trên mọi độ phân giải màn hình." FontSize="11" Opacity="0.65" TextWrapping="Wrap" Margin="0,4,0,0" />
+                            </StackPanel>
+                        </Border>
+                        <Border Grid.Column="1" Background="#181A20" CornerRadius="6" Padding="10" Margin="3,0,3,0">
+                            <StackPanel>
+                                <TextBlock Text="🔸 Có chân (Serif/Cổ điển)" FontWeight="Bold" FontSize="12" Foreground="#E5A93C" />
+                                <TextBlock Text="Cambria, Constantia, Palatino Linotype" FontSize="11" Opacity="0.8" Margin="0,2,0,0" />
+                                <TextBlock Text="Phong cách cổ điển, trang nhã, hợp với cốt truyện thần thoại/kiếm hiệp." FontSize="11" Opacity="0.65" TextWrapping="Wrap" Margin="0,4,0,0" />
+                            </StackPanel>
+                        </Border>
+                        <Border Grid.Column="2" Background="#181A20" CornerRadius="6" Padding="10" Margin="6,0,0,0">
+                            <StackPanel>
+                                <TextBlock Text="▪️ Đơn cách (Monospace/Code)" FontWeight="Bold" FontSize="12" Foreground="#6CCB5F" />
+                                <TextBlock Text="Cascadia Code, Consolas, Courier New" FontSize="11" Opacity="0.8" Margin="0,2,0,0" />
+                                <TextBlock Text="Khoảng cách đều, phong cách công nghệ / khoa học viễn tưởng." FontSize="11" Opacity="0.65" TextWrapping="Wrap" Margin="0,4,0,0" />
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+                </StackPanel>
+            </ui:Card>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>
