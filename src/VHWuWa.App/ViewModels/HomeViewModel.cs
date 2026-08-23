@@ -80,45 +80,22 @@ public partial class HomeViewModel : ObservableObject
         var dlg = new OpenFolderDialog { Title = "Chọn thư mục game (vd: D:\\Game\\Wuthering Waves Game - chứa Client)" };
         if (dlg.ShowDialog() == true)
         {
-            var p = NormalizeGamePath(dlg.FolderName);
+            var p = _detect.NormalizeGamePath(dlg.FolderName) ?? dlg.FolderName;
             SetPath(p);
         }
-    }
-
-    private static string NormalizeGamePath(string path)
-    {
-        if (string.IsNullOrWhiteSpace(path)) return path;
-        path = path.Trim().TrimEnd('\\', '/');
-        // Nếu chọn nhầm Client/Content/Paks
-        if (path.EndsWith("Client\\Content\\Paks", StringComparison.OrdinalIgnoreCase) ||
-            path.EndsWith("Client/Content/Paks", StringComparison.OrdinalIgnoreCase))
-        {
-            var p3 = Directory.GetParent(Directory.GetParent(Directory.GetParent(path)?.FullName ?? "")?.FullName ?? "");
-            if (p3 != null && Directory.Exists(Path.Combine(p3.FullName, "Client")))
-                return p3.FullName;
-        }
-        // Nếu chọn nhầm Client
-        if (path.EndsWith("\\Client", StringComparison.OrdinalIgnoreCase) ||
-            path.EndsWith("/Client", StringComparison.OrdinalIgnoreCase))
-        {
-            var p1 = Directory.GetParent(path);
-            if (p1 != null && File.Exists(Path.Combine(p1.FullName, "Client", "Binaries", "Win64", "Client-Win64-Shipping.exe")))
-                return p1.FullName;
-        }
-        return path;
     }
 
     [RelayCommand]
     private void AutoDetect()
     {
         var found = _detect.AutoDetect();
-        if (found.Count > 0) { SetPath(found[0]); Message = "Đã tự tìm thấy game."; }
+        if (found.Count > 0) { SetPath(found[0]); Message = "Đã tự tìm thấy đúng thư mục game chứa Client."; }
         else Message = "Không tự tìm thấy game. Hãy chọn thủ công (ví dụ: D:\\Game\\Wuthering Waves Game).";
     }
 
     public void SetPath(string path)
     {
-        GamePath = NormalizeGamePath(path);
+        GamePath = _detect.NormalizeGamePath(path) ?? path.Trim().TrimEnd('\\', '/');
         _settings.Settings.GamePath = GamePath;
         _settings.Save();
         Refresh();

@@ -259,6 +259,7 @@ public sealed class FontService : IFontService
 
     public async Task<Result> BuildAndApplyCustomFontAsync(string gamePath, string rawFontPath, CancellationToken ct = default)
     {
+        string? tempDir = null;
         try
         {
             if (string.IsNullOrWhiteSpace(gamePath) || !Directory.Exists(gamePath))
@@ -270,8 +271,7 @@ public sealed class FontService : IFontService
             {
                 Path.Combine(AppContext.BaseDirectory, "tools", "repak.exe"),
                 Path.Combine(AppContext.BaseDirectory, "repak.exe"),
-                Path.Combine(AppContext.BaseDirectory, "..", "tools", "repak.exe"),
-                @"D:\Tim hieu\WuwaVH\wuwavh_tool\Wahu\tools\repak.exe"
+                Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "tools", "repak.exe"))
             };
             var repak = repakCandidates.FirstOrDefault(File.Exists);
             if (repak == null)
@@ -279,8 +279,9 @@ public sealed class FontService : IFontService
                 return Result.Fail("Không tìm thấy công cụ đóng gói repak.exe. Hãy kiểm tra thư mục tools\\.");
             }
 
-            var tempDir = Path.Combine(Path.GetTempPath(), "VHWuWa_Font_" + Guid.NewGuid().ToString("N"));
-            var stagingFontDir = Path.Combine(tempDir, "Client", "Content", "Aki", "UI", "Framework", "LGUI", "Font");
+            tempDir = Path.Combine(Path.GetTempPath(), "VHWuWa_Font_" + Guid.NewGuid().ToString("N"));
+            var contentDir = Path.Combine(tempDir, "content");
+            var stagingFontDir = Path.Combine(contentDir, "Client", "Content", "Aki", "UI", "Framework", "LGUI", "Font");
             Directory.CreateDirectory(stagingFontDir);
 
             var destUfont = Path.Combine(stagingFontDir, "LaguSansBold.ufont");
@@ -289,35 +290,55 @@ public sealed class FontService : IFontService
             var fontName = Path.GetFileNameWithoutExtension(rawFontPath);
             var safeName = System.Text.RegularExpressions.Regex.Replace(fontName, @"[^\w\-]", "_");
             var outPak = Path.Combine(tempDir, $"{safeName}_100_P.pak");
+            var v11Pak = outPak + ".v11.tmp";
 
             var psi = new ProcessStartInfo
             {
                 FileName = repak,
-                Arguments = $"pack --version V12 -s \"{tempDir}\" \"{outPak}\"",
                 CreateNoWindow = true,
                 UseShellExecute = false,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true
             };
+            psi.ArgumentList.Add("pack");
+            psi.ArgumentList.Add("--version");
+            psi.ArgumentList.Add("V11");
+            psi.ArgumentList.Add("--mount-point");
+            psi.ArgumentList.Add("../../../");
+            psi.ArgumentList.Add(contentDir);
+            psi.ArgumentList.Add(v11Pak);
 
             using var p = Process.Start(psi);
             if (p == null) return Result.Fail("Không thể khởi chạy repak.exe");
+            var stdoutTask = p.StandardOutput.ReadToEndAsync(ct);
+            var stderrTask = p.StandardError.ReadToEndAsync(ct);
             await p.WaitForExitAsync(ct);
+            var stdout = await stdoutTask;
+            var stderr = await stderrTask;
 
-            if (!File.Exists(outPak))
+            if (p.ExitCode != 0 || !File.Exists(v11Pak))
             {
-                var err = await p.StandardError.ReadToEndAsync(ct);
-                return Result.Fail("Lỗi khi đóng gói font V12: " + err);
+                var details = string.Join(" ", new[] { stdout.Trim(), stderr.Trim() }.Where(s => s.Length > 0));
+                return Result.Fail("repak không thể đóng gói font V11" + (details.Length > 0 ? ": " + details : "."));
             }
 
-            var applyRes = await ApplyFontPakAsync(gamePath, outPak, ct);
-            try { Directory.Delete(tempDir, true); } catch { }
+            PakV12Converter.ConvertV11ToV12(v11Pak, outPak);
+            if (!PakV12Converter.TryVerifyV12(outPak, out var verifyError))
+                return Result.Fail("Gói font V12 không hợp lệ: " + verifyError);
 
+            var applyRes = await ApplyFontPakAsync(gamePath, outPak, ct);
             return applyRes;
         }
         catch (Exception ex)
         {
             return Result.Fail("Lỗi khi tạo font: " + ex.Message);
+        }
+        finally
+        {
+            if (tempDir is not null)
+            {
+                try { Directory.Delete(tempDir, true); } catch { }
+            }
         }
     }
 

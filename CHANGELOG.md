@@ -2,6 +2,15 @@
 
 Tất cả các thay đổi đáng chú ý của dự án VHWuWa được ghi lại tại đây theo chuẩn [SemVer](https://semver.org/lang/vi/).
 
+## [2.0.2] - 2026-08-23
+### Cải thiện
+- Tự tìm đúng thư mục `Wuthering Waves Game` có `Client\Binaries\Win64\Client-Win64-Shipping.exe`.
+- Nhận diện được đường dẫn ở thư mục cha, thư mục `Client`, `Content\Paks` hoặc file EXE của game.
+- Bổ sung vị trí cài dạng `D:\Game\...`, thư mục Kuro Games tùy chọn và game đang chạy.
+- Không nhận nhầm thư mục chỉ có tên giống game nhưng thiếu Client thực tế.
+- Sửa tạo font tùy chọn: bỏ tham số `repak -s` không tồn tại, đóng gói V11 rồi chuyển và xác minh đúng định dạng PAK V12 của game.
+- Làm rõ DirectX 11 chỉ là phương án thay thế khi DirectX 12 gặp lỗi.
+
 ## [2.0.0] - 2026-08-21 (Cộng đồng 3.6)
 ### Thêm mới & Nâng cấp
 - **Dữ liệu Việt hóa Wuthering Waves 3.6:** 100% Cốt truyện chính 3.6 (1.827 câu) + Kỹ năng các mốc 3.4, 3.5, 3.6.

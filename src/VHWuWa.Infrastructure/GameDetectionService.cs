@@ -10,11 +10,15 @@ namespace VHWuWa.Infrastructure;
 public sealed class GameDetectionService : IGameDetectionService
 {
     private readonly ILogService _log;
+    private readonly IReadOnlyList<string>? _searchRoots;
     public GameConfig GameConfig { get; }
 
-    public GameDetectionService(ILogService log, string? configDir = null)
+    public GameDetectionService(ILogService log, string? configDir = null,
+        IEnumerable<string>? searchRoots = null)
     {
         _log = log;
+        _searchRoots = searchRoots?.Where(Directory.Exists)
+            .Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
         var dir = configDir ?? AppPaths.DefaultConfigDir;
         var path = Path.Combine(dir, "game.json");
         try
@@ -87,46 +91,111 @@ public sealed class GameDetectionService : IGameDetectionService
         return null;
     }
 
+    public string? NormalizeGamePath(string path)
+    {
+        if (string.IsNullOrWhiteSpace(path)) return null;
+        try
+        {
+            var cleaned = Environment.ExpandEnvironmentVariables(path.Trim().Trim('"'))
+                .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+            if (File.Exists(cleaned)) cleaned = Path.GetDirectoryName(cleaned) ?? cleaned;
+            cleaned = Path.GetFullPath(cleaned);
+
+            var visited = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var current = new DirectoryInfo(cleaned);
+            for (var level = 0; current is not null && level < 8; level++, current = current.Parent)
+            {
+                foreach (var candidate in CandidateRoots(current.FullName))
+                {
+                    var normalized = candidate.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+                    if (!visited.Add(normalized) || !Directory.Exists(normalized)) continue;
+                    if (Validate(normalized).IsValid) return normalized;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _log.Warn("GameDetection", $"Không chuẩn hóa được đường dẫn '{path}': {ex.Message}");
+        }
+        return null;
+    }
+
+    private static IEnumerable<string> CandidateRoots(string root)
+    {
+        yield return root;
+        yield return Path.Combine(root, "Wuthering Waves Game");
+        yield return Path.Combine(root, "Wuthering Waves");
+        yield return Path.Combine(root, "Wuthering Waves", "Wuthering Waves Game");
+    }
+
     public IReadOnlyList<string> AutoDetect()
     {
         var found = new List<string>();
-        void TryAdd(string p)
+        void TryAdd(string? p)
         {
             if (string.IsNullOrWhiteSpace(p)) return;
-            if (found.Any(x => string.Equals(x, p, StringComparison.OrdinalIgnoreCase))) return;
-            if (Directory.Exists(p) && Validate(p).IsValid) found.Add(p);
+            var normalized = NormalizeGamePath(p);
+            if (normalized is null) return;
+            if (found.Any(x => string.Equals(x, normalized, StringComparison.OrdinalIgnoreCase))) return;
+            found.Add(normalized);
         }
 
-        // 1) Registry (Windows)
+        // 1) Game đang chạy: nhận cả đường dẫn EXE nằm sâu trong Client\Binaries\Win64.
+        if (OperatingSystem.IsWindows())
+        {
+            foreach (var processName in new[] { "Client-Win64-Shipping", "Wuthering Waves" })
+            {
+                try
+                {
+                    foreach (var process in Process.GetProcessesByName(processName))
+                    {
+                        using (process)
+                        {
+                            try { TryAdd(process.MainModule?.FileName); } catch { }
+                        }
+                    }
+                }
+                catch { }
+            }
+        }
+
+        // 2) Registry (Windows). NormalizeGamePath xử lý cả thư mục launcher/thư mục cha.
         if (OperatingSystem.IsWindows())
         {
             foreach (var key in GameConfig.PossibleRegistryKeys)
                 TryAdd(ReadRegistryInstallLocation(key));
         }
 
-        // 2) Steam libraries: <lib>/steamapps/common/*
+        // 3) Steam libraries: <lib>/steamapps/common/*
         foreach (var lib in SteamLibraries())
         {
             var common = Path.Combine(lib, "steamapps", "common");
             if (!Directory.Exists(common)) continue;
+            TryAdd(common);
             foreach (var sub in SafeDirs(common))
                 TryAdd(sub);
         }
 
-        // 3) Vị trí phổ biến trên các ổ đĩa
+        // 4) Các ổ đĩa/thư mục cài tùy chọn. Duyệt một tầng ở gốc để bắt được
+        // D:\Game\Wuthering Waves Game, E:\Kuro Games\Wuthering Waves\Wuthering Waves Game, ...
         var names = new[]
         {
             GameConfig.GameName, GameConfig.GameId,
             "Wuthering Waves Game", "Wuthering Waves"
         }.Where(s => !string.IsNullOrWhiteSpace(s)).Distinct();
-        foreach (var drive in DriveInfo.GetDrives().Where(d => d.IsReady && d.DriveType == DriveType.Fixed))
+        var roots = _searchRoots ?? DriveInfo.GetDrives()
+            .Where(d => d.IsReady && d.DriveType == DriveType.Fixed)
+            .Select(d => d.RootDirectory.FullName).ToArray();
+        foreach (var root in roots)
         {
+            TryAdd(root);
             foreach (var name in names)
             {
-                TryAdd(Path.Combine(drive.RootDirectory.FullName, name));
-                TryAdd(Path.Combine(drive.RootDirectory.FullName, "Games", name));
-                TryAdd(Path.Combine(drive.RootDirectory.FullName, "Program Files", name));
+                TryAdd(Path.Combine(root, name));
+                foreach (var container in new[] { "Game", "Games", "Kuro Games", "Program Files", "Program Files (x86)" })
+                    TryAdd(Path.Combine(root, container, name));
             }
+            foreach (var topLevel in SafeDirs(root)) TryAdd(topLevel);
         }
         return found;
     }

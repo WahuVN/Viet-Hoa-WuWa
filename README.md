@@ -8,8 +8,8 @@ Bộ cài đặt và công cụ quản lý bản dịch tiếng Việt cho **Wut
 
 | Tệp tải về | Mục đích |
 | :--- | :--- |
-| 🎮 [**VietHoa-WuWa-v2.0.1.zip**](https://github.com/WahuVN/Viet-Hoa-WuWa/releases/download/v2.0.1/VietHoa-WuWa-v2.0.1.zip) | **Dành cho người chơi** — Bộ cài Tool Việt hóa chính thức trên Windows (có sẵn bản Tiếng Anh + 72 Font) |
-| 🛠️ [**App-Dich-WuWa-v2.0.1.zip**](https://github.com/WahuVN/Viet-Hoa-WuWa/releases/download/v2.0.1/App-Dich-WuWa-v2.0.1.zip) | **Dành cho dịch giả & modder** — Bộ công cụ Studio chỉnh sửa dữ liệu, QA và đóng gói |
+| 🎮 [**VietHoa-WuWa-v2.0.2.zip**](https://github.com/WahuVN/Viet-Hoa-WuWa/releases/download/v2.0.2/VietHoa-WuWa-v2.0.2.zip) | **Dành cho người chơi** — Bộ cài Tool Việt hóa chính thức trên Windows (có sẵn bản Tiếng Anh + 72 Font) |
+| 🛠️ [**App-Dich-WuWa-v2.0.2.zip**](https://github.com/WahuVN/Viet-Hoa-WuWa/releases/download/v2.0.2/App-Dich-WuWa-v2.0.2.zip) | **Dành cho dịch giả & modder** — Bộ công cụ Studio chỉnh sửa dữ liệu, QA và đóng gói |
 
 > 📌 *Tải bản mới nhất tại: **[GitHub Releases](https://github.com/WahuVN/Viet-Hoa-WuWa/releases/latest)***
 
@@ -22,7 +22,7 @@ Bộ cài đặt và công cụ quản lý bản dịch tiếng Việt cho **Wut
 3. Chọn **Tự tìm game** (hoặc chọn thư mục game có chứa thư mục con `Client`).
 4. Chọn kiểu tên nhân vật (**Hán Việt** hoặc **Tên Tiếng Anh**).
 5. Bấm **Cài Việt hóa**.
-6. Vào game: Cài đặt ngôn ngữ hiển thị **Text Language = English** (Khuyến nghị chạy game bằng **DirectX 11**).
+6. Vào game: đặt **Text Language = English**. Có thể dùng DirectX 11 hoặc 12; nếu DX12 gặp crash/lỗi đồ họa, hãy chuyển sang DX11.
 
 ---
 

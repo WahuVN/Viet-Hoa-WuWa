@@ -29,6 +29,8 @@ public interface IGameDetectionService
 {
     GameConfig GameConfig { get; }
     GameValidation Validate(string gamePath);
+    /// <summary>Chuẩn hóa đường dẫn bất kỳ về đúng thư mục gốc chứa Client, hoặc null nếu không hợp lệ.</summary>
+    string? NormalizeGamePath(string path);
     /// <summary>Tự động dò thư mục game ở các vị trí phổ biến + Steam + Registry.</summary>
     IReadOnlyList<string> AutoDetect();
     string? DetectVersion(string gamePath);
