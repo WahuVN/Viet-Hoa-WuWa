@@ -1,0 +1,45 @@
+<UserControl x:Class="VHWuWa.App.Views.ModPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml">
+    <Grid Margin="28,22,28,22">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0" Text="Quản lý mod" FontSize="24" FontWeight="Bold" Margin="0,0,0,10" />
+
+        <ui:Card Grid.Row="1" Padding="12" Margin="0,0,0,12">
+            <StackPanel>
+                <TextBlock Text="Trạng thái Việt hóa hiện tại" FontWeight="SemiBold" Margin="0,0,0,4" />
+                <TextBlock Text="{Binding StatusLine}" FontSize="14" TextWrapping="Wrap" />
+            </StackPanel>
+        </ui:Card>
+
+        <WrapPanel Grid.Row="2" Margin="0,0,0,10">
+            <ui:Button Content="➕ Cài mod (.vhwpack)" Appearance="Primary" Command="{Binding AddModCommand}" Margin="0,0,10,8" />
+            <Button Content="🗑 Gỡ mod đã chọn" Command="{Binding UninstallCommand}" Margin="0,0,10,8" />
+            <Button Content="🔍 Kiểm tra lại" Command="{Binding RefreshCommand}" Margin="0,0,10,8" />
+            <Button Content="📂 Mở thư mục game" Command="{Binding OpenFolderCommand}" Margin="0,0,10,8" />
+        </WrapPanel>
+
+        <ui:Card Grid.Row="3" Padding="6">
+            <DataGrid ItemsSource="{Binding Mods}" SelectedItem="{Binding SelectedMod}">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Tên mod" Width="*" Binding="{Binding Name}" />
+                    <DataGridTextColumn Header="Phiên bản" Width="100" Binding="{Binding Version}" />
+                    <DataGridCheckBoxColumn Header="Bật" Width="60" Binding="{Binding Enabled}" />
+                    <DataGridTextColumn Header="Dung lượng" Width="120"
+                        Binding="{Binding SizeBytes, StringFormat='{}{0:N0} B'}" />
+                    <DataGridTextColumn Header="Xung đột" Width="90" Binding="{Binding Conflicts.Count}" />
+                </DataGrid.Columns>
+            </DataGrid>
+        </ui:Card>
+
+        <TextBlock Grid.Row="4" Text="{Binding Message}" Opacity="0.9" Margin="0,10,0,0" TextWrapping="Wrap" />
+    </Grid>
+</UserControl>

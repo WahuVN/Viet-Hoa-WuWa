@@ -1,0 +1,60 @@
+﻿# ---- .NET build ----
+bin/
+obj/
+[Dd]ebug/
+[Rr]elease/
+dist/
+out/
+out_single/
+publish/
+*.user
+*.suo
+.vs/
+artifacts/
+TestResults/
+*.binlog
+
+# ---- NuGet ----
+*.nupkg
+packages/
+
+# ---- BAO MAT: KHONG COMMIT ----
+*.snk
+*.pfx
+*.p12
+*.key
+private*.pem
+*private*.pem
+*.private.json
+secrets.json
+appsettings.Secrets.json
+.env
+.env.*
+*.token
+github-token*.txt
+
+# ---- Obfuscar mapping ----
+Mapping.xml
+*.map.xml
+Confused/
+Obfuscated/
+
+# ---- Du lieu ----
+*.vhwpack
+!Samples/**/*.vhwpack
+*.pak
+!Fonts/*.pak
+Release/*.vhwpack
+/PackageSource/
+
+# ---- Runtime/local ----
+Logs/
+*.log
+
+# ---- OS ----
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Ban dong goi (dung Releases, khong commit)
+*.zip
