@@ -10,6 +10,7 @@ namespace VHWuWa.Infrastructure;
 internal sealed class ViethoaInstallMarker
 {
     [JsonPropertyName("schemaVersion")] public int SchemaVersion { get; set; } = 2;
+    [JsonPropertyName("packageVersion")] public string PackageVersion { get; set; } = "";
     [JsonPropertyName("variant")] public string Variant { get; set; } = "";
     [JsonPropertyName("font")] public string? Font { get; set; }
     [JsonPropertyName("installedAt")] public DateTimeOffset InstalledAt { get; set; }

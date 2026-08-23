@@ -8,6 +8,8 @@ Tất cả các thay đổi đáng chú ý của dự án VHWuWa được ghi l�
 - Báo rõ mod có thể xung đột và cho phép người dùng chọn giữ bản sao hoặc xóa sau khi xác nhận.
 - Cải thiện thao tác gỡ Việt hóa khi file đã bị thay đổi, tránh báo lỗi khó hiểu và không tự ý xóa file lạ.
 - Cập nhật đúng liên kết tải gói Hán Việt của bản 2.0.3.
+- Hiển thị đúng phiên bản Việt hóa đã cài thay cho giá trị `v2.0.0` ghi cứng.
+- Sửa lỗi tiếng Việt bị mất dấu trong cửa sổ trình cập nhật.
 
 ### Khởi chạy game
 - Thêm nút mở trực tiếp `Client-Win64-Shipping.exe` và nút tắt game đặt cạnh nhau, không bắt buộc đi qua launcher.

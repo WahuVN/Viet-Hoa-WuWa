@@ -7,6 +7,7 @@ Bản 2.0.3 tập trung vào cài/gỡ an toàn hơn, xử lý xung đột rõ r
 - Cài, gỡ và chuyển đổi Việt hóa/font an toàn hơn; không tự ý xóa file lạ.
 - Báo rõ mod có thể xung đột, cho phép giữ bản sao hoặc xóa sau khi người dùng xác nhận.
 - Cải thiện gỡ Việt hóa khi file đã bị thay đổi và cập nhật đúng gói Hán Việt 2.0.3.
+- Hiển thị đúng phiên bản Việt hóa đã cài và sửa lỗi chữ tiếng Việt trong cửa sổ cập nhật.
 - Mở game trực tiếp từ Trang chủ bằng `Client-Win64-Shipping.exe`; nút **Tắt game** được đặt ngay cạnh để dễ sử dụng.
 - Tùy chọn bật môi trường C# thử nghiệm bằng `-ForceEnableCSharpEnvironment`; mặc định tắt, có cảnh báo lần đầu và có thể tắt ngay khi gặp lỗi.
 - Có nút chép tham số cho Steam Launch Options. App không tự ý chỉnh sửa cấu hình Steam.

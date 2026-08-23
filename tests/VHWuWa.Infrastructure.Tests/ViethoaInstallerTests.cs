@@ -1,3 +1,4 @@
+using System.Text.Json.Nodes;
 using VHWuWa.Core.Models;
 using VHWuWa.Infrastructure;
 using Xunit;
@@ -79,6 +80,11 @@ public sealed class ViethoaInstallerTests : IDisposable
         var st = _viet.GetStatus(_game);
         Assert.True(st.Installed);
         Assert.Equal("hanviet", st.Variant);
+        var assemblyVersion = typeof(ViethoaInstaller).Assembly.GetName().Version!;
+        Assert.Equal($"{assemblyVersion.Major}.{assemblyVersion.Minor}.{assemblyVersion.Build}", st.Version);
+
+        var marker = File.ReadAllText(Path.Combine(Mods, "vhwuwa_install.json"));
+        Assert.Contains($"\"packageVersion\": \"{st.Version}\"", marker, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -89,6 +95,21 @@ public sealed class ViethoaInstallerTests : IDisposable
         Assert.True(r.Success, r.Error);
         Assert.Equal("ENGLISH", File.ReadAllText(Path.Combine(Mods, "WuWaVH_99_P.pak")));
         Assert.Equal("en", _viet.GetStatus(_game).Variant);
+    }
+
+    [Fact]
+    public async Task LegacyMarkerWithoutVersion_UsesCurrentApplicationVersion()
+    {
+        Assert.True((await _viet.InstallAsync(_game, NameVariant.HanViet, withFont: false)).Success);
+        var markerPath = Path.Combine(Mods, "vhwuwa_install.json");
+        var marker = JsonNode.Parse(File.ReadAllText(markerPath))!.AsObject();
+        marker.Remove("packageVersion");
+        File.WriteAllText(markerPath, marker.ToJsonString());
+
+        var status = _viet.GetStatus(_game);
+        var assemblyVersion = typeof(ViethoaInstaller).Assembly.GetName().Version!;
+
+        Assert.Equal($"{assemblyVersion.Major}.{assemblyVersion.Minor}.{assemblyVersion.Build}", status.Version);
     }
 
     [Fact]

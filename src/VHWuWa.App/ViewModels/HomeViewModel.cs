@@ -65,14 +65,18 @@ public partial class HomeViewModel : ObservableObject
         if (vst is { Installed: true })
         {
             TranslationStatus = "Đã cài";
-            TranslationVersion = "v2.0.0";
+            TranslationVersion = string.IsNullOrWhiteSpace(vst.Version)
+                ? "-"
+                : "v" + vst.Version.TrimStart('v', 'V');
             CurrentVariant = vst.VariantLabel;
             CurrentFont = (PathOk ? _fonts.CurrentFontPak(GamePath) : null) ?? "Mặc định";
         }
         else
         {
             TranslationStatus = tr is null ? "Chưa cài" : "Đã cài";
-            TranslationVersion = tr is null ? "-" : "v2.0.0";
+            TranslationVersion = tr is null || string.IsNullOrWhiteSpace(tr.Version)
+                ? "-"
+                : "v" + tr.Version.TrimStart('v', 'V');
             CurrentVariant = "-";
             CurrentFont = "-";
         }

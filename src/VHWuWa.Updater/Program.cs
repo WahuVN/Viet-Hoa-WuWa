@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.IO.Compression;
+using System.Text;
 using VHWuWa.Core.Services;
 
 namespace VHWuWa.Updater;
@@ -11,6 +12,9 @@ internal static class Program
 {
     private static int Main(string[] args)
     {
+        Console.OutputEncoding = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
+        Console.InputEncoding = Encoding.UTF8;
+
         var o = Parse(args);
         if (!o.TryGetValue("zip", out var zip) || !o.TryGetValue("target", out var target))
         {

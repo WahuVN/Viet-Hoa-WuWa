@@ -103,6 +103,12 @@ public sealed class ViethoaInstaller : IViethoaInstaller
 
     private bool IsGameRunning() => _isGameRunning();
 
+    private static string CurrentPackageVersion()
+    {
+        var version = typeof(ViethoaInstaller).Assembly.GetName().Version;
+        return version is null ? "" : $"{version.Major}.{version.Minor}.{version.Build}";
+    }
+
     private static OperationLease? TryAcquireOperationLock(string gamePath)
     {
         var normalized = Path.GetFullPath(gamePath).TrimEnd(Path.DirectorySeparatorChar).ToUpperInvariant();
@@ -132,13 +138,16 @@ public sealed class ViethoaInstaller : IViethoaInstaller
                         || File.Exists(Path.Combine(win64, "WuWaVH.dll"))
                         || File.Exists(Path.Combine(win64, "verorg.dll"))
                         || (File.Exists(Path.Combine(win64, "version.dll")) && File.Exists(Path.Combine(win64, "version_goc.dll")));
-            var marker = Path.Combine(mods, MarkerName);
-            if (File.Exists(marker))
+            var marker = ViethoaInstallMarker.Load(Path.Combine(mods, MarkerName));
+            if (marker is not null)
             {
-                using var doc = JsonDocument.Parse(File.ReadAllText(marker));
-                if (doc.RootElement.TryGetProperty("variant", out var v)) st.Variant = v.GetString() ?? "";
-                if (doc.RootElement.TryGetProperty("font", out var f)) st.FontPak = f.GetString();
+                st.Version = string.IsNullOrWhiteSpace(marker.PackageVersion)
+                    ? CurrentPackageVersion()
+                    : marker.PackageVersion;
+                st.Variant = marker.Variant;
+                st.FontPak = marker.Font;
             }
+            else if (st.Installed) st.Version = CurrentPackageVersion();
         }
         catch (Exception ex) { _log.Warn("Viethoa", "Đọc trạng thái lỗi: " + ex.Message); }
         return st;
@@ -725,6 +734,7 @@ public sealed class ViethoaInstaller : IViethoaInstaller
                 // ghi đè đúng tên file, app sẽ cảnh báo và không xóa nhầm lúc gỡ.
                 var marker = new ViethoaInstallMarker
                 {
+                    PackageVersion = CurrentPackageVersion(),
                     Variant = variant == NameVariant.English ? "en" : "hanviet",
                     Font = fontName
                 };
