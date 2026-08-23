@@ -35,7 +35,7 @@ public sealed class BackupService : IBackupService
             Version = version,
         };
 
-        foreach (var dest in destinations.Distinct())
+        foreach (var dest in destinations.Distinct(StringComparer.OrdinalIgnoreCase))
         {
             var full = PathValidation.ResolveInsideRoot(gamePath, dest);
             var entry = new BackupFileEntry { Destination = dest };
@@ -66,6 +66,15 @@ public sealed class BackupService : IBackupService
             if (manifest is null) return Result.Fail("backup-manifest.json hỏng.");
 
             var filesDir = Path.Combine(dir, "files");
+            foreach (var f in manifest.Files.Where(f => f.ExistedBefore))
+            {
+                var source = PathValidation.ResolveInsideRoot(filesDir, f.Destination);
+                if (!File.Exists(source))
+                    return Result.Fail("Backup bị thiếu file, chưa thay đổi game: " + f.Destination);
+                if (!string.IsNullOrWhiteSpace(f.Sha256Before)
+                    && !_hash.Verify(source, f.Sha256Before))
+                    return Result.Fail("Backup sai SHA-256, chưa thay đổi game: " + f.Destination);
+            }
             foreach (var f in manifest.Files)
             {
                 var full = PathValidation.ResolveInsideRoot(gamePath, f.Destination);
@@ -84,6 +93,19 @@ public sealed class BackupService : IBackupService
                     if (File.Exists(full)) File.Delete(full);
                 }
             }
+            foreach (var f in manifest.Files)
+            {
+                var full = PathValidation.ResolveInsideRoot(gamePath, f.Destination);
+                if (f.ExistedBefore)
+                {
+                    if (!File.Exists(full)) return Result.Fail("Khôi phục còn thiếu file: " + f.Destination);
+                    if (!string.IsNullOrWhiteSpace(f.Sha256Before)
+                        && !_hash.Verify(full, f.Sha256Before))
+                        return Result.Fail("File khôi phục sai SHA-256: " + f.Destination);
+                }
+                else if (File.Exists(full))
+                    return Result.Fail("Không xóa được file do mod tạo: " + f.Destination);
+            }
             _log.Info("Backup", $"Đã khôi phục từ backup {backupId}.");
             return Result.Ok();
         }
@@ -93,8 +115,6 @@ public sealed class BackupService : IBackupService
             return Result.Fail("Khôi phục thất bại: " + ex.Message, ex);
         }
     }
-
-    private static BackupManifest? return_fail(string _) => null;
 
     public IReadOnlyList<BackupInfo> List()
     {

@@ -2,6 +2,27 @@
 
 Tất cả các thay đổi đáng chú ý của dự án VHWuWa được ghi lại tại đây theo chuẩn [SemVer](https://semver.org/lang/vi/).
 
+## [2.0.3] - 2026-08-23
+### Cài đặt và quản lý xung đột
+- Cài, gỡ và chuyển đổi Việt hóa/font an toàn hơn, theo dõi đúng các file do ứng dụng quản lý.
+- Báo rõ mod có thể xung đột và cho phép người dùng chọn giữ bản sao hoặc xóa sau khi xác nhận.
+- Cải thiện thao tác gỡ Việt hóa khi file đã bị thay đổi, tránh báo lỗi khó hiểu và không tự ý xóa file lạ.
+- Cập nhật đúng liên kết tải gói Hán Việt của bản 2.0.3.
+
+### Khởi chạy game
+- Thêm nút mở trực tiếp `Client-Win64-Shipping.exe` và nút tắt game đặt cạnh nhau, không bắt buộc đi qua launcher.
+- Có công tắc tùy chọn `-ForceEnableCSharpEnvironment`, mặc định tắt và cảnh báo rõ đây là môi trường C# thử nghiệm.
+- Thêm nút sao chép tham số cho Steam Launch Options; app không tự sửa cấu hình Steam.
+- Hiển thị hướng dẫn kiểm tra dấu `*` ở cuối phiên bản và cách quay về chế độ thường.
+
+### WAHU Community
+- Làm mới màn hình khởi động, logo, bố cục và các liên kết Discord/GitHub.
+- Tinh gọn mục nhân vật, giữ riêng phần đặt tên và mặc định tải đầy đủ dữ liệu khi chọn `Tất cả`.
+- Tách ba bộ tên độc lập: Hán Việt, tên Anh và tên tự đặt; có thể tạo PAK riêng cho từng bộ.
+- Bản tên tự đặt tự dùng tên Hán Việt cho những nhân vật chưa được nhập tên riêng.
+- Giảm cảnh báo QA sai đối với placeholder, thẻ định dạng và câu dài; sửa cách nhận diện dữ liệu khi nhiều bảng dùng cùng mã key.
+- Bổ sung dữ liệu giao diện hệ thống vào PAK và Việt hóa màn cảnh báo nhạy cảm ánh sáng khi mở game.
+
 ## [2.0.2] - 2026-08-23
 ### Cải thiện
 - Tự tìm đúng thư mục `Wuthering Waves Game` có `Client\Binaries\Win64\Client-Win64-Shipping.exe`.

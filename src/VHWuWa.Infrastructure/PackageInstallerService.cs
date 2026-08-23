@@ -50,6 +50,10 @@ public sealed class PackageInstallerService : IPackageInstallerService
     {
         BackupManifest? backup = null;
         PackageManifest? manifest = null;
+        string? stagedCacheDir = null;
+        string? activeCacheDir = null;
+        string? previousCacheDir = null;
+        var cacheSwapped = false;
         try
         {
             var val = _game.Validate(gamePath);
@@ -71,6 +75,33 @@ public sealed class PackageInstallerService : IPackageInstallerService
             var hashCheck = await reader.VerifyPayloadHashesAsync(_hash, ct);
             if (!hashCheck.Success) return Result.Fail(hashCheck.Error!);
 
+            var state = _settings.LoadState();
+            var destinations = manifest.Files.Select(f => f.Destination)
+                .Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+            var destinationSet = destinations.ToHashSet(StringComparer.OrdinalIgnoreCase);
+            var existing = state.InstalledPackages.FirstOrDefault(p =>
+                p.PackageId.Equals(manifest.PackageId, StringComparison.OrdinalIgnoreCase));
+            if (existing is { Enabled: true })
+            {
+                var changed = ChangedInstalledFiles(gamePath, existing);
+                if (changed.Count > 0)
+                    return Result.Fail("Không nâng cấp gói vì file đang cài đã bị mod khác thay đổi:\n- "
+                        + string.Join("\n- ", changed)
+                        + "\nHãy gỡ/tắt mod ghi đè rồi thử lại.");
+            }
+            var conflicts = state.InstalledPackages
+                .Where(p => p.Enabled && !p.PackageId.Equals(manifest.PackageId, StringComparison.OrdinalIgnoreCase))
+                .Select(p => new
+                {
+                    Package = p,
+                    Paths = p.InstalledFiles.Where(destinationSet.Contains).Distinct(StringComparer.OrdinalIgnoreCase).ToList()
+                })
+                .Where(x => x.Paths.Count > 0).ToList();
+            if (conflicts.Count > 0)
+                return Result.Fail("Gói này xung đột với mod đang bật. Hãy gỡ hoặc tắt mod sau trước:\n- "
+                    + string.Join("\n- ", conflicts.Select(x =>
+                        $"{x.Package.PackageName} ({string.Join(", ", x.Paths.Take(3))})")));
+
             // Kiểm phiên bản game hỗ trợ (cảnh báo, không chặn)
             if (manifest.SupportedGameVersions.Count > 0 && !string.IsNullOrWhiteSpace(val.DetectedVersion)
                 && !manifest.SupportedGameVersions.Contains(val.DetectedVersion!))
@@ -84,13 +115,13 @@ public sealed class PackageInstallerService : IPackageInstallerService
                 return Result.Fail("Không có quyền ghi vào thư mục game. Hãy đóng game hoặc chạy lại.");
 
             // Backup
-            var destinations = manifest.Files.Select(f => f.Destination).ToList();
             backup = _backup.CreateBackup(gamePath, "install:" + manifest.PackageType, manifest.PackageId,
                 manifest.Version, destinations);
 
             // Cài từng file
             var cacheDir = Path.Combine(_modCacheDir, manifest.PackageId);
-            if (Directory.Exists(cacheDir)) Directory.Delete(cacheDir, true);
+            activeCacheDir = cacheDir;
+            stagedCacheDir = cacheDir + ".install_" + Guid.NewGuid().ToString("N");
             int total = manifest.Files.Count, done = 0;
             foreach (var f in manifest.Files)
             {
@@ -102,7 +133,7 @@ public sealed class PackageInstallerService : IPackageInstallerService
                     await src.CopyToAsync(outFs, ct);
 
                 // cache để bật/tắt sau này
-                var cache = PathValidation.ResolveInsideRoot(cacheDir, f.Destination);
+                var cache = PathValidation.ResolveInsideRoot(stagedCacheDir, f.Destination);
                 Directory.CreateDirectory(Path.GetDirectoryName(cache)!);
                 File.Copy(dest, cache, overwrite: true);
 
@@ -121,9 +152,21 @@ public sealed class PackageInstallerService : IPackageInstallerService
             }
 
             // Lưu trạng thái
-            var state = _settings.LoadState();
+            var fileHashes = destinations.ToDictionary(
+                d => d,
+                d => _hash.Sha256File(PathValidation.ResolveInsideRoot(gamePath, d)),
+                StringComparer.OrdinalIgnoreCase);
+            if (Directory.Exists(cacheDir))
+            {
+                previousCacheDir = cacheDir + ".previous_" + Guid.NewGuid().ToString("N");
+                Directory.Move(cacheDir, previousCacheDir);
+            }
+            Directory.Move(stagedCacheDir, cacheDir);
+            stagedCacheDir = null;
+            cacheSwapped = true;
+
             state.GamePath = gamePath;
-            state.InstalledPackages.RemoveAll(p => p.PackageId == manifest.PackageId);
+            state.InstalledPackages.RemoveAll(p => p.PackageId.Equals(manifest.PackageId, StringComparison.OrdinalIgnoreCase));
             state.InstalledPackages.Add(new InstalledPackage
             {
                 PackageId = manifest.PackageId,
@@ -131,11 +174,21 @@ public sealed class PackageInstallerService : IPackageInstallerService
                 PackageName = manifest.PackageName,
                 Version = manifest.Version,
                 InstalledAt = DateTimeOffset.Now,
-                BackupId = backup.Id,
+                // Khi nâng cấp cùng packageId, giữ backup gốc của lần cài đầu tiên.
+                BackupId = existing is not null && BackupExists(existing.BackupId) ? existing.BackupId : backup.Id,
                 Enabled = true,
                 InstalledFiles = destinations,
+                FileHashes = fileHashes,
             });
             _settings.SaveState(state);
+
+            if (existing is not null && BackupExists(existing.BackupId)
+                && !backup.Id.Equals(existing.BackupId, StringComparison.OrdinalIgnoreCase))
+                _backup.Delete(backup.Id);
+            if (previousCacheDir is not null && Directory.Exists(previousCacheDir))
+                Directory.Delete(previousCacheDir, true);
+            previousCacheDir = null;
+            cacheSwapped = false;
 
             _log.Info("Install", $"Đã cài '{manifest.PackageName}' v{manifest.Version} ({total} file).");
             return Result.Ok();
@@ -143,14 +196,23 @@ public sealed class PackageInstallerService : IPackageInstallerService
         catch (OperationCanceledException)
         {
             if (backup is not null) _backup.Restore(gamePath, backup.Id);
+            RestorePreviousCache(activeCacheDir, previousCacheDir, cacheSwapped);
             _log.Warn("Install", "Người dùng đã hủy — đã rollback.");
             return Result.Fail("Đã hủy cài đặt và khôi phục file gốc.");
         }
         catch (Exception ex)
         {
             if (backup is not null) _backup.Restore(gamePath, backup.Id);
+            RestorePreviousCache(activeCacheDir, previousCacheDir, cacheSwapped);
             _log.Error("Install", $"Cài thất bại: {ex.Message}", ex);
             return Result.Fail("Cài thất bại (đã rollback): " + ex.Message, ex);
+        }
+        finally
+        {
+            if (stagedCacheDir is not null)
+            {
+                try { if (Directory.Exists(stagedCacheDir)) Directory.Delete(stagedCacheDir, true); } catch { }
+            }
         }
     }
 
@@ -159,19 +221,41 @@ public sealed class PackageInstallerService : IPackageInstallerService
         try
         {
             var state = _settings.LoadState();
-            var pkg = state.InstalledPackages.FirstOrDefault(p => p.PackageId == packageId);
+            var pkg = state.InstalledPackages.FirstOrDefault(p =>
+                p.PackageId.Equals(packageId, StringComparison.OrdinalIgnoreCase));
             if (pkg is null) return Task.FromResult(Result.Fail("Gói chưa được cài."));
 
-            if (string.IsNullOrWhiteSpace(pkg.BackupId)
-                || !Directory.Exists(Path.Combine(_backup.BackupsDirectory, pkg.BackupId)))
+            var overlaps = state.InstalledPackages
+                .Where(p => p.Enabled && p.InstalledAt > pkg.InstalledAt
+                    && !p.PackageId.Equals(packageId, StringComparison.OrdinalIgnoreCase))
+                .Where(p => p.InstalledFiles.Intersect(pkg.InstalledFiles, StringComparer.OrdinalIgnoreCase).Any())
+                .Select(p => p.PackageName).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+            if (overlaps.Count > 0)
+                return Task.FromResult(Result.Fail("Không thể gỡ mod lớp dưới vì các mod cài sau đang dùng chung file: "
+                    + string.Join(", ", overlaps) + ". Hãy gỡ/tắt mod cài sau trước."));
+
+            if (pkg.Enabled)
+            {
+                var changed = ChangedInstalledFiles(gamePath, pkg);
+                if (changed.Count > 0)
+                    return Task.FromResult(Result.Fail("Không gỡ để tránh xóa file đã bị mod khác thay đổi:\n- "
+                        + string.Join("\n- ", changed)
+                        + "\nHãy gỡ/tắt mod ghi đè rồi thử lại."));
+            }
+
+            if (pkg.Enabled && (string.IsNullOrWhiteSpace(pkg.BackupId)
+                || !Directory.Exists(Path.Combine(_backup.BackupsDirectory, pkg.BackupId))))
             {
                 return Task.FromResult(Result.Fail(
                     "Không tìm thấy backup của gói này. Không tự ý xóa file để tránh hỏng game. " +
                     "Hãy dùng Steam → Xác minh file, hoặc trình quản lý game để kiểm tra."));
             }
 
-            var restore = _backup.Restore(gamePath, pkg.BackupId);
-            if (!restore.Success) return Task.FromResult(restore);
+            if (pkg.Enabled)
+            {
+                var restore = _backup.Restore(gamePath, pkg.BackupId);
+                if (!restore.Success) return Task.FromResult(restore);
+            }
 
             // Dọn thư mục rỗng do gói tạo
             RemoveEmptyDirsUpward(gamePath, pkg.InstalledFiles);
@@ -179,7 +263,8 @@ public sealed class PackageInstallerService : IPackageInstallerService
             var cache = Path.Combine(_modCacheDir, packageId);
             if (Directory.Exists(cache)) Directory.Delete(cache, true);
 
-            state.InstalledPackages.RemoveAll(p => p.PackageId == packageId);
+            state.InstalledPackages.RemoveAll(p =>
+                p.PackageId.Equals(packageId, StringComparison.OrdinalIgnoreCase));
             _settings.SaveState(state);
             _log.Info("Uninstall", $"Đã gỡ gói '{packageId}'.");
             return Task.FromResult(Result.Ok());
@@ -189,6 +274,43 @@ public sealed class PackageInstallerService : IPackageInstallerService
             _log.Error("Uninstall", $"Gỡ thất bại: {ex.Message}", ex);
             return Task.FromResult(Result.Fail("Gỡ thất bại: " + ex.Message, ex));
         }
+    }
+
+    private bool BackupExists(string? backupId)
+        => !string.IsNullOrWhiteSpace(backupId)
+           && Directory.Exists(Path.Combine(_backup.BackupsDirectory, backupId));
+
+    private static void RestorePreviousCache(string? activeCacheDir, string? previousCacheDir, bool cacheSwapped)
+    {
+        if (!cacheSwapped || string.IsNullOrWhiteSpace(activeCacheDir)) return;
+        try
+        {
+            if (Directory.Exists(activeCacheDir)) Directory.Delete(activeCacheDir, true);
+            if (!string.IsNullOrWhiteSpace(previousCacheDir) && Directory.Exists(previousCacheDir))
+                Directory.Move(previousCacheDir, activeCacheDir);
+        }
+        catch { }
+    }
+
+    private List<string> ChangedInstalledFiles(string gamePath, InstalledPackage package)
+    {
+        var changed = new List<string>();
+        var cacheDir = Path.Combine(_modCacheDir, package.PackageId);
+        foreach (var destination in package.InstalledFiles.Distinct(StringComparer.OrdinalIgnoreCase))
+        {
+            var installed = PathValidation.ResolveInsideRoot(gamePath, destination);
+            if (!File.Exists(installed)) continue;
+            var expected = (package.FileHashes ?? new Dictionary<string, string>())
+                .FirstOrDefault(x => x.Key.Equals(destination, StringComparison.OrdinalIgnoreCase)).Value;
+            if (string.IsNullOrWhiteSpace(expected))
+            {
+                var cache = PathValidation.ResolveInsideRoot(cacheDir, destination);
+                if (File.Exists(cache)) expected = _hash.Sha256File(cache);
+            }
+            if (!string.IsNullOrWhiteSpace(expected) && !_hash.Verify(installed, expected))
+                changed.Add(destination);
+        }
+        return changed;
     }
 
     private static void RemoveEmptyDirsUpward(string gamePath, IEnumerable<string> destinations)

@@ -127,7 +127,7 @@ LƯU Ý QUAN TRỌNG
   - Hãy TẮT HẲN GAME và launcher trước khi cài hoặc gỡ Việt Hóa.
   - Hai lựa chọn tên là hai bản riêng: Hán Việt hoặc tên nhân vật Tiếng Anh.
   - Đã tích hợp sẵn Font chữ tiếng Việt hiển thị sắc nét, không lỗi ô vuông.
-  - Đầy đủ 85 DB dữ liệu: Cốt truyện 3.6 (1.827 câu), Kỹ năng (3.4/3.5/3.6), UI, Nhiệm vụ.
+  - Đầy đủ 86 DB dữ liệu: Cốt truyện 3.6 (1.827 câu), Kỹ năng (3.4/3.5/3.6), UI, Nhiệm vụ.
   - Khi cần gỡ: Mở lại App VHWuWa -> Cài Việt hóa -> Bấm Gỡ Việt hóa (khôi phục game sạch).
   - Không cần cài đặt thêm .NET (ứng dụng đã đóng gói sẵn môi trường chạy).
 

@@ -69,6 +69,28 @@
                 </StackPanel>
             </ui:Card>
 
+            <!-- Khởi chạy trực tiếp, không chỉnh sửa launcher hoặc cấu hình Steam -->
+            <ui:Card Padding="16" Margin="0,0,0,12">
+                <StackPanel>
+                    <TextBlock Text="Khởi chạy game" FontWeight="SemiBold" FontSize="14" Margin="0,0,0,6" />
+                    <TextBlock Text="Mở Client-Win64-Shipping.exe trực tiếp thay vì launcher."
+                               Opacity="0.7" FontSize="12" Margin="0,0,0,10" />
+                    <CheckBox Content="Bật môi trường C# thử nghiệm (-ForceEnableCSharpEnvironment)"
+                              IsChecked="{Binding ForceCSharpEnvironment, Mode=TwoWay}"
+                              FontWeight="SemiBold" Margin="0,0,0,5" />
+                    <TextBlock Text="Mặc định tắt. Lần đầu có thể tải thêm dữ liệu; dấu * ở cuối phiên bản trong game cho biết đã bật. Nếu lỗi hoặc kém mượt, hãy tắt công tắc."
+                               TextWrapping="Wrap" Opacity="0.65" FontSize="11" Margin="20,0,0,10" />
+                    <WrapPanel>
+                        <ui:Button Content="{Binding LaunchButtonText}" Appearance="Primary"
+                                   Command="{Binding LaunchGameCommand}" Margin="0,0,8,6" Padding="12,7" FontSize="12" />
+                        <ui:Button Content="🛑 Tắt game" Appearance="Danger"
+                                   Command="{Binding KillGameProcessesCommand}" Margin="0,0,8,6" Padding="12,7" FontSize="12" />
+                        <Button Content="📋 Chép tham số cho Steam" Command="{Binding CopyCSharpArgumentCommand}"
+                                Margin="0,0,8,6" Padding="10,7" FontSize="12" />
+                    </WrapPanel>
+                </StackPanel>
+            </ui:Card>
+
             <!-- Card Thư mục game -->
             <ui:Card Padding="16" Margin="0,0,0,12">
                 <StackPanel>
@@ -79,7 +101,6 @@
                         <Button Content="📁 Chọn thư mục" Command="{Binding ChooseFolderCommand}" Margin="0,0,8,6" Padding="10,6" FontSize="12" />
                         <Button Content="📂 Mở thư mục" Command="{Binding OpenFolderCommand}" Margin="0,0,8,6" Padding="10,6" FontSize="12" />
                         <Button Content="✔ Kiểm tra file" Command="{Binding CheckFilesCommand}" Margin="0,0,8,6" Padding="10,6" FontSize="12" />
-                        <ui:Button Content="🛑 Tắt game" Appearance="Danger" Command="{Binding KillGameProcessesCommand}" Margin="0,0,8,6" Padding="10,6" FontSize="12" />
                     </WrapPanel>
                 </StackPanel>
             </ui:Card>

@@ -39,6 +39,17 @@
                                    Command="{Binding InstallCommand}" Margin="0,0,8,8" MinWidth="160" Padding="14,8" FontSize="13" FontWeight="SemiBold" />
                         <Button Content="🗑 Gỡ Việt hóa" Command="{Binding UninstallCommand}" Margin="0,0,8,8" Padding="12,8" FontSize="12" />
                         <Button Content="🔎 Quét lại mod" Command="{Binding CheckConflictsCommand}" Margin="0,0,8,8" Padding="12,8" FontSize="12" />
+                        <ui:Button Content="🧹 Cách ly mod xung đột" Appearance="Danger"
+                                   Command="{Binding QuarantineConflictsCommand}"
+                                   Visibility="{Binding HasConflicts, Converter={StaticResource BoolToVis}}"
+                                   Margin="0,0,8,8" Padding="12,8" FontSize="12" />
+                        <ui:Button Content="🗑 Xóa mod xung đột" Appearance="Danger"
+                                   Command="{Binding DeleteConflictsCommand}"
+                                   Visibility="{Binding HasConflicts, Converter={StaticResource BoolToVis}}"
+                                   Margin="0,0,8,8" Padding="12,8" FontSize="12" />
+                        <Button Content="📂 Mở vùng cách ly" Command="{Binding OpenQuarantineCommand}"
+                                Visibility="{Binding HasQuarantine, Converter={StaticResource BoolToVis}}"
+                                Margin="0,0,8,8" Padding="12,8" FontSize="12" />
                         <Button Content="✖ Hủy" Command="{Binding CancelCommand}"
                                 Visibility="{Binding Busy, Converter={StaticResource BoolToVis}}" Margin="0,0,8,8" Padding="12,8" FontSize="12" />
                     </WrapPanel>

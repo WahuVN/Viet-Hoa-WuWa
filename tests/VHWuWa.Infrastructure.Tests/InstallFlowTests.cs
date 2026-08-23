@@ -112,6 +112,52 @@ public sealed class InstallFlowTests : IDisposable
     }
 
     [Fact]
+    public async Task InstallingOverlappingMod_IsBlockedAndKeepsFirstMod()
+    {
+        var a = MakePack("mod-a", PackageType.Mod, "Data/shared.pak", "A", FileOperation.Copy);
+        var b = MakePack("mod-b", PackageType.Mod, "Data/shared.pak", "B", FileOperation.Copy);
+        Assert.True((await _installer.InstallAsync(_game, a)).Success);
+
+        var result = await _installer.InstallAsync(_game, b);
+
+        Assert.False(result.Success);
+        Assert.Contains("xung đột", result.Error!, StringComparison.OrdinalIgnoreCase);
+        Assert.Equal("A", File.ReadAllText(Path.Combine(_game, "Data", "shared.pak")));
+        Assert.Single(_settings.LoadState().InstalledPackages);
+    }
+
+    [Fact]
+    public async Task Uninstall_RefusesWhenInstalledFileWasChangedExternally()
+    {
+        var pack = MakePack("mod-a", PackageType.Mod, "Data/mod.pak", "A", FileOperation.Copy);
+        Assert.True((await _installer.InstallAsync(_game, pack)).Success);
+        var installed = Path.Combine(_game, "Data", "mod.pak");
+        File.WriteAllText(installed, "OTHER_MOD");
+
+        var result = await _installer.UninstallAsync(_game, "mod-a");
+
+        Assert.False(result.Success);
+        Assert.Contains("mod khác", result.Error!, StringComparison.OrdinalIgnoreCase);
+        Assert.Equal("OTHER_MOD", File.ReadAllText(installed));
+        Assert.Single(_settings.LoadState().InstalledPackages);
+    }
+
+    [Fact]
+    public async Task ReinstallSamePackage_KeepsOriginalBackupForLaterUninstall()
+    {
+        var v1 = MakePack("same-mod", PackageType.Mod, "Data/text.pak", "VERSION_1", FileOperation.Replace);
+        Assert.True((await _installer.InstallAsync(_game, v1)).Success);
+        var firstBackup = _settings.LoadState().InstalledPackages.Single().BackupId;
+
+        var v2 = MakePack("same-mod", PackageType.Mod, "Data/text.pak", "VERSION_2", FileOperation.Replace);
+        Assert.True((await _installer.InstallAsync(_game, v2)).Success);
+        Assert.Equal(firstBackup, _settings.LoadState().InstalledPackages.Single().BackupId);
+
+        Assert.True((await _installer.UninstallAsync(_game, "same-mod")).Success);
+        Assert.Equal("ORIGINAL", File.ReadAllText(Path.Combine(_game, "Data", "text.pak")));
+    }
+
+    [Fact]
     public async Task Uninstall_Without_Backup_Refuses()
     {
         var pack = MakePack("p", PackageType.Mod, "Data/x.pak", "X", FileOperation.Copy);
@@ -121,6 +167,56 @@ public sealed class InstallFlowTests : IDisposable
         var r = await _installer.UninstallAsync(_game, "p");
         Assert.False(r.Success);
         Assert.Contains("backup", r.Error!, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task Uninstall_WithIncompleteBackup_DoesNotPartiallyChangeGame()
+    {
+        var pack = MakePack("replace", PackageType.Mod, "Data/text.pak", "MODDED", FileOperation.Replace);
+        Assert.True((await _installer.InstallAsync(_game, pack)).Success);
+        var package = _settings.LoadState().InstalledPackages.Single();
+        var backupFile = Path.Combine(_backup.BackupsDirectory, package.BackupId, "files", "Data", "text.pak");
+        File.Delete(backupFile);
+
+        var result = await _installer.UninstallAsync(_game, "replace");
+
+        Assert.False(result.Success);
+        Assert.Contains("thiếu file", result.Error!, StringComparison.OrdinalIgnoreCase);
+        Assert.Equal("MODDED", File.ReadAllText(Path.Combine(_game, "Data", "text.pak")));
+        Assert.Single(_settings.LoadState().InstalledPackages);
+    }
+
+    [Fact]
+    public async Task DisabledMod_CanBeRemovedWithoutRestoringOverItsOriginalAgain()
+    {
+        var pack = MakePack("toggle", PackageType.Mod, "Data/mod.pak", "MOD", FileOperation.Copy);
+        Assert.True((await _installer.InstallAsync(_game, pack)).Success);
+        var mods = new ModService(_settings, _backup, _log);
+        Assert.True(mods.SetEnabled(_game, "toggle", false).Success);
+        Assert.False(File.Exists(Path.Combine(_game, "Data", "mod.pak")));
+
+        var result = await _installer.UninstallAsync(_game, "toggle");
+
+        Assert.True(result.Success, result.Error);
+        Assert.Empty(_settings.LoadState().InstalledPackages);
+        Assert.False(File.Exists(Path.Combine(_game, "Data", "mod.pak")));
+    }
+
+    [Fact]
+    public async Task EnableMod_WithMissingCache_DoesNotTouchGameOrState()
+    {
+        var pack = MakePack("toggle", PackageType.Mod, "Data/mod.pak", "MOD", FileOperation.Copy);
+        Assert.True((await _installer.InstallAsync(_game, pack)).Success);
+        var mods = new ModService(_settings, _backup, _log);
+        Assert.True(mods.SetEnabled(_game, "toggle", false).Success);
+        var cached = Path.Combine(_appData, "ModCache", "toggle", "Data", "mod.pak");
+        File.Delete(cached);
+
+        var result = mods.SetEnabled(_game, "toggle", true);
+
+        Assert.False(result.Success);
+        Assert.False(File.Exists(Path.Combine(_game, "Data", "mod.pak")));
+        Assert.False(_settings.LoadState().InstalledPackages.Single().Enabled);
     }
 
     public void Dispose()

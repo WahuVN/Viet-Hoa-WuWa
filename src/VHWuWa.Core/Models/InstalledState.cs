@@ -14,6 +14,9 @@ public sealed class InstalledPackage
     [JsonPropertyName("enabled")] public bool Enabled { get; set; } = true;
     /// <summary>Danh sách đường dẫn đích (tương đối thư mục game) do gói này ghi.</summary>
     [JsonPropertyName("installedFiles")] public List<string> InstalledFiles { get; set; } = new();
+    /// <summary>SHA-256 sau cài theo đường dẫn đích, dùng để phát hiện mod khác đã ghi đè.</summary>
+    [JsonPropertyName("fileHashes")] public Dictionary<string, string> FileHashes { get; set; }
+        = new(StringComparer.OrdinalIgnoreCase);
 }
 
 /// <summary>Trạng thái cài đặt tổng (%LocalAppData%/VHWuWa/installed-state.json).</summary>

@@ -17,6 +17,7 @@ public static class ServiceCollectionExtensions
 
         services.AddSingleton<IGameDetectionService>(sp =>
             new GameDetectionService(sp.GetRequiredService<ILogService>(), configDir));
+        services.AddSingleton<IGameLaunchService, GameLaunchService>();
         services.AddSingleton<IBackupService, BackupService>();
         services.AddSingleton<IPackageInstallerService>(sp => new PackageInstallerService(
             sp.GetRequiredService<IGameDetectionService>(),

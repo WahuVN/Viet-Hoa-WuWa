@@ -36,6 +36,13 @@ public interface IGameDetectionService
     string? DetectVersion(string gamePath);
 }
 
+/// <summary>Khởi chạy trực tiếp Client-Win64-Shipping.exe với chế độ thường hoặc môi trường C# thử nghiệm.</summary>
+public interface IGameLaunchService
+{
+    string GetExecutablePath(string gamePath);
+    Result Launch(string gamePath, bool forceCSharpEnvironment);
+}
+
 /// <summary>Sao lưu &amp; khôi phục file gốc.</summary>
 public interface IBackupService
 {
@@ -58,11 +65,16 @@ public interface IViethoaInstaller
     ViethoaStatus GetStatus(string gamePath);
     /// <summary>Dò PAK/mod/loader khác có thể xung đột với bản Việt hóa tích hợp.</summary>
     IReadOnlyList<string> FindConflicts(string gamePath);
+    /// <summary>Chuyển file mod xung đột sang vùng cách ly có thể khôi phục, không xóa vĩnh viễn.</summary>
+    Result<ModQuarantineReport> QuarantineConflicts(string gamePath);
+    /// <summary>Xóa vĩnh viễn các file mod xung đột sau khi người dùng xác nhận trên giao diện.</summary>
+    Result<int> DeleteConflicts(string gamePath);
     /// <summary>Cài bản Việt hóa theo biến thể tên nhân vật.</summary>
     Task<Result> InstallAsync(string gamePath, NameVariant variant, bool withFont,
         IProgress<InstallProgress>? progress = null, CancellationToken ct = default);
     /// <summary>Gỡ Việt hóa và khôi phục file gốc.</summary>
-    Task<Result> UninstallAsync(string gamePath, CancellationToken ct = default);
+    Task<Result> UninstallAsync(string gamePath, bool forceRemoveChangedFiles = false,
+        CancellationToken ct = default);
 }
 
 /// <summary>Cài / gỡ gói .vhwpack (Việt hóa hoặc mod) — có kiểm tra, backup, rollback.</summary>

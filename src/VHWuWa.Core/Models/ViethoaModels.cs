@@ -37,3 +37,10 @@ public sealed class ViethoaStatus
         _ => "-"
     };
 }
+
+/// <summary>Kết quả chuyển mod xung đột ra khỏi thư mục game.</summary>
+public sealed class ModQuarantineReport
+{
+    public string QuarantineDirectory { get; set; } = "";
+    public List<string> MovedFiles { get; set; } = new();
+}

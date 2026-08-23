@@ -54,27 +54,49 @@ public sealed class ModService : IModService
         try
         {
             var state = _settings.LoadState();
-            var pkg = state.InstalledPackages.FirstOrDefault(p => p.PackageId == packageId);
+            var pkg = state.InstalledPackages.FirstOrDefault(p =>
+                p.PackageId.Equals(packageId, StringComparison.OrdinalIgnoreCase));
             if (pkg is null) return Result.Fail("Không tìm thấy mod.");
             if (pkg.Enabled == enabled) return Result.Ok();
+
+            var overlaps = state.InstalledPackages
+                .Where(p => p.Enabled && !p.PackageId.Equals(packageId, StringComparison.OrdinalIgnoreCase))
+                .Where(p => p.InstalledFiles.Intersect(pkg.InstalledFiles, StringComparer.OrdinalIgnoreCase).Any())
+                .Select(p => p.PackageName).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+            if (enabled && overlaps.Count > 0)
+                return Result.Fail($"Mod xung đột với: {string.Join(", ", overlaps)}. Hãy tắt/gỡ mod đó trước.");
 
             if (!enabled)
             {
                 // Tắt: khôi phục file gốc từ backup (gỡ lớp phủ mod)
-                if (!string.IsNullOrWhiteSpace(pkg.BackupId))
-                    _backup.Restore(gamePath, pkg.BackupId);
+                var changed = ChangedFiles(gamePath, pkg);
+                if (changed.Count > 0)
+                    return Result.Fail("Không tắt để tránh ghi đè file đã bị mod khác thay đổi:\n- "
+                        + string.Join("\n- ", changed));
+                if (string.IsNullOrWhiteSpace(pkg.BackupId))
+                    return Result.Fail("Mod không có thông tin backup nên không thể tắt an toàn.");
+                var restore = _backup.Restore(gamePath, pkg.BackupId);
+                if (!restore.Success) return restore;
             }
             else
             {
                 // Bật: copy lại từ ModCache
-                var cacheDir = Path.Combine(_modCacheDir, packageId);
+                var cacheDir = Path.Combine(_modCacheDir, pkg.PackageId);
+                if (!Directory.Exists(cacheDir))
+                    return Result.Fail("Đã mất bộ nhớ đệm của mod; hãy cài lại gói thay vì bật.");
+                var missing = pkg.InstalledFiles.Where(d =>
+                    !File.Exists(PathValidation.ResolveInsideRoot(cacheDir, d))).ToList();
+                if (missing.Count > 0)
+                    return Result.Fail("Thiếu file bộ nhớ đệm; chưa bật mod và chưa thay đổi game:\n- "
+                        + string.Join("\n- ", missing));
                 foreach (var d in pkg.InstalledFiles)
                 {
                     var cache = PathValidation.ResolveInsideRoot(cacheDir, d);
-                    if (!File.Exists(cache)) continue;
                     var dest = PathValidation.ResolveInsideRoot(gamePath, d);
                     Directory.CreateDirectory(Path.GetDirectoryName(dest)!);
                     File.Copy(cache, dest, overwrite: true);
+                    pkg.FileHashes ??= new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+                    pkg.FileHashes[d] = ViethoaInstallMarker.Sha256(cache);
                 }
             }
             pkg.Enabled = enabled;
@@ -97,12 +119,35 @@ public sealed class ModService : IModService
             using var reader = VhwPackageReader.Open(vhwpackPath);
             var dests = reader.Manifest.Files.Select(f => f.Destination).ToHashSet(StringComparer.OrdinalIgnoreCase);
             var state = _settings.LoadState();
-            foreach (var p in state.InstalledPackages)
+            foreach (var p in state.InstalledPackages.Where(p => p.Enabled
+                         && !p.PackageId.Equals(reader.Manifest.PackageId, StringComparison.OrdinalIgnoreCase)))
                 foreach (var d in p.InstalledFiles)
-                    if (dests.Contains(d)) conflicts.Add($"{d} (đang thuộc {p.PackageName})");
+                    if (dests.Contains(d)) conflicts.Add($"{p.PackageName}: {d}");
         }
         catch { }
         return conflicts;
+    }
+
+    private List<string> ChangedFiles(string gamePath, InstalledPackage package)
+    {
+        var changed = new List<string>();
+        var cacheDir = Path.Combine(_modCacheDir, package.PackageId);
+        foreach (var destination in package.InstalledFiles.Distinct(StringComparer.OrdinalIgnoreCase))
+        {
+            var installed = PathValidation.ResolveInsideRoot(gamePath, destination);
+            if (!File.Exists(installed)) continue;
+            var expected = (package.FileHashes ?? new Dictionary<string, string>())
+                .FirstOrDefault(x => x.Key.Equals(destination, StringComparison.OrdinalIgnoreCase)).Value;
+            if (string.IsNullOrWhiteSpace(expected))
+            {
+                var cache = PathValidation.ResolveInsideRoot(cacheDir, destination);
+                if (File.Exists(cache)) expected = ViethoaInstallMarker.Sha256(cache);
+            }
+            if (!string.IsNullOrWhiteSpace(expected)
+                && !expected.Equals(ViethoaInstallMarker.Sha256(installed), StringComparison.OrdinalIgnoreCase))
+                changed.Add(destination);
+        }
+        return changed;
     }
 }
 
@@ -164,44 +209,40 @@ public sealed class FontService : IFontService
 
             var mods = ModsDir(gamePath);
             Directory.CreateDirectory(mods);
+            var markerPath = Path.Combine(mods, "vhwuwa_install.json");
+            var marker = ViethoaInstallMarker.Load(markerPath);
+            if (marker is null)
+                return Task.FromResult(Result.Fail("Chưa có bản Việt hóa do VHWuWa quản lý. Hãy cài Việt hóa trước khi đổi font."));
+            var newFontName = Path.GetFileName(fontPakPath);
+            if (newFontName.Equals("WuWaVH_99_P.pak", StringComparison.OrdinalIgnoreCase))
+                return Task.FromResult(Result.Fail("Tên file font trùng với PAK Việt hóa; hãy chọn file font khác."));
 
-            // Xóa font pak cũ trong ~WuWaMods để tránh đè trùng font
-            foreach (var old in Directory.EnumerateFiles(mods, "*", SearchOption.TopDirectoryOnly))
+            // Chỉ xóa đúng font đã được marker ghi nhận; không đụng tới mod *_100_P.pak khác.
+            var oldFont = string.IsNullOrWhiteSpace(marker.Font) ? null : Path.GetFileName(marker.Font);
+            if (oldFont is not null)
             {
-                var fn = Path.GetFileName(old);
-                if (fn.EndsWith("_100_P.pak", StringComparison.OrdinalIgnoreCase) ||
-                    fn.EndsWith("_100_P.sig", StringComparison.OrdinalIgnoreCase) ||
-                    fn.StartsWith("WahuFont_", StringComparison.OrdinalIgnoreCase))
-                {
-                    try { File.Delete(old); } catch { }
-                }
+                var oldPak = Path.Combine(mods, oldFont);
+                var oldSig = Path.Combine(mods, Path.ChangeExtension(oldFont, ".sig"));
+                if (File.Exists(oldPak) && !marker.Matches("mods", oldPak))
+                    return Task.FromResult(Result.Fail("Font hiện tại đã bị mod khác ghi đè; không thay thế để tránh xóa nhầm. Hãy gỡ mod xung đột trước."));
+                if (File.Exists(oldSig) && !marker.Matches("mods", oldSig))
+                    return Task.FromResult(Result.Fail("File chữ ký của font đã bị mod khác thay đổi; không thay thế để tránh xóa nhầm."));
+                if (File.Exists(oldPak)) File.Delete(oldPak);
+                if (File.Exists(oldSig)) File.Delete(oldSig);
+                marker.ForgetModFile(oldFont);
+                marker.ForgetModFile(Path.ChangeExtension(oldFont, ".sig"));
             }
 
-            var dest = Path.Combine(mods, Path.GetFileName(fontPakPath));
+            var dest = Path.Combine(mods, newFontName);
             File.Copy(fontPakPath, dest, overwrite: true);
 
             var seedSig = FindSeedSig(paks);
-            WriteSig(seedSig, Path.ChangeExtension(dest, ".sig"));
-
-            var markerPath = Path.Combine(mods, "vhwuwa_install.json");
-            if (File.Exists(markerPath))
-            {
-                try
-                {
-                    using var doc = System.Text.Json.JsonDocument.Parse(File.ReadAllText(markerPath));
-                    var root = doc.RootElement;
-                    var variant = root.TryGetProperty("variant", out var v) ? v.GetString() : "english";
-                    var markerObj = new
-                    {
-                        schemaVersion = 1,
-                        variant = variant,
-                        font = Path.GetFileName(dest),
-                        installedAt = DateTimeOffset.Now
-                    };
-                    File.WriteAllText(markerPath, System.Text.Json.JsonSerializer.Serialize(markerObj, new System.Text.Json.JsonSerializerOptions { WriteIndented = true }));
-                }
-                catch { }
-            }
+            var destSig = Path.ChangeExtension(dest, ".sig");
+            WriteSig(seedSig, destSig);
+            marker.Font = Path.GetFileName(dest);
+            marker.Track("mods", dest);
+            marker.Track("mods", destSig);
+            marker.Save(markerPath);
 
             return Task.FromResult(Result.Ok());
         }
@@ -217,39 +258,25 @@ public sealed class FontService : IFontService
         {
             var mods = ModsDir(gamePath);
             if (!Directory.Exists(mods)) return Task.FromResult(Result.Ok());
-            var n = 0;
-            foreach (var old in Directory.EnumerateFiles(mods, "*", SearchOption.TopDirectoryOnly))
-            {
-                var fn = Path.GetFileName(old);
-                if (fn.EndsWith("_100_P.pak", StringComparison.OrdinalIgnoreCase) ||
-                    fn.EndsWith("_100_P.sig", StringComparison.OrdinalIgnoreCase) ||
-                    fn.StartsWith("WahuFont_", StringComparison.OrdinalIgnoreCase))
-                {
-                    try { File.Delete(old); n++; } catch { }
-                }
-            }
-
             var markerPath = Path.Combine(mods, "vhwuwa_install.json");
-            if (File.Exists(markerPath))
-            {
-                try
-                {
-                    using var doc = System.Text.Json.JsonDocument.Parse(File.ReadAllText(markerPath));
-                    var root = doc.RootElement;
-                    var variant = root.TryGetProperty("variant", out var v) ? v.GetString() : "english";
-                    var markerObj = new
-                    {
-                        schemaVersion = 1,
-                        variant = variant,
-                        font = (string?)null,
-                        installedAt = DateTimeOffset.Now
-                    };
-                    File.WriteAllText(markerPath, System.Text.Json.JsonSerializer.Serialize(markerObj, new System.Text.Json.JsonSerializerOptions { WriteIndented = true }));
-                }
-                catch { }
-            }
+            var marker = ViethoaInstallMarker.Load(markerPath);
+            var font = string.IsNullOrWhiteSpace(marker?.Font) ? null : Path.GetFileName(marker.Font);
+            if (marker is null || font is null)
+                return Task.FromResult(Result.Fail("Không có font do VHWuWa quản lý để xóa."));
 
-            return Task.FromResult(n > 0 ? Result.Ok() : Result.Fail("Không có font pak nào để xóa."));
+            var pak = Path.Combine(mods, font);
+            var sig = Path.Combine(mods, Path.ChangeExtension(font, ".sig"));
+            if (File.Exists(pak) && !marker.Matches("mods", pak))
+                return Task.FromResult(Result.Fail("Font đã bị mod khác thay đổi; không xóa để tránh mất dữ liệu. Hãy gỡ mod ghi đè trước."));
+            if (File.Exists(sig) && !marker.Matches("mods", sig))
+                return Task.FromResult(Result.Fail("File chữ ký của font đã bị mod khác thay đổi; không xóa để tránh mất dữ liệu."));
+            if (File.Exists(pak)) File.Delete(pak);
+            if (File.Exists(sig)) File.Delete(sig);
+            marker.ForgetModFile(font);
+            marker.ForgetModFile(Path.ChangeExtension(font, ".sig"));
+            marker.Font = null;
+            marker.Save(markerPath);
+            return Task.FromResult(Result.Ok());
         }
         catch (Exception e)
         {
@@ -348,9 +375,10 @@ public sealed class FontService : IFontService
         {
             var mods = ModsDir(gamePath);
             if (!Directory.Exists(mods)) return null;
-            return Directory.EnumerateFiles(mods, "*_100_P.pak")
-                .Concat(Directory.EnumerateFiles(mods, "WahuFont_*.pak"))
-                .Select(Path.GetFileName).FirstOrDefault();
+            var marker = ViethoaInstallMarker.Load(Path.Combine(mods, "vhwuwa_install.json"));
+            if (string.IsNullOrWhiteSpace(marker?.Font)) return null;
+            var name = Path.GetFileName(marker.Font);
+            return File.Exists(Path.Combine(mods, name)) ? name : null;
         }
         catch { return null; }
     }

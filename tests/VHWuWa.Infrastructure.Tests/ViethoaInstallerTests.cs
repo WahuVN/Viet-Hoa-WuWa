@@ -40,7 +40,8 @@ public sealed class ViethoaInstallerTests : IDisposable
 
         _settings = new SettingsService(Path.Combine(_work, "appdata"));
         _log = new LogService(_settings);
-        _viet = new ViethoaInstaller(_log, _content);
+        _viet = new ViethoaInstaller(_log, _content, Path.Combine(_work, "quarantine"),
+            isGameRunning: () => false);
     }
 
     private string Mods => Path.Combine(_paks, "~WuWaMods");
@@ -136,6 +137,22 @@ public sealed class ViethoaInstallerTests : IDisposable
     }
 
     [Fact]
+    public async Task RootPaksCustomPriorityMod_IsReportedButOfficialPakchunkIsIgnored()
+    {
+        var custom = Path.Combine(_paks, "CoolCharacter_P.pak");
+        File.WriteAllText(custom, "MOD");
+        File.WriteAllText(Path.Combine(_paks, "pakchunk0-WindowsNoEditor_P.pak"), "OFFICIAL");
+
+        var conflicts = _viet.FindConflicts(_game);
+
+        Assert.Contains(conflicts, x => x.Contains("CoolCharacter_P.pak", StringComparison.OrdinalIgnoreCase));
+        Assert.DoesNotContain(conflicts, x => x.Contains("pakchunk0", StringComparison.OrdinalIgnoreCase));
+        var install = await _viet.InstallAsync(_game, NameVariant.HanViet, withFont: true);
+        Assert.False(install.Success);
+        Assert.Equal("MOD", File.ReadAllText(custom));
+    }
+
+    [Fact]
     public async Task OwnInstall_IsNotReportedAsConflict_AndCanSwitchVariant()
     {
         Assert.True((await _viet.InstallAsync(_game, NameVariant.HanViet, withFont: true)).Success);
@@ -160,6 +177,129 @@ public sealed class ViethoaInstallerTests : IDisposable
         Assert.True(Directory.Exists(Mods));
         Assert.Equal("USER_FILE", File.ReadAllText(foreign));
         Assert.False(File.Exists(Path.Combine(Mods, "WuWaVH_99_P.pak")));
+    }
+
+    [Fact]
+    public async Task ForeignPriority100Pak_IsReportedAndNeverDeleted()
+    {
+        Assert.True((await _viet.InstallAsync(_game, NameVariant.HanViet, withFont: true)).Success);
+        var foreignPak = Path.Combine(Mods, "OtherMod_100_P.pak");
+        var foreignSig = Path.ChangeExtension(foreignPak, ".sig");
+        File.WriteAllText(foreignPak, "FOREIGN_MOD");
+        File.WriteAllText(foreignSig, "FOREIGN_SIG");
+
+        var conflicts = _viet.FindConflicts(_game);
+        Assert.Contains(conflicts, x => x.Contains("OtherMod_100_P.pak", StringComparison.OrdinalIgnoreCase));
+
+        var uninstall = await _viet.UninstallAsync(_game);
+        Assert.True(uninstall.Success, uninstall.Error);
+        Assert.Equal("FOREIGN_MOD", File.ReadAllText(foreignPak));
+        Assert.Equal("FOREIGN_SIG", File.ReadAllText(foreignSig));
+        Assert.False(File.Exists(Path.Combine(Mods, "WuWaVH_99_P.pak")));
+    }
+
+    [Fact]
+    public async Task Uninstall_RefusesWhenTranslationPakWasOverwrittenByAnotherMod()
+    {
+        Assert.True((await _viet.InstallAsync(_game, NameVariant.HanViet, withFont: true)).Success);
+        var managedPak = Path.Combine(Mods, "WuWaVH_99_P.pak");
+        File.WriteAllText(managedPak, "OTHER_MOD_OVERWRITE");
+
+        Assert.Contains(_viet.FindConflicts(_game), x => x.Contains("ghi đè", StringComparison.OrdinalIgnoreCase));
+        var uninstall = await _viet.UninstallAsync(_game);
+
+        Assert.False(uninstall.Success);
+        Assert.Contains("không gỡ", uninstall.Error!, StringComparison.OrdinalIgnoreCase);
+        Assert.Equal("OTHER_MOD_OVERWRITE", File.ReadAllText(managedPak));
+    }
+
+    [Fact]
+    public async Task Uninstall_Force_RemovesOverwrittenManagedFileAfterExplicitChoice()
+    {
+        Assert.True((await _viet.InstallAsync(_game, NameVariant.HanViet, withFont: true)).Success);
+        var managedPak = Path.Combine(Mods, "WuWaVH_99_P.pak");
+        File.WriteAllText(managedPak, "OTHER_MOD_OVERWRITE");
+
+        var uninstall = await _viet.UninstallAsync(_game, forceRemoveChangedFiles: true);
+
+        Assert.True(uninstall.Success, uninstall.Error);
+        Assert.False(File.Exists(managedPak));
+        Assert.False(_viet.GetStatus(_game).Installed);
+    }
+
+    [Fact]
+    public async Task Uninstall_RefusesWhenVersionLoaderWasOverwrittenByAnotherMod()
+    {
+        Assert.True((await _viet.InstallAsync(_game, NameVariant.English, withFont: false)).Success);
+        var version = Path.Combine(_win64, "version.dll");
+        File.WriteAllText(version, "OTHER_PROXY_LOADER");
+
+        Assert.Contains(_viet.FindConflicts(_game), x => x.Contains("version.dll", StringComparison.OrdinalIgnoreCase));
+        var uninstall = await _viet.UninstallAsync(_game);
+
+        Assert.False(uninstall.Success);
+        Assert.Equal("OTHER_PROXY_LOADER", File.ReadAllText(version));
+        Assert.True(File.Exists(Path.Combine(Mods, "WuWaVH_99_P.pak")));
+    }
+
+    [Fact]
+    public async Task KnownWinHttpLocalizationBundle_IsDetectedAndQuarantinedWithoutTouchingVhwFiles()
+    {
+        Assert.True((await _viet.InstallAsync(_game, NameVariant.HanViet, withFont: true)).Success);
+        var foreignDir = Path.Combine(_win64, "wuwaVietHoa");
+        Directory.CreateDirectory(foreignDir);
+        var foreignTranslation = Path.Combine(foreignDir, "WuWaVH_99_P.pak");
+        var foreignFont = Path.Combine(foreignDir, "Default_font_99_P.pak");
+        var winhttp = Path.Combine(_win64, "winhttp.dll");
+        File.WriteAllText(foreignTranslation, "FOREIGN_TRANSLATION");
+        File.WriteAllText(foreignFont, "FOREIGN_FONT");
+        File.WriteAllText(winhttp, "FOREIGN_PROXY");
+
+        var conflicts = _viet.FindConflicts(_game);
+        Assert.Contains(conflicts, x => x.Contains("winhttp.dll", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(conflicts, x => x.Contains("wuwaVietHoa", StringComparison.OrdinalIgnoreCase));
+
+        var result = _viet.QuarantineConflicts(_game);
+
+        Assert.True(result.Success, result.Error);
+        Assert.NotNull(result.Value);
+        Assert.Equal(3, result.Value.MovedFiles.Count);
+        Assert.False(File.Exists(winhttp));
+        Assert.False(Directory.Exists(foreignDir));
+        Assert.True(File.Exists(Path.Combine(Mods, "WuWaVH_99_P.pak")));
+        Assert.True(File.Exists(Path.Combine(Mods, "WahuFont_100_P.pak")));
+        Assert.True(File.Exists(Path.Combine(result.Value.QuarantineDirectory, "quarantine-manifest.json")));
+        Assert.Empty(_viet.FindConflicts(_game));
+    }
+
+    [Fact]
+    public async Task DeleteConflicts_PermanentlyRemovesForeignBundleAndChangedManagedPak()
+    {
+        Assert.True((await _viet.InstallAsync(_game, NameVariant.HanViet, withFont: true)).Success);
+        var managedPak = Path.Combine(Mods, "WuWaVH_99_P.pak");
+        File.WriteAllText(managedPak, "OTHER_MOD_OVERWRITE");
+        var foreignDir = Path.Combine(_win64, "wuwaVietHoa");
+        Directory.CreateDirectory(foreignDir);
+        var foreignTranslation = Path.Combine(foreignDir, "WuWaVH_99_P.pak");
+        var foreignFont = Path.Combine(foreignDir, "Default_font_99_P.pak");
+        var winhttp = Path.Combine(_win64, "winhttp.dll");
+        File.WriteAllText(foreignTranslation, "FOREIGN_TRANSLATION");
+        File.WriteAllText(foreignFont, "FOREIGN_FONT");
+        File.WriteAllText(winhttp, "FOREIGN_PROXY");
+
+        var result = _viet.DeleteConflicts(_game);
+
+        Assert.True(result.Success, result.Error);
+        Assert.Equal(4, result.Value);
+        Assert.False(File.Exists(managedPak));
+        Assert.False(File.Exists(winhttp));
+        Assert.False(Directory.Exists(foreignDir));
+        Assert.True(File.Exists(Path.Combine(Mods, "WahuFont_100_P.pak")));
+        Assert.True(File.Exists(Path.Combine(_win64, "version.dll")));
+        Assert.Empty(_viet.FindConflicts(_game));
+
+        var uninstall = await _viet.UninstallAsync(_game);
+        Assert.True(uninstall.Success, uninstall.Error);
     }
 
     [Fact]

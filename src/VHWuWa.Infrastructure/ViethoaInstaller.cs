@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Text;
 using VHWuWa.Core.Abstractions;
 using VHWuWa.Core.Models;
+using VHWuWa.Core.Services;
 
 namespace VHWuWa.Infrastructure;
 
@@ -26,6 +27,8 @@ public sealed class ViethoaInstaller : IViethoaInstaller
         { "version.dll", "dxgi.dll", "dinput8.dll", "winmm.dll", "xinput1_3.dll", "xinput1_4.dll", "dsound.dll", "winhttp.dll" };
     private readonly ILogService _log;
     private readonly string _contentDir;
+    private readonly string _quarantineRoot;
+    private readonly Func<bool> _isGameRunning;
 
     private sealed class OperationLease : IDisposable
     {
@@ -42,10 +45,13 @@ public sealed class ViethoaInstaller : IViethoaInstaller
         }
     }
 
-    public ViethoaInstaller(ILogService log, string? contentDir = null)
+    public ViethoaInstaller(ILogService log, string? contentDir = null, string? quarantineRoot = null,
+        Func<bool>? isGameRunning = null)
     {
         _log = log;
         _contentDir = contentDir ?? Path.Combine(AppContext.BaseDirectory, "content");
+        _quarantineRoot = quarantineRoot ?? Path.Combine(AppPaths.AppData, "Quarantine");
+        _isGameRunning = isGameRunning ?? DetectGameRunning;
     }
 
     private string HanVietPak => Path.Combine(_contentDir, "WuWaVH_HanViet_99_P.pak");
@@ -82,15 +88,20 @@ public sealed class ViethoaInstaller : IViethoaInstaller
     private static string ModsOf(string gamePath) =>
         Path.Combine(PaksOf(gamePath), ModsFolder);
 
-    private static bool IsGameRunning()
+    private static bool DetectGameRunning()
     {
         try
         {
-            return Process.GetProcessesByName("Client-Win64-Shipping").Length > 0
-                || Process.GetProcessesByName("Wuthering Waves").Length > 0;
+            var processes = Process.GetProcessesByName("Client-Win64-Shipping")
+                .Concat(Process.GetProcessesByName("Wuthering Waves"))
+                .ToArray();
+            try { return processes.Length > 0; }
+            finally { foreach (var process in processes) process.Dispose(); }
         }
         catch { return false; }
     }
+
+    private bool IsGameRunning() => _isGameRunning();
 
     private static OperationLease? TryAcquireOperationLock(string gamePath)
     {
@@ -137,49 +148,79 @@ public sealed class ViethoaInstaller : IViethoaInstaller
     {
         var owned = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         {
-            PakName, Path.ChangeExtension(PakName, ".sig"), MarkerName,
-            "WahuFont_100_P.pak", "WahuFont_100_P.sig",
-            "font_BeaufortforLOL-Bold_100_P.pak", "font_BeaufortforLOL-Bold_100_P.sig"
+            PakName, Path.ChangeExtension(PakName, ".sig"), MarkerName
         };
-        var bundledFont = FindFontPak();
-        if (bundledFont is not null)
+
+        var marker = ViethoaInstallMarker.Load(Path.Combine(mods, MarkerName));
+        if (!string.IsNullOrWhiteSpace(marker?.Font))
         {
-            var name = Path.GetFileName(bundledFont);
+            var name = Path.GetFileName(marker.Font);
             owned.Add(name);
             owned.Add(Path.ChangeExtension(name, ".sig"));
         }
-
-        // Tự động nhận diện mọi font tiếng Việt do Tool quản lý (_100_P.pak và .sig)
-        if (Directory.Exists(mods))
+        if (marker is not null)
         {
-            foreach (var file in Directory.EnumerateFiles(mods, "*", SearchOption.TopDirectoryOnly))
+            foreach (var key in marker.ManagedFiles.Keys)
             {
-                var fn = Path.GetFileName(file);
-                if (fn.EndsWith("_100_P.pak", StringComparison.OrdinalIgnoreCase) ||
-                    fn.EndsWith("_100_P.sig", StringComparison.OrdinalIgnoreCase) ||
-                    fn.StartsWith("WahuFont_", StringComparison.OrdinalIgnoreCase))
-                {
-                    owned.Add(fn);
-                }
+                if (!key.StartsWith("mods/", StringComparison.OrdinalIgnoreCase)) continue;
+                owned.Add(Path.GetFileName(key));
             }
         }
-
-        var marker = Path.Combine(mods, MarkerName);
-        try
-        {
-            if (File.Exists(marker))
-            {
-                using var doc = JsonDocument.Parse(File.ReadAllText(marker));
-                if (doc.RootElement.TryGetProperty("font", out var font) && !string.IsNullOrWhiteSpace(font.GetString()))
-                {
-                    var name = Path.GetFileName(font.GetString()!);
-                    owned.Add(name);
-                    owned.Add(Path.ChangeExtension(name, ".sig"));
-                }
-            }
-        }
-        catch { }
         return owned;
+    }
+
+    private bool MatchesLegacyManagedFile(ViethoaInstallMarker? marker, string scope, string filePath)
+    {
+        if (!File.Exists(filePath)) return true;
+        if (marker is not null)
+        {
+            var key = scope.Equals("win64", StringComparison.OrdinalIgnoreCase)
+                ? ViethoaInstallMarker.LoaderKey(Path.GetFileName(filePath))
+                : ViethoaInstallMarker.ModKey(Path.GetFileName(filePath));
+            if (marker.ManagedFiles.ContainsKey(key)) return marker.Matches(scope, filePath);
+        }
+
+        var name = Path.GetFileName(filePath);
+        if (scope.Equals("win64", StringComparison.OrdinalIgnoreCase))
+        {
+            var source = Path.Combine(LoaderDir, name);
+            return File.Exists(source) && SameFile(filePath, source);
+        }
+        if (name.Equals(PakName, StringComparison.OrdinalIgnoreCase))
+        {
+            var source = marker?.Variant == "en" ? EnPak : HanVietPak;
+            return File.Exists(source) && SameFile(filePath, source);
+        }
+        if (!string.IsNullOrWhiteSpace(marker?.Font)
+            && name.Equals(Path.GetFileName(marker.Font), StringComparison.OrdinalIgnoreCase))
+        {
+            var bundled = FindFontPak();
+            return bundled is null || !Path.GetFileName(bundled).Equals(name, StringComparison.OrdinalIgnoreCase)
+                || SameFile(filePath, bundled);
+        }
+        return true;
+    }
+
+    private IReadOnlyList<string> FindManagedFileChanges(string gamePath)
+    {
+        var changes = new List<string>();
+        var mods = ModsOf(gamePath);
+        var win64 = Win64Of(gamePath);
+        var marker = ViethoaInstallMarker.Load(Path.Combine(mods, MarkerName));
+
+        foreach (var name in OwnedModFiles(mods).Where(n => !n.Equals(MarkerName, StringComparison.OrdinalIgnoreCase)))
+        {
+            var path = Path.Combine(mods, name);
+            if (File.Exists(path) && !MatchesLegacyManagedFile(marker, "mods", path))
+                changes.Add("File Việt hóa/font đã bị thay đổi: " + Path.Combine(ModsFolder, name));
+        }
+        foreach (var name in new[] { "version.dll", "verorg.dll", "WuWaVH.dll" })
+        {
+            var path = Path.Combine(win64, name);
+            if (File.Exists(path) && !MatchesLegacyManagedFile(marker, "win64", path))
+                changes.Add("Loader Việt hóa đã bị mod khác ghi đè: Win64\\" + name);
+        }
+        return changes;
     }
 
     private static bool SameFile(string left, string right)
@@ -259,45 +300,75 @@ public sealed class ViethoaInstaller : IViethoaInstaller
             var paks = PaksOf(gamePath);
             var mods = ModsOf(gamePath);
             var markerExists = File.Exists(Path.Combine(mods, MarkerName));
+            var marker = ViethoaInstallMarker.Load(Path.Combine(mods, MarkerName));
             var owned = OwnedModFiles(mods);
 
             if (Directory.Exists(paks))
             {
+                // Một số mod được thả trực tiếp vào Paks thay vì thư mục ~mods.
+                // Chỉ nhận mẫu *_P.* và loại pakchunk chính thức để tránh báo giả hàng nghìn file game.
+                foreach (var file in Directory.EnumerateFiles(paks, "*", SearchOption.TopDirectoryOnly))
+                {
+                    var name = Path.GetFileName(file);
+                    var extension = Path.GetExtension(file);
+                    if (!ModExtensions.Contains(extension)
+                        || name.StartsWith("pakchunk", StringComparison.OrdinalIgnoreCase)
+                        || !Path.GetFileNameWithoutExtension(name).EndsWith("_P", StringComparison.OrdinalIgnoreCase))
+                        continue;
+                    if (extension.Equals(".sig", StringComparison.OrdinalIgnoreCase)
+                        && File.Exists(Path.ChangeExtension(file, ".pak"))) continue;
+                    conflicts.Add("Mod ngoài ở thư mục Paks: " + name);
+                }
+
                 foreach (var dir in Directory.EnumerateDirectories(paks, "~*", SearchOption.TopDirectoryOnly))
                 {
                     if (Path.GetFullPath(dir).Equals(Path.GetFullPath(mods), StringComparison.OrdinalIgnoreCase))
                     {
                         foreach (var file in Directory.EnumerateFiles(dir, "*", SearchOption.TopDirectoryOnly))
-                            if ((!markerExists || !owned.Contains(Path.GetFileName(file))) && ModExtensions.Contains(Path.GetExtension(file)))
-                                conflicts.Add("File mod khác: " + Path.GetRelativePath(paks, file));
+                        {
+                            if (!ModExtensions.Contains(Path.GetExtension(file))) continue;
+                            var name = Path.GetFileName(file);
+                            if (markerExists && owned.Contains(name))
+                            {
+                                if (!MatchesLegacyManagedFile(marker, "mods", file))
+                                    conflicts.Add("File của Việt hóa đã bị mod khác ghi đè: " + Path.GetRelativePath(paks, file));
+                                continue;
+                            }
+                            // Một .sig đi cùng .pak chỉ là file phụ; báo tên PAK một lần cho dễ hiểu.
+                            if (Path.GetExtension(file).Equals(".sig", StringComparison.OrdinalIgnoreCase)
+                                && File.Exists(Path.ChangeExtension(file, ".pak"))) continue;
+                            conflicts.Add("Mod khác: " + Path.GetRelativePath(paks, file));
+                        }
                         continue;
                     }
-                    foreach (var file in Directory.EnumerateFiles(dir, "*", SearchOption.AllDirectories))
+                    foreach (var file in SafeEnumerateFiles(dir))
                         if (ModExtensions.Contains(Path.GetExtension(file)))
                             conflicts.Add("Thư mục mod khác: " + Path.GetRelativePath(paks, file));
                 }
             }
 
             var win64 = Win64Of(gamePath);
-            var isWahuVersionDll = File.Exists(Path.Combine(win64, "WuWaVH.dll"))
-                                || File.Exists(Path.Combine(win64, "verorg.dll"))
-                                || File.Exists(Path.Combine(win64, "version_goc.dll"))
-                                || (File.Exists(Path.Combine(win64, "version.dll")) && File.Exists(Path.Combine(LoaderDir, "version.dll")) && SameFile(Path.Combine(win64, "version.dll"), Path.Combine(LoaderDir, "version.dll")));
-
             foreach (var name in ProxyLoaders)
             {
-                if (name.Equals("version.dll", StringComparison.OrdinalIgnoreCase) && isWahuVersionDll)
-                    continue; // version.dll là loader của Wahu, sẽ được cài đè / nâng cấp sạch sẽ
-
                 var installed = Path.Combine(win64, name);
                 if (!File.Exists(installed)) continue;
                 var ownSource = Path.Combine(LoaderDir, name);
-                if (markerExists && SameFile(installed, ownSource)) continue;
+                if (markerExists && File.Exists(ownSource)
+                    && MatchesLegacyManagedFile(marker, "win64", installed)) continue;
                 conflicts.Add("Loader/proxy khác: Win64\\" + name);
+            }
+            foreach (var name in new[] { "verorg.dll", "WuWaVH.dll" })
+            {
+                var installed = Path.Combine(win64, name);
+                if (markerExists && File.Exists(installed)
+                    && !MatchesLegacyManagedFile(marker, "win64", installed))
+                    conflicts.Add("Loader Việt hóa đã bị mod khác ghi đè: Win64\\" + name);
             }
             foreach (var dirName in new[] { "Mods", "ue4ss", "RE-UE4SS" })
                 if (Directory.Exists(Path.Combine(win64, dirName)))
                     conflicts.Add("Bộ nạp mod khác: Win64\\" + dirName + "\\");
+            if (Directory.Exists(Path.Combine(win64, "wuwaVietHoa")))
+                conflicts.Add("Bộ Việt hóa khác: Win64\\wuwaVietHoa\\ (PAK/font được nạp qua proxy)");
         }
         catch (Exception ex)
         {
@@ -306,12 +377,264 @@ public sealed class ViethoaInstaller : IViethoaInstaller
         return conflicts.Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(x => x).ToList();
     }
 
+    public Result<ModQuarantineReport> QuarantineConflicts(string gamePath)
+    {
+        var moved = new List<(string Source, string Target, string Relative, string Hash)>();
+        try
+        {
+            if (IsGameRunning())
+                return Result<ModQuarantineReport>.Fail("Game hoặc launcher đang chạy. Hãy đóng hẳn trước khi dọn mod xung đột.");
+
+            using var operationLock = TryAcquireOperationLock(gamePath);
+            if (operationLock is null)
+                return Result<ModQuarantineReport>.Fail("Đang có một tiến trình VHWuWa khác cài/gỡ. Hãy chờ hoàn tất.");
+
+            var targets = CollectConflictFiles(gamePath);
+            if (targets.Count == 0)
+                return Result<ModQuarantineReport>.Fail("Không tìm thấy file mod xung đột có thể cách ly an toàn.");
+
+            var quarantine = Path.Combine(_quarantineRoot,
+                DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss") + "_" + Guid.NewGuid().ToString("N")[..6]);
+            Directory.CreateDirectory(quarantine);
+            foreach (var source in targets)
+            {
+                var relative = Path.GetRelativePath(gamePath, source);
+                if (relative.StartsWith("..", StringComparison.Ordinal))
+                    throw new InvalidOperationException("Đường dẫn mod nằm ngoài thư mục game: " + source);
+                var target = PathValidation.ResolveInsideRoot(quarantine, relative);
+                Directory.CreateDirectory(Path.GetDirectoryName(target)!);
+                var hash = ViethoaInstallMarker.Sha256(source);
+                File.Copy(source, target, overwrite: false);
+                if (!hash.Equals(ViethoaInstallMarker.Sha256(target), StringComparison.OrdinalIgnoreCase))
+                {
+                    File.Delete(target);
+                    throw new IOException("File cách ly sai SHA-256: " + relative);
+                }
+                File.Delete(source);
+                moved.Add((source, target, relative, hash));
+            }
+
+            var manifest = new
+            {
+                schemaVersion = 1,
+                gamePath = Path.GetFullPath(gamePath),
+                quarantinedAt = DateTimeOffset.Now,
+                files = moved.Select(x => new { originalPath = x.Relative, sha256 = x.Hash }).ToList()
+            };
+            File.WriteAllText(Path.Combine(quarantine, "quarantine-manifest.json"),
+                JsonSerializer.Serialize(manifest, new JsonSerializerOptions { WriteIndented = true }));
+
+            RemoveEmptyModDirectories(gamePath);
+            var report = new ModQuarantineReport
+            {
+                QuarantineDirectory = quarantine,
+                MovedFiles = moved.Select(x => x.Relative).ToList()
+            };
+            _log.Info("Conflict", $"Đã cách ly {moved.Count} file mod xung đột vào {quarantine}");
+            return Result<ModQuarantineReport>.Ok(report);
+        }
+        catch (Exception ex)
+        {
+            foreach (var item in moved.AsEnumerable().Reverse())
+            {
+                try
+                {
+                    if (!File.Exists(item.Target)) continue;
+                    Directory.CreateDirectory(Path.GetDirectoryName(item.Source)!);
+                    File.Copy(item.Target, item.Source, overwrite: true);
+                    if (item.Hash.Equals(ViethoaInstallMarker.Sha256(item.Source), StringComparison.OrdinalIgnoreCase))
+                        File.Delete(item.Target);
+                }
+                catch { }
+            }
+            _log.Error("Conflict", "Cách ly mod thất bại: " + ex.Message, ex);
+            return Result<ModQuarantineReport>.Fail("Cách ly mod thất bại; các file đã di chuyển được hoàn tác: " + ex.Message, ex);
+        }
+    }
+
+    public Result<int> DeleteConflicts(string gamePath)
+    {
+        try
+        {
+            if (IsGameRunning())
+                return Result<int>.Fail("Game hoặc launcher đang chạy. Hãy đóng hẳn trước khi xóa mod xung đột.");
+
+            using var operationLock = TryAcquireOperationLock(gamePath);
+            if (operationLock is null)
+                return Result<int>.Fail("Đang có một tiến trình VHWuWa khác cài/gỡ. Hãy chờ hoàn tất.");
+
+            var targets = CollectConflictFiles(gamePath);
+            if (targets.Count == 0)
+                return Result<int>.Fail("Không tìm thấy file mod xung đột để xóa.");
+
+            var gameRoot = Path.GetFullPath(gamePath);
+            var deleted = 0;
+            var failures = new List<string>();
+            foreach (var target in targets)
+            {
+                var relative = Path.GetRelativePath(gameRoot, target);
+                if (relative.StartsWith("..", StringComparison.Ordinal))
+                {
+                    failures.Add(relative + " (nằm ngoài thư mục game)");
+                    continue;
+                }
+
+                try
+                {
+                    if (!File.Exists(target)) continue;
+                    var attributes = File.GetAttributes(target);
+                    if ((attributes & FileAttributes.ReadOnly) != 0)
+                        File.SetAttributes(target, attributes & ~FileAttributes.ReadOnly);
+                    File.Delete(target);
+                    if (File.Exists(target))
+                        failures.Add(relative + " (Windows không cho xóa)");
+                    else
+                        deleted++;
+                }
+                catch (Exception ex)
+                {
+                    failures.Add(relative + " (" + ex.Message + ")");
+                }
+            }
+
+            RemoveEmptyModDirectories(gamePath);
+            if (failures.Count > 0)
+            {
+                _log.Warn("Conflict", $"Đã xóa {deleted} file; còn {failures.Count} file không xóa được.");
+                return Result<int>.Fail($"Đã xóa {deleted} file nhưng còn {failures.Count} file không xóa được:\n- "
+                    + string.Join("\n- ", failures.Take(8)));
+            }
+
+            _log.Info("Conflict", $"Đã xóa vĩnh viễn {deleted} file mod xung đột theo xác nhận của người dùng.");
+            return Result<int>.Ok(deleted);
+        }
+        catch (Exception ex)
+        {
+            _log.Error("Conflict", "Xóa mod xung đột thất bại: " + ex.Message, ex);
+            return Result<int>.Fail("Xóa mod xung đột thất bại: " + ex.Message, ex);
+        }
+    }
+
+    private IReadOnlyList<string> CollectConflictFiles(string gamePath)
+    {
+        var files = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        void AddFile(string path) { if (File.Exists(path)) files.Add(Path.GetFullPath(path)); }
+        void AddTree(string path)
+        {
+            if (!Directory.Exists(path)) return;
+            foreach (var file in SafeEnumerateFiles(path)) AddFile(file);
+        }
+
+        var paks = PaksOf(gamePath);
+        var mods = ModsOf(gamePath);
+        var win64 = Win64Of(gamePath);
+        var markerExists = File.Exists(Path.Combine(mods, MarkerName));
+        var marker = ViethoaInstallMarker.Load(Path.Combine(mods, MarkerName));
+        var owned = OwnedModFiles(mods);
+
+        if (Directory.Exists(paks))
+        {
+            foreach (var file in Directory.EnumerateFiles(paks, "*", SearchOption.TopDirectoryOnly))
+            {
+                var name = Path.GetFileName(file);
+                if (name.StartsWith("pakchunk", StringComparison.OrdinalIgnoreCase)
+                    || !ModExtensions.Contains(Path.GetExtension(file))
+                    || !Path.GetFileNameWithoutExtension(name).EndsWith("_P", StringComparison.OrdinalIgnoreCase))
+                    continue;
+                AddFile(file);
+            }
+            foreach (var dir in Directory.EnumerateDirectories(paks, "~*", SearchOption.TopDirectoryOnly))
+            {
+                var isOwnDirectory = Path.GetFullPath(dir).Equals(Path.GetFullPath(mods), StringComparison.OrdinalIgnoreCase);
+                foreach (var file in SafeEnumerateFiles(dir))
+                {
+                    if (!ModExtensions.Contains(Path.GetExtension(file))) continue;
+                    var isTopLevel = Path.GetDirectoryName(file)!.Equals(dir, StringComparison.OrdinalIgnoreCase);
+                    var name = Path.GetFileName(file);
+                    if (isOwnDirectory && isTopLevel && markerExists && owned.Contains(name)
+                        && MatchesLegacyManagedFile(marker, "mods", file)) continue;
+                    AddFile(file);
+                }
+            }
+        }
+
+        foreach (var name in ProxyLoaders)
+        {
+            var installed = Path.Combine(win64, name);
+            if (!File.Exists(installed)) continue;
+            if (markerExists && File.Exists(Path.Combine(LoaderDir, name))
+                && MatchesLegacyManagedFile(marker, "win64", installed)) continue;
+            AddFile(installed);
+        }
+        foreach (var dirName in new[] { "Mods", "ue4ss", "RE-UE4SS", "wuwaVietHoa" })
+            AddTree(Path.Combine(win64, dirName));
+
+        return files.OrderBy(x => x, StringComparer.OrdinalIgnoreCase).ToList();
+    }
+
+    private static void RemoveEmptyModDirectories(string gamePath)
+    {
+        var paks = PaksOf(gamePath);
+        if (Directory.Exists(paks))
+            foreach (var dir in Directory.EnumerateDirectories(paks, "~*", SearchOption.TopDirectoryOnly))
+                RemoveEmptyTree(dir);
+        var win64 = Win64Of(gamePath);
+        foreach (var name in new[] { "Mods", "ue4ss", "RE-UE4SS", "wuwaVietHoa" })
+            RemoveEmptyTree(Path.Combine(win64, name));
+    }
+
+    private static void RemoveEmptyTree(string root)
+    {
+        if (!Directory.Exists(root)) return;
+        if ((File.GetAttributes(root) & FileAttributes.ReparsePoint) != 0) return;
+        foreach (var dir in SafeEnumerateDirectories(root).OrderByDescending(x => x.Length))
+            if (!Directory.EnumerateFileSystemEntries(dir).Any()) Directory.Delete(dir);
+        if (!Directory.EnumerateFileSystemEntries(root).Any()) Directory.Delete(root);
+    }
+
+    private static IEnumerable<string> SafeEnumerateFiles(string root)
+    {
+        foreach (var directory in new[] { root }.Concat(SafeEnumerateDirectories(root)))
+        {
+            string[] files;
+            try { files = Directory.GetFiles(directory, "*", SearchOption.TopDirectoryOnly); }
+            catch { continue; }
+            foreach (var file in files) yield return file;
+        }
+    }
+
+    private static IEnumerable<string> SafeEnumerateDirectories(string root)
+    {
+        var pending = new Stack<string>();
+        pending.Push(root);
+        while (pending.Count > 0)
+        {
+            var current = pending.Pop();
+            string[] children;
+            try { children = Directory.GetDirectories(current, "*", SearchOption.TopDirectoryOnly); }
+            catch { continue; }
+            foreach (var child in children)
+            {
+                FileAttributes attributes;
+                try { attributes = File.GetAttributes(child); }
+                catch { continue; }
+                if ((attributes & FileAttributes.ReparsePoint) != 0) continue;
+                pending.Push(child);
+                yield return child;
+            }
+        }
+    }
+
     /// <summary>Tìm 1 file .sig gốc trong Paks\ để làm "hạt giống" cho .sig của mod (loader chỉ cần .sig TỒN TẠI).</summary>
     private static string? FindSeedSig(string paksDir)
     {
         var prefer = Path.Combine(paksDir, "pakchunk0optional-WindowsNoEditor.sig");
         if (File.Exists(prefer)) return prefer;
-        try { return Directory.EnumerateFiles(paksDir, "*.sig", SearchOption.AllDirectories).FirstOrDefault(); }
+        try
+        {
+            return SafeEnumerateFiles(paksDir)
+                .FirstOrDefault(file => Path.GetExtension(file).Equals(".sig", StringComparison.OrdinalIgnoreCase));
+        }
         catch { return null; }
     }
 
@@ -398,15 +721,23 @@ public sealed class ViethoaInstaller : IViethoaInstaller
                 }
                 progress?.Report(new InstallProgress(100, "loader", fontName is null ? 2 : 3, fontName is null ? 2 : 3));
 
-                // Marker
-                var marker = new
+                // Marker v2 lưu SHA-256 của từng file do app quản lý. Khi mod khác
+                // ghi đè đúng tên file, app sẽ cảnh báo và không xóa nhầm lúc gỡ.
+                var marker = new ViethoaInstallMarker
                 {
-                    variant = variant == NameVariant.English ? "en" : "hanviet",
-                    font = fontName,
-                    installedAt = DateTimeOffset.Now
+                    Variant = variant == NameVariant.English ? "en" : "hanviet",
+                    Font = fontName
                 };
-                File.WriteAllText(Path.Combine(mods, MarkerName),
-                    JsonSerializer.Serialize(marker, new JsonSerializerOptions { WriteIndented = true }));
+                marker.Track("mods", pakDst);
+                marker.Track("mods", Path.ChangeExtension(pakDst, ".sig"));
+                if (fontName is not null)
+                {
+                    marker.Track("mods", Path.Combine(mods, fontName));
+                    marker.Track("mods", Path.Combine(mods, Path.ChangeExtension(fontName, ".sig")));
+                }
+                foreach (var dll in new[] { "version.dll", "verorg.dll", "WuWaVH.dll" })
+                    marker.Track("win64", Path.Combine(win64, dll));
+                marker.Save(Path.Combine(mods, MarkerName));
             }, ct);
 
             var verifyErrors = VerifyInstallation(
@@ -432,11 +763,14 @@ public sealed class ViethoaInstaller : IViethoaInstaller
         }
     }
 
-    public async Task<Result> UninstallAsync(string gamePath, CancellationToken ct = default)
+    public async Task<Result> UninstallAsync(string gamePath, bool forceRemoveChangedFiles = false,
+        CancellationToken ct = default)
     {
         try
         {
             var win64 = Win64Of(gamePath);
+            if (!GetStatus(gamePath).Installed)
+                return Result.Fail("Chưa phát hiện bản Việt hóa do VHWuWa cài trong thư mục game này.");
             if (IsGameRunning())
                 return Result.Fail("Game hoặc launcher Wuthering Waves đang chạy. Hãy đóng hẳn game/launcher rồi mới gỡ.");
 
@@ -444,35 +778,51 @@ public sealed class ViethoaInstaller : IViethoaInstaller
             if (operationLock is null)
                 return Result.Fail("Đang có một tiến trình VHWuWa khác cài/gỡ. Hãy chờ tiến trình đó hoàn tất.");
 
+            var changedFiles = FindManagedFileChanges(gamePath);
+            if (changedFiles.Count > 0 && !forceRemoveChangedFiles)
+                return Result.Fail("Không gỡ để tránh xóa nhầm file của mod khác. Các file do VHWuWa quản lý đã bị thay đổi:\n- "
+                    + string.Join("\n- ", changedFiles)
+                    + "\nBạn có thể xác nhận Xóa luôn trên giao diện nếu vẫn muốn gỡ.");
+            if (changedFiles.Count > 0)
+                _log.Warn("Viethoa", $"Người dùng xác nhận gỡ cưỡng bức {changedFiles.Count} file đã bị thay đổi.");
+
             await Task.Run(() =>
             {
-                // Chỉ xóa file của WAHU; giữ nguyên file lạ nếu người dùng đặt chung thư mục.
+                ct.ThrowIfCancellationRequested();
                 var mods = ModsOf(gamePath);
-                if (Directory.Exists(mods))
-                {
-                    var owned = OwnedModFiles(mods);
-                    foreach (var file in Directory.EnumerateFiles(mods, "*", SearchOption.TopDirectoryOnly))
-                        if (owned.Contains(Path.GetFileName(file)))
-                            try { File.Delete(file); } catch { }
-                    if (!Directory.EnumerateFileSystemEntries(mods).Any()) Directory.Delete(mods);
-                }
+                var owned = OwnedModFiles(mods);
 
-                // Gỡ loader của WAHU (WuWaVH.dll, verorg.dll)
+                // Chỉ gỡ loader khi hậu kiểm đã xác nhận chúng vẫn là file của WAHU.
                 foreach (var dll in new[] { "WuWaVH.dll", "verorg.dll" })
                 {
                     var p = Path.Combine(win64, dll);
-                    try { if (File.Exists(p)) File.Delete(p); } catch { }
+                    if (File.Exists(p)) File.Delete(p);
                 }
-                // Khôi phục version.dll gốc nếu có backup, ngược lại xóa loader version.dll
+
                 var ver = Path.Combine(win64, "version.dll");
                 var verBak = Path.Combine(win64, "version_goc.dll");
                 if (File.Exists(verBak))
                 {
-                    try { File.Copy(verBak, ver, true); File.Delete(verBak); } catch { }
+                    File.Copy(verBak, ver, true);
+                    File.Delete(verBak);
                 }
                 else if (File.Exists(ver))
                 {
-                    try { File.Delete(ver); } catch { }
+                    File.Delete(ver);
+                }
+
+                // Giữ nguyên mọi file không được marker sở hữu, kể cả mod *_100_P.pak.
+                if (Directory.Exists(mods))
+                {
+                    foreach (var file in Directory.EnumerateFiles(mods, "*", SearchOption.TopDirectoryOnly))
+                    {
+                        var name = Path.GetFileName(file);
+                        if (owned.Contains(name) && !name.Equals(MarkerName, StringComparison.OrdinalIgnoreCase))
+                            File.Delete(file);
+                    }
+                    var markerPath = Path.Combine(mods, MarkerName);
+                    if (File.Exists(markerPath)) File.Delete(markerPath);
+                    if (!Directory.EnumerateFileSystemEntries(mods).Any()) Directory.Delete(mods);
                 }
             }, ct);
             _log.Info("Viethoa", "Đã gỡ Việt hóa: " + gamePath);

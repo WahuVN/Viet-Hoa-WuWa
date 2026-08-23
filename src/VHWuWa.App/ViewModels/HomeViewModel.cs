@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.IO;
+using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Win32;
@@ -12,6 +13,7 @@ public partial class HomeViewModel : ObservableObject
 {
     private readonly ISettingsService _settings;
     private readonly IGameDetectionService _detect;
+    private readonly IGameLaunchService _gameLaunch;
     private readonly IPackageInstallerService _installer;
     private readonly IViethoaInstaller _viet;
     private readonly IFontService _fonts;
@@ -29,14 +31,17 @@ public partial class HomeViewModel : ObservableObject
     [ObservableProperty] private bool _pathOk;
     [ObservableProperty] private string _message = "";
     [ObservableProperty] private bool _busy;
+    [ObservableProperty] private bool _forceCSharpEnvironment;
+    [ObservableProperty] private string _launchButtonText = "▶ Mở game trực tiếp";
 
     public MainViewModel Main => _main;
 
-    public HomeViewModel(ISettingsService settings, IGameDetectionService detect,
+    public HomeViewModel(ISettingsService settings, IGameDetectionService detect, IGameLaunchService gameLaunch,
         IPackageInstallerService installer, IViethoaInstaller viet, IFontService fonts, ILogService log, MainViewModel main)
     {
-        _settings = settings; _detect = detect; _installer = installer; _viet = viet; _fonts = fonts; _log = log; _main = main;
+        _settings = settings; _detect = detect; _gameLaunch = gameLaunch; _installer = installer; _viet = viet; _fonts = fonts; _log = log; _main = main;
         GameName = string.IsNullOrWhiteSpace(detect.GameConfig.GameName) ? "Wuthering Waves" : detect.GameConfig.GameName;
+        ForceCSharpEnvironment = settings.Settings.ForceCSharpEnvironment;
         OnActivated();
     }
 
@@ -83,6 +88,49 @@ public partial class HomeViewModel : ObservableObject
             var p = _detect.NormalizeGamePath(dlg.FolderName) ?? dlg.FolderName;
             SetPath(p);
         }
+    }
+
+    partial void OnForceCSharpEnvironmentChanged(bool value)
+    {
+        _settings.Settings.ForceCSharpEnvironment = value;
+        _settings.Save();
+        LaunchButtonText = value ? "▶ Mở game với C# thử nghiệm" : "▶ Mở game trực tiếp";
+    }
+
+    [RelayCommand]
+    private void LaunchGame()
+    {
+        if (!PathOk)
+        {
+            Message = "Đường dẫn game chưa hợp lệ. Hãy dùng Tự tìm game hoặc chọn lại thư mục.";
+            return;
+        }
+
+        if (ForceCSharpEnvironment && !_settings.Settings.CSharpLaunchWarningAccepted)
+        {
+            var accepted = MessageBox.Show(
+                "Đây là môi trường C# thử nghiệm của game, không bảo đảm tăng FPS trên mọi máy. " +
+                "Lần chạy đầu có thể tải thêm dữ liệu; nếu giật, crash hoặc lỗi, hãy tắt công tắc để trở về chế độ thường.\n\n" +
+                "Khi kích hoạt thành công, cuối phiên bản trong game sẽ có dấu *. Bạn có muốn tiếp tục?",
+                "Môi trường C# thử nghiệm", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+            if (accepted != MessageBoxResult.Yes) return;
+            _settings.Settings.CSharpLaunchWarningAccepted = true;
+            _settings.Save();
+        }
+
+        var result = _gameLaunch.Launch(GamePath, ForceCSharpEnvironment);
+        Message = result.Success
+            ? ForceCSharpEnvironment
+                ? "Đã mở game với môi trường C# thử nghiệm. Hãy kiểm tra dấu * ở cuối phiên bản trong game."
+                : "Đã mở game trực tiếp ở chế độ thường."
+            : "Lỗi: " + result.Error;
+    }
+
+    [RelayCommand]
+    private void CopyCSharpArgument()
+    {
+        Clipboard.SetText(GameLaunchOptions.ForceCSharpEnvironment);
+        Message = "Đã chép -ForceEnableCSharpEnvironment. Với Steam, dán vào Properties → Launch Options.";
     }
 
     [RelayCommand]

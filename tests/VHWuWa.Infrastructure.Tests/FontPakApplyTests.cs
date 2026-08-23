@@ -38,6 +38,9 @@ public sealed class FontPakApplyTests : IDisposable
         // pak text (priority 99) + font cũ (priority 100) đã có sẵn
         File.WriteAllText(Path.Combine(ModsDir, "WuWaVH_99_P.pak"), "TEXT");
         File.WriteAllText(Path.Combine(ModsDir, "OldFont_100_P.pak"), "OLD");
+        File.WriteAllText(Path.Combine(ModsDir, "OtherMod_100_P.pak"), "FOREIGN");
+        File.WriteAllText(Path.Combine(ModsDir, "vhwuwa_install.json"),
+            """{"schemaVersion":1,"variant":"hanviet","font":"OldFont_100_P.pak"}""");
 
         var newPak = Path.Combine(_work, "NewFont_100_P.pak");
         File.WriteAllText(newPak, "NEW");
@@ -49,12 +52,14 @@ public sealed class FontPakApplyTests : IDisposable
         Assert.True(File.Exists(Path.Combine(ModsDir, "NewFont_100_P.pak")));    // font mới đã vào
         Assert.True(File.Exists(Path.Combine(ModsDir, "NewFont_100_P.sig")));    // .sig tạo kèm
         Assert.True(File.Exists(Path.Combine(ModsDir, "WuWaVH_99_P.pak")));      // pak text còn nguyên
+        Assert.Equal("FOREIGN", File.ReadAllText(Path.Combine(ModsDir, "OtherMod_100_P.pak")));
         Assert.Equal("NewFont_100_P.pak", _svc.CurrentFontPak(_game));
 
         var rm = await _svc.RemoveFontPaksAsync(_game);
         Assert.True(rm.Success);
         Assert.Null(_svc.CurrentFontPak(_game));
         Assert.True(File.Exists(Path.Combine(ModsDir, "WuWaVH_99_P.pak")));      // vẫn không đụng pak text
+        Assert.Equal("FOREIGN", File.ReadAllText(Path.Combine(ModsDir, "OtherMod_100_P.pak")));
     }
 
     public void Dispose()

@@ -1,4 +1,5 @@
 using System.IO;
+using System.Diagnostics;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using VHWuWa.Core.Abstractions;
@@ -29,6 +30,8 @@ public partial class InstallViewModel : ObservableObject
     [ObservableProperty] private bool _fontAvailable;
     [ObservableProperty] private bool _hasConflicts;
     [ObservableProperty] private string _conflictText = "✔ Không phát hiện mod khác.";
+    [ObservableProperty] private bool _hasQuarantine;
+    [ObservableProperty] private string _lastQuarantinePath = "";
 
     public InstallViewModel(ISettingsService settings, IGameDetectionService detect, IViethoaInstaller viet)
     {
@@ -49,8 +52,9 @@ public partial class InstallViewModel : ObservableObject
         var conflicts = valid ? _viet.FindConflicts(game) : Array.Empty<string>();
         HasConflicts = conflicts.Count > 0;
         ConflictText = HasConflicts
-            ? "⚠ Phát hiện mod có thể xung đột:\n• " + string.Join("\n• ", conflicts.Take(6))
-              + "\nHãy gỡ hoặc tắt các mod trên trước khi cài Việt hóa."
+            ? $"⚠ Phát hiện {conflicts.Count} mục có thể xung đột:\n• " + string.Join("\n• ", conflicts.Take(8))
+              + (conflicts.Count > 8 ? $"\n• … và {conflicts.Count - 8} mục khác" : "")
+              + "\nBạn có thể cách ly để giữ bản sao hoặc chọn Xóa mod xung đột để xóa vĩnh viễn."
             : "✔ Không phát hiện mod khác có thể xung đột.";
         FontAvailable = content.FontPak is not null;
         HasHanViet = File.Exists(HanVietPakPath);
@@ -97,6 +101,83 @@ public partial class InstallViewModel : ObservableObject
     [RelayCommand]
     private void CheckConflicts() => Refresh();
 
+    [RelayCommand]
+    private void QuarantineConflicts()
+    {
+        var game = _settings.Settings.GamePath;
+        if (string.IsNullOrWhiteSpace(game) || !HasConflicts)
+        {
+            Summary = "Không có mod xung đột để cách ly.";
+            return;
+        }
+        var answer = System.Windows.MessageBox.Show(
+            "VHWuWa sẽ chuyển các PAK/loader xung đột ra khỏi thư mục game vào vùng cách ly.\n\n"
+            + "Không file nào bị xóa vĩnh viễn. Bạn có muốn tiếp tục?",
+            "Cách ly mod xung đột", System.Windows.MessageBoxButton.YesNo,
+            System.Windows.MessageBoxImage.Warning);
+        if (answer != System.Windows.MessageBoxResult.Yes) return;
+
+        Busy = true;
+        try
+        {
+            var result = _viet.QuarantineConflicts(game);
+            if (!result.Success || result.Value is null)
+            {
+                Summary = "❌ " + result.Error;
+                return;
+            }
+            LastQuarantinePath = result.Value.QuarantineDirectory;
+            HasQuarantine = true;
+            Summary = $"✅ Đã cách ly {result.Value.MovedFiles.Count} file mod xung đột. "
+                + "Có thể mở vùng cách ly để xem hoặc khôi phục thủ công.";
+        }
+        finally
+        {
+            Busy = false;
+            Refresh();
+        }
+    }
+
+    [RelayCommand]
+    private void OpenQuarantine()
+    {
+        if (Directory.Exists(LastQuarantinePath))
+            Process.Start(new ProcessStartInfo(LastQuarantinePath) { UseShellExecute = true });
+    }
+
+    [RelayCommand]
+    private void DeleteConflicts()
+    {
+        var game = _settings.Settings.GamePath;
+        if (string.IsNullOrWhiteSpace(game) || !HasConflicts)
+        {
+            Summary = "Không có mod xung đột để xóa.";
+            return;
+        }
+
+        var answer = System.Windows.MessageBox.Show(
+            "XÓA VĨNH VIỄN toàn bộ file mod xung đột mà ứng dụng vừa liệt kê?\n\n"
+            + "Thao tác này không tạo bản sao và không thể hoàn tác. Nếu muốn giữ bản sao, hãy dùng Cách ly mod xung đột.",
+            "Xóa mod xung đột", System.Windows.MessageBoxButton.YesNo,
+            System.Windows.MessageBoxImage.Warning,
+            System.Windows.MessageBoxResult.No);
+        if (answer != System.Windows.MessageBoxResult.Yes) return;
+
+        Busy = true;
+        try
+        {
+            var result = _viet.DeleteConflicts(game);
+            Summary = result.Success
+                ? $"✅ Đã xóa vĩnh viễn {result.Value} file mod xung đột."
+                : "❌ " + result.Error;
+        }
+        finally
+        {
+            Busy = false;
+            Refresh();
+        }
+    }
+
     [ObservableProperty] private bool _hasHanViet;
     [ObservableProperty] private string _hanVietDownloadBtnText = "⬇️ Tải gói Hán Việt";
 
@@ -110,7 +191,7 @@ public partial class InstallViewModel : ObservableObject
         var dir = Path.GetDirectoryName(dst);
         if (!string.IsNullOrEmpty(dir)) Directory.CreateDirectory(dir);
 
-        var url = "https://github.com/WahuVN/Viet-Hoa-WuWa/releases/download/v2.0.0/WuWaVH_HanViet_99_P.pak";
+        var url = "https://github.com/WahuVN/Viet-Hoa-WuWa/releases/download/v2.0.3/WuWaVH_HanViet_99_P.pak";
         try
         {
             using var response = await _http.GetAsync(url, System.Net.Http.HttpCompletionOption.ResponseHeadersRead, ct);
@@ -200,7 +281,7 @@ public partial class InstallViewModel : ObservableObject
 
             var r = await _viet.InstallAsync(game, variant, ApplyFont && FontAvailable, progress, _cts.Token);
             Summary = r.Success
-                ? "✅ Cài xong! Vào game đặt Text Language = English và chơi bằng DirectX 11."
+                ? "✅ Cài xong! Vào game đặt Text Language = English. Có thể dùng DirectX 11 hoặc 12."
                 : "❌ Lỗi: " + r.Error;
         }
         finally { Busy = false; _cts?.Dispose(); _cts = null; Refresh(); }
@@ -215,6 +296,16 @@ public partial class InstallViewModel : ObservableObject
         try
         {
             var r = await _viet.UninstallAsync(game);
+            if (!r.Success && r.Error?.Contains("xác nhận Xóa luôn", StringComparison.OrdinalIgnoreCase) == true)
+            {
+                var answer = System.Windows.MessageBox.Show(
+                    r.Error + "\n\nBạn có chắc muốn xóa các file này và tiếp tục gỡ Việt hóa?",
+                    "Gỡ và xóa file đã thay đổi", System.Windows.MessageBoxButton.YesNo,
+                    System.Windows.MessageBoxImage.Warning,
+                    System.Windows.MessageBoxResult.No);
+                if (answer == System.Windows.MessageBoxResult.Yes)
+                    r = await _viet.UninstallAsync(game, forceRemoveChangedFiles: true);
+            }
             Summary = r.Success ? "✅ Đã gỡ Việt hóa và khôi phục file gốc." : "❌ Lỗi: " + r.Error;
         }
         finally { Busy = false; Refresh(); }

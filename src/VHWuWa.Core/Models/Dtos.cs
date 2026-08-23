@@ -1,11 +1,18 @@
 namespace VHWuWa.Core.Models;
 
+public static class GameLaunchOptions
+{
+    public const string ForceCSharpEnvironment = "-ForceEnableCSharpEnvironment";
+}
+
 /// <summary>Cấu hình ứng dụng (lưu %LocalAppData%/VHWuWa/settings.json).</summary>
 public sealed class AppSettings
 {
     public string GamePath { get; set; } = "";
     public string Theme { get; set; } = "Dark";       // Dark | Light | System
     public bool AutoCheckUpdate { get; set; } = true;
+    public bool ForceCSharpEnvironment { get; set; }
+    public bool CSharpLaunchWarningAccepted { get; set; }
     public DateTimeOffset? LastUpdateCheck { get; set; }
 }
 
