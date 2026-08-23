@@ -9,7 +9,6 @@ Bộ cài đặt và công cụ quản lý bản dịch tiếng Việt cho **Wut
 | Tệp tải về | Mục đích |
 | :--- | :--- |
 | 🎮 [**VietHoa-WuWa-v2.0.0.zip**](https://github.com/WahuVN/Viet-Hoa-WuWa/releases/download/v2.0.0/VietHoa-WuWa-v2.0.0.zip) | **Dành cho người chơi** — Bộ cài Tool Việt hóa chính thức trên Windows (có sẵn bản Tiếng Anh + 72 Font) |
-| 📂 [**WuWaVH_HanViet_99_P.pak**](https://github.com/WahuVN/Viet-Hoa-WuWa/releases/download/v2.0.0/WuWaVH_HanViet_99_P.pak) | **Gói Hán Việt tải riêng** (nếu muốn chép thủ công hoặc mạng yếu) |
 | 🛠️ [**App-Dich-WuWa-v2.0.0.zip**](https://github.com/WahuVN/Viet-Hoa-WuWa/releases/download/v2.0.0/App-Dich-WuWa-v2.0.0.zip) | **Dành cho dịch giả & modder** — Bộ công cụ Studio chỉnh sửa dữ liệu, QA và đóng gói |
 
 > 📌 *Tải bản mới nhất tại: **[GitHub Releases](https://github.com/WahuVN/Viet-Hoa-WuWa/releases/latest)***

@@ -9,7 +9,6 @@ Chào mừng bạn đến với bản phát hành **Việt Hóa Wuthering Waves 
 | Tệp tải về | Dành cho ai? |
 | :--- | :--- |
 | 🎮 **VietHoa-WuWa-v2.0.0.zip** | **Dành cho Người chơi (Khuyên dùng)** — Bộ cài Tool tự động (có sẵn bản Tiếng Anh + 72 Font chữ + tự động tải bản Hán Việt) |
-| 📂 **WuWaVH_HanViet_99_P.pak** | **Gói Hán Việt tải riêng** (nếu bạn muốn chép thủ công hoặc mạng yếu không tải qua Tool được) |
 | 🛠️ **App-Dich-WuWa-v2.0.0.zip** | **Dành cho Dịch giả & Modder** — Bộ công cụ Studio chỉnh sửa dữ liệu, QA dịch thuật và đóng gói |
 
 ---

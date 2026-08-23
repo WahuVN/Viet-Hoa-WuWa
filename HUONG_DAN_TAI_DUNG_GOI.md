@@ -14,7 +14,6 @@ Truy cập **[Trang Phát Hành Mới Nhất (GitHub Releases)](https://github.c
 | Nhu cầu của bạn | Tệp cần tải về | Thao tác sau khi giải nén |
 | :--- | :--- | :--- |
 | 🎮 **Chỉ muốn cài và chơi game** | `VietHoa-WuWa-v2.0.0.zip` (~107 MB) | Mở thư mục $\rightarrow$ Chạy file `Chay VHWuWa.bat` hoặc `app\VHWuWa.exe` |
-| 📂 **Gói Hán Việt tải riêng** | `WuWaVH_HanViet_99_P.pak` (~59 MB) | Tải riêng nếu không muốn Tool tải online |
 | 👥 **Muốn dịch, duyệt hoặc đóng góp** | `App-Dich-WuWa-v2.0.0.zip` (~245 MB) | Mở thư mục $\rightarrow$ Chạy file `Chay WAHU Community.bat` |
 
 > ⚠️ **Lưu ý:** Người chơi thông thường chỉ cần tải **`VietHoa-WuWa-v2.0.0.zip`**, **không cần tải** tool dịch hay mục **Source code**.
