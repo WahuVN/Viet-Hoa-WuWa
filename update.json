@@ -1,9 +1,9 @@
-﻿{
-  "version": "2.0.0",
-  "downloadUrl": "https://github.com/WahuVN/Viet-Hoa-WuWa/releases/download/v2.0.0/VietHoa-WuWa-v2.0.0.zip",
-  "sha256": "145811dc42d198383b2a5936fea4aa14a77b319b99ec1d41d1d3cf912b9bb662",
-  "releaseNotes": "Bản 2.0.0: Cập nhật cốt truyện chính 3.6, kỹ năng 3.4-3.6, kèm danh mục 72 font tiếng Việt và công cụ tạo font tự động.",
+{
+  "version": "2.0.1",
+  "minimumVersion": "2.0.0",
+  "releaseNotes": "Bản 2.0.1: sửa tự cập nhật, cài font, giao diện và công cụ đặt tên nhân vật.",
+  "downloadUrl": "https://github.com/WahuVN/Viet-Hoa-WuWa/releases/download/v2.0.1/VietHoa-WuWa-v2.0.1.zip",
+  "sha256": "edbd978e11a8bd7a083177bc24ff97c0d4632ba4753372db4281212c434c1d65",
   "signature": "",
-  "minimumVersion": "1.0.0",
   "mandatory": false
 }
