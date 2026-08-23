@@ -25,7 +25,6 @@ public partial class MainWindow : FluentWindow
         {
             "home" => _sp.GetRequiredService<HomePage>(),
             "install" => _sp.GetRequiredService<InstallPage>(),
-            "mod" => _sp.GetRequiredService<ModPage>(),
             "font" => _sp.GetRequiredService<FontPage>(),
             "graphics" => _sp.GetRequiredService<GraphicsPage>(),
             "guide" => _sp.GetRequiredService<GuidePage>(),

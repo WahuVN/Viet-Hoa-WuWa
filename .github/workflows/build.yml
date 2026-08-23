@@ -32,8 +32,10 @@ jobs:
 
       - name: Publish app (win-x64, 1 file .exe)
         run: |
-          dotnet publish src/VHWuWa.App/VHWuWa.App.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true -o dist
-          dotnet publish src/VHWuWa.Updater/VHWuWa.Updater.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o dist
+          [xml]$props = Get-Content Directory.Build.props
+          $ver = if ("${{ github.ref_type }}" -eq "tag") { "${{ github.ref_name }}".TrimStart('v') } else { [string]$props.Project.PropertyGroup.Version }
+          dotnet publish src/VHWuWa.App/VHWuWa.App.csproj -c Release -r win-x64 --self-contained true -p:Version=$ver -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true -o dist
+          dotnet publish src/VHWuWa.Updater/VHWuWa.Updater.csproj -c Release -r win-x64 --self-contained true -p:Version=$ver -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o dist
           Remove-Item dist/*.pdb -Force -ErrorAction SilentlyContinue
         shell: pwsh
 
@@ -50,12 +52,18 @@ jobs:
 
       - name: Đóng gói ZIP + checksum + update manifest
         run: |
-          $ver = "${{ github.ref_name }}".TrimStart('v'); if (-not $ver) { $ver = "1.0.0" }
-          $zip = "VHWuWa-$ver-win-x64.zip"
-          Compress-Archive -Path dist/* -DestinationPath $zip -Force
+          [xml]$props = Get-Content Directory.Build.props
+          $ver = if ("${{ github.ref_type }}" -eq "tag") { "${{ github.ref_name }}".TrimStart('v') } else { [string]$props.Project.PropertyGroup.Version }
+          $zip = "VietHoa-WuWa-v$ver.zip"
+          New-Item -ItemType Directory -Force update-payload | Out-Null
+          Copy-Item dist/* update-payload -Recurse -Force
+          if (Test-Path update-payload/VHWuWa.Updater.exe) {
+            Move-Item update-payload/VHWuWa.Updater.exe update-payload/VHWuWa.Updater.next.exe -Force
+          }
+          Compress-Archive -Path update-payload/* -DestinationPath $zip -Force
           $sha = (Get-FileHash $zip -Algorithm SHA256).Hash.ToLower()
           "$sha  $zip" | Out-File checksums.txt -Encoding utf8
-          @{ version = $ver; minimumVersion = "1.0.0"; releaseNotes = "Bản phát hành $ver"; downloadUrl = "https://github.com/WahuVN/Viet-Hoa-WuWa/releases/download/${{ github.ref_name }}/$zip"; sha256 = $sha; signature = ""; mandatory = $false } | ConvertTo-Json | Out-File update.json -Encoding utf8
+          @{ version = $ver; minimumVersion = "2.0.0"; releaseNotes = "Bản phát hành $ver"; downloadUrl = "https://github.com/WahuVN/Viet-Hoa-WuWa/releases/download/v$ver/$zip"; sha256 = $sha; signature = ""; mandatory = $false } | ConvertTo-Json | Out-File update.json -Encoding utf8
         shell: pwsh
 
       - name: Upload artifact
@@ -63,7 +71,7 @@ jobs:
         with:
           name: VHWuWa-win-x64
           path: |
-            VHWuWa-*-win-x64.zip
+            VietHoa-WuWa-v*.zip
             checksums.txt
             update.json
 

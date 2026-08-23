@@ -17,8 +17,8 @@ Bộ cài đặt và công cụ quản lý bản dịch tiếng Việt cho **Wut
 
 ## ⚡ Hướng dẫn cài đặt nhanh
 
-1. Tải file **`VietHoa-WuWa-v2.0.0.zip`** và giải nén ra một thư mục riêng.
-2. Mở file **`Chay VHWuWa.bat`** (hoặc `app\VHWuWa.exe`).
+1. Tải file **`VietHoa-WuWa-vX.Y.Z.zip`** mới nhất và giải nén ra một thư mục riêng.
+2. Mở **`VHWuWa.exe`**. Với bộ cài đầy đủ, có thể mở `Chay VHWuWa.bat` hoặc `app\VHWuWa.exe`.
 3. Chọn **Tự tìm game** (hoặc chọn thư mục game có chứa thư mục con `Client`).
 4. Chọn kiểu tên nhân vật (**Hán Việt** hoặc **Tên Tiếng Anh**).
 5. Bấm **Cài Việt hóa**.
@@ -36,7 +36,7 @@ Bộ cài đặt và công cụ quản lý bản dịch tiếng Việt cho **Wut
 
 ## 💬 Hỗ trợ & Cộng đồng
 
-* 🎮 **Discord :** [Tham gia Server VHWuWa](https://discord.gg/c9ws4q9U7) — Nhận thông báo cập nhật, thảo luận.
+* 🎮 **Discord :** [Tham gia Server VHWuWa](https://discord.gg/tuRCj47sy) — Nhận thông báo cập nhật, thảo luận.
 * 📱 **Discord :** [Tham gia Server DangDev](https://discord.gg/3t5NSyJEz) — Nếu bạn muốn tìm bản Việt Hóa Android.
 * ⚠️ **Báo lỗi :** [Gửi phản hồi tại GitHub Issues](https://github.com/WahuVN/Viet-Hoa-WuWa/issues)
 
@@ -54,3 +54,24 @@ Bộ cài đặt và công cụ quản lý bản dịch tiếng Việt cho **Wut
 ## ⚖️ Giấy phép
 
 Mã nguồn được phân phối theo giấy phép [MIT License](LICENSE).
+
+---
+
+## 🚀 Phát hành bản mới
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\build-dist.ps1 -Version 2.1.0
+```
+
+Tạo release có tag đúng dạng **`v2.1.0`**, sau đó tải ba tệp bắt buộc trong `dist` lên:
+
+- `VietHoa-WuWa-v2.1.0.zip`
+- `update.json`
+- `checksums.txt`
+
+Khi phát hành kèm công cụ dịch hoặc PAK cài thủ công, tải thêm:
+
+- `App-Dich-WuWa-v2.1.0.zip`
+- `WuWaVH_HanViet_99_P.pak`
+
+Không đổi tên riêng từng tệp sau khi build. `update.json` chứa đúng phiên bản, URL tải và SHA-256 để ứng dụng kiểm tra rồi tự cập nhật an toàn.

@@ -11,6 +11,8 @@ namespace VHWuWa.App.ViewModels;
 
 public partial class MainViewModel : ObservableObject
 {
+    private const string DiscordUrl = "https://discord.gg/tuRCj47sy";
+    private const string GitHubUrl = "https://github.com/WahuVN/Viet-Hoa-WuWa";
     private readonly ISettingsService _settings;
     private readonly IGameDetectionService _detect;
     private readonly IUpdateService _update;
@@ -32,8 +34,10 @@ public partial class MainViewModel : ObservableObject
 
     public UpdateManifest? CurrentUpdateManifest { get; set; }
 
-    /// <summary>Bản dịch đi kèm: v2.0.0, dành cho game 3.6.</summary>
-    public string VhVersion => "Bản dịch v2.0.0 · game 3.6";
+    /// <summary>Phiên bản bản dịch đi cùng bản build hiện tại.</summary>
+    public string VhVersion => "Bản dịch v"
+        + (Assembly.GetEntryAssembly()?.GetName().Version?.ToString(3) ?? "2.0.0")
+        + " · game 3.6";
 
     public MainViewModel(ISettingsService settings, IGameDetectionService detect, IUpdateService update, ILogService log)
     {
@@ -47,7 +51,7 @@ public partial class MainViewModel : ObservableObject
 
         if (settings.Settings.AutoCheckUpdate)
         {
-            _ = Task.Run(() => CheckUpdateAsync(true));
+            _ = CheckUpdateAsync(true);
         }
     }
 
@@ -76,13 +80,37 @@ public partial class MainViewModel : ObservableObject
     }
 
     [RelayCommand]
+    private void OpenDiscord() => OpenExternalUrl(DiscordUrl);
+
+    [RelayCommand]
+    private void OpenGitHub() => OpenExternalUrl(GitHubUrl);
+
+    private void OpenExternalUrl(string url)
+    {
+        try
+        {
+            Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
+        }
+        catch (Exception ex)
+        {
+            _log.Warn("Link", $"Không mở được {url}: {ex.Message}");
+        }
+    }
+
+    [RelayCommand]
     public async Task<UpdateCheckResult> CheckUpdateAsync(bool silent = false)
     {
         if (!silent) UpdateStatusMessage = "Đang kiểm tra cập nhật từ máy chủ...";
         try
         {
             var r = await _update.CheckAsync();
-            if (r.UpdateAvailable && r.Manifest != null)
+            if (!r.CheckSucceeded)
+            {
+                HasUpdate = false;
+                UpdateStatus = "Không kiểm tra được";
+                UpdateStatusMessage = r.Message;
+            }
+            else if (r.UpdateAvailable && r.Manifest != null)
             {
                 CurrentUpdateManifest = r.Manifest;
                 LatestVersion = r.Manifest.Version;
@@ -100,6 +128,8 @@ public partial class MainViewModel : ObservableObject
                 UpdateStatus = "Đã là bản mới nhất";
                 UpdateStatusMessage = r.Message;
             }
+            _settings.Settings.LastUpdateCheck = DateTimeOffset.UtcNow;
+            _settings.Save();
             return r;
         }
         catch (Exception ex)
@@ -142,26 +172,53 @@ public partial class MainViewModel : ObservableObject
             UpdateStatusMessage = "Đang giải nén và cập nhật...";
             var zipPath = dlRes.Value;
             var appDir = AppContext.BaseDirectory.TrimEnd('\\', '/');
-            var updaterExe = Path.Combine(appDir, "VHWuWa.Updater.exe");
+            // Gói cập nhật dùng tên .next để bản updater 2.0.0 đang chạy
+            // không phải tự ghi đè chính nó. App mới luôn ưu tiên bản này.
+            var nextUpdaterExe = Path.Combine(appDir, "VHWuWa.Updater.next.exe");
+            var updaterExe = File.Exists(nextUpdaterExe)
+                ? nextUpdaterExe
+                : Path.Combine(appDir, "VHWuWa.Updater.exe");
             var pid = Environment.ProcessId;
 
             if (File.Exists(updaterExe))
             {
+                // Chạy updater từ thư mục tạm để file trong thư mục ứng dụng
+                // có thể được thay thế an toàn.
+                var stagedUpdater = Path.Combine(tempDir, "VHWuWa.Updater.exe");
+                File.Copy(updaterExe, stagedUpdater, overwrite: true);
                 var psi = new ProcessStartInfo
                 {
-                    FileName = updaterExe,
+                    FileName = stagedUpdater,
                     Arguments = $"--zip \"{zipPath}\" --target \"{appDir}\" --relaunch \"VHWuWa.exe\" --pid {pid}",
-                    UseShellExecute = true
+                    UseShellExecute = true,
+                    WorkingDirectory = tempDir
                 };
                 Process.Start(psi);
             }
             else
             {
-                // Fallback updater script nếu không có file updater exe rời
-                var scriptPath = Path.Combine(tempDir, "apply_update.bat");
-                var batContent = $"@echo off\r\nchcp 65001 >nul\r\ntimeout /t 2 /nobreak >nul\r\npowershell -NoProfile -ExecutionPolicy Bypass -Command \"Expand-Archive -LiteralPath '{zipPath}' -DestinationPath '{appDir}' -Force\"\r\nstart \"\" \"{Path.Combine(appDir, "VHWuWa.exe")}\"\r\n";
-                File.WriteAllText(scriptPath, batContent, System.Text.Encoding.ASCII);
-                Process.Start(new ProcessStartInfo(scriptPath) { UseShellExecute = true, WindowStyle = ProcessWindowStyle.Hidden });
+                // Fallback cho bản rất cũ chưa kèm updater riêng. PowerShell tự
+                // tìm đúng payload app trong cả ZIP đầy đủ lẫn ZIP app-only.
+                var scriptPath = Path.Combine(tempDir, "apply_update.ps1");
+                var script = "param([string]$Zip,[string]$Target,[int]$AppPid)\r\n"
+                    + "$ErrorActionPreference='Stop'\r\n"
+                    + "try { Wait-Process -Id $AppPid -Timeout 30 -ErrorAction SilentlyContinue } catch {}\r\n"
+                    + "$stage=Join-Path $env:TEMP ('VHWuWa_Extract_'+[guid]::NewGuid().ToString('N'))\r\n"
+                    + "Expand-Archive -LiteralPath $Zip -DestinationPath $stage -Force\r\n"
+                    + "$exe=Get-ChildItem -LiteralPath $stage -Recurse -Filter 'VHWuWa.exe' -File | Where-Object { $_.Directory.Name -ieq 'app' } | Sort-Object { $_.FullName.Length } | Select-Object -First 1\r\n"
+                    + "if(-not $exe){$exe=Get-Item -LiteralPath (Join-Path $stage 'VHWuWa.exe') -ErrorAction SilentlyContinue}\r\n"
+                    + "if(-not $exe){throw 'ZIP cập nhật không có VHWuWa.exe hợp lệ'}\r\n"
+                    + "Get-ChildItem -LiteralPath $exe.Directory.FullName -Force | Copy-Item -Destination $Target -Recurse -Force\r\n"
+                    + "Start-Process -FilePath (Join-Path $Target 'VHWuWa.exe') -WorkingDirectory $Target\r\n";
+                File.WriteAllText(scriptPath, script, new System.Text.UTF8Encoding(true));
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = "powershell.exe",
+                    Arguments = $"-NoProfile -ExecutionPolicy Bypass -File \"{scriptPath}\" -Zip \"{zipPath}\" -Target \"{appDir}\" -AppPid {pid}",
+                    UseShellExecute = true,
+                    WindowStyle = ProcessWindowStyle.Hidden,
+                    WorkingDirectory = tempDir
+                });
             }
 
             System.Windows.Application.Current.Shutdown();

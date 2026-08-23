@@ -23,4 +23,4 @@ Chào mừng bạn đến với bản phát hành **Việt Hóa Wuthering Waves 
 
 ---
 
-💬 **Hỗ trợ, giải đáp & Báo lỗi:** [Discord Cộng đồng WAHU](https://discord.gg/c9ws4q9U7)
+💬 **Hỗ trợ, giải đáp & Báo lỗi:** [Discord Cộng đồng WAHU](https://discord.gg/tuRCj47sy)

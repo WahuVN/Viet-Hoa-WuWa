@@ -18,6 +18,8 @@ internal static class Program
             return 1;
         }
         var relaunch = o.GetValueOrDefault("relaunch", "VHWuWa.exe");
+        var noRelaunch = o.TryGetValue("no-relaunch", out var noRelaunchValue)
+            && bool.TryParse(noRelaunchValue, out var parsedNoRelaunch) && parsedNoRelaunch;
         target = Path.GetFullPath(target);
 
         try
@@ -27,6 +29,17 @@ internal static class Program
 
             if (!File.Exists(zip)) { Console.Error.WriteLine("Không tìm thấy file zip."); return 2; }
             Directory.CreateDirectory(target);
+            var currentExe = Path.Combine(target, relaunch);
+            if (!File.Exists(currentExe))
+            {
+                Console.Error.WriteLine("Thư mục đích không phải thư mục ứng dụng VHWuWa: " + target);
+                return 2;
+            }
+
+            // Kiểm tra layout trước khi tạo backup. Lỗi ZIP sai cấu trúc không được
+            // phép đụng tới bản đang dùng.
+            using (var archive = ZipFile.OpenRead(zip))
+                _ = UpdateArchiveInstaller.DetectApplicationPrefix(archive);
 
             var backupDir = target.TrimEnd('\\', '/') + "_backup_" + DateTime.Now.ToString("yyyyMMdd_HHmmss");
             Console.WriteLine("Sao lưu bản hiện tại...");
@@ -35,12 +48,13 @@ internal static class Program
             try
             {
                 Console.WriteLine("Giải nén bản cập nhật...");
-                ExtractOver(zip, target);
+                UpdateArchiveInstaller.ExtractApplication(zip, target);
                 var exe = Path.Combine(target, relaunch);
                 if (!File.Exists(exe)) throw new FileNotFoundException("Thiếu file thực thi sau cập nhật: " + relaunch);
 
                 Console.WriteLine("Cập nhật thành công. Khởi động lại...");
-                Process.Start(new ProcessStartInfo(exe) { UseShellExecute = true, WorkingDirectory = target });
+                if (!noRelaunch)
+                    Process.Start(new ProcessStartInfo(exe) { UseShellExecute = true, WorkingDirectory = target });
                 TryDelete(backupDir);
                 return 0;
             }
@@ -49,7 +63,7 @@ internal static class Program
                 Console.Error.WriteLine("Cập nhật lỗi, đang rollback: " + ex.Message);
                 RestoreDir(backupDir, target);
                 var exe = Path.Combine(target, relaunch);
-                if (File.Exists(exe))
+                if (!noRelaunch && File.Exists(exe))
                     Process.Start(new ProcessStartInfo(exe) { UseShellExecute = true, WorkingDirectory = target });
                 return 3;
             }
@@ -71,21 +85,6 @@ internal static class Program
         catch { /* tiến trình đã thoát */ }
     }
 
-    private static void ExtractOver(string zipPath, string target)
-    {
-        var rootFull = Path.GetFullPath(target);
-        using var zip = ZipFile.OpenRead(zipPath);
-        foreach (var entry in zip.Entries)
-        {
-            var name = entry.FullName.Replace('\\', '/');
-            if (name.EndsWith('/')) continue; // thư mục
-            if (!PathValidation.IsSafeRelativePath(name)) continue; // chống zip-slip
-            var dest = PathValidation.ResolveInsideRoot(rootFull, name);
-            Directory.CreateDirectory(Path.GetDirectoryName(dest)!);
-            entry.ExtractToFile(dest, overwrite: true);
-        }
-    }
-
     private static void CopyDir(string src, string dst)
     {
         if (!Directory.Exists(src)) return;
@@ -102,6 +101,8 @@ internal static class Program
     private static void RestoreDir(string backup, string target)
     {
         if (!Directory.Exists(backup)) return;
+        if (Directory.Exists(target)) Directory.Delete(target, true);
+        Directory.CreateDirectory(target);
         CopyDir(backup, target);
     }
 

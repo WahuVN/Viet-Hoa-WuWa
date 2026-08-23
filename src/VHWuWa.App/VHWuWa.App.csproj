@@ -5,6 +5,7 @@
     <UseWPF>true</UseWPF>
     <RootNamespace>VHWuWa.App</RootNamespace>
     <AssemblyName>VHWuWa</AssemblyName>
+    <ApplicationIcon>..\..\Assets\app.ico</ApplicationIcon>
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
@@ -21,6 +22,8 @@
 
   <!-- Copy Config / Guides / Assets ra thư mục output để app đọc lúc chạy -->
   <ItemGroup>
+    <Resource Include="..\..\Assets\app.ico" Link="Assets\app.ico" />
+    <Resource Include="..\..\Assets\logo.png" Link="Assets\logo.png" />
     <None Include="..\..\Config\**\*" Link="Config\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\..\Guides\**\*" Link="Guides\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\..\Fonts\fonts.json" Link="Fonts\fonts.json" CopyToOutputDirectory="PreserveNewest" />

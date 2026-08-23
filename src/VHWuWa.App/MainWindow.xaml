@@ -3,6 +3,7 @@
                   xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                   xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
                   Title="VHWuWa — Quản lý Việt hóa"
+                  Icon="/Assets/app.ico"
                   Width="1020" Height="660" MinWidth="880" MinHeight="540"
                   WindowStartupLocation="CenterScreen"
                   ExtendsContentIntoTitleBar="True"
@@ -47,6 +48,32 @@
                             <TextBlock Text="{Binding GameStatus}" Opacity="0.6" FontSize="11" Margin="0,1,0,0" TextWrapping="Wrap" />
                         </StackPanel>
 
+                        <Grid Margin="0,0,0,6">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="6" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Button Grid.Column="0" Command="{Binding OpenDiscordCommand}" ToolTip="Tham gia Discord WAHU"
+                                    HorizontalAlignment="Stretch" Padding="5,4">
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                    <Viewbox Width="15" Height="15" Margin="0,0,5,0">
+                                        <Path Fill="#5865F2" Data="M19.5,5.34 A16.3,16.3 0 0 0 15.44,4 L14.94,5.02 A15.4,15.4 0 0 0 9.06,5.02 L8.55,4 A16.3,16.3 0 0 0 4.5,5.34 C1.94,9.14 1.25,12.85 1.6,16.5 A16.6,16.6 0 0 0 6.55,19 L7.75,17.35 C7.09,17.12 6.47,16.82 5.9,16.45 C9.65,19.22 14.35,19.22 18.16,16.45 C17.57,16.83 16.94,17.13 16.28,17.36 L17.48,19 A16.6,16.6 0 0 0 22.42,16.51 C22.84,12.28 21.7,8.6 19.5,5.34 Z M8.6,14.25 C7.52,14.25 6.64,13.26 6.64,12.04 C6.64,10.82 7.5,9.83 8.6,9.83 C9.7,9.83 10.58,10.82 10.56,12.04 C10.56,13.26 9.7,14.25 8.6,14.25 Z M15.4,14.25 C14.32,14.25 13.44,13.26 13.44,12.04 C13.44,10.82 14.3,9.83 15.4,9.83 C16.5,9.83 17.38,10.82 17.36,12.04 C17.36,13.26 16.5,14.25 15.4,14.25 Z" />
+                                    </Viewbox>
+                                    <TextBlock Text="Discord" FontSize="11" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
+                            <Button Grid.Column="2" Command="{Binding OpenGitHubCommand}" ToolTip="Mở GitHub của dự án"
+                                    HorizontalAlignment="Stretch" Padding="5,4">
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                    <Viewbox Width="15" Height="15" Margin="0,0,5,0">
+                                        <Path Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" Data="M12,1 C5.923,1 1,5.923 1,12 C1,16.867 4.149,20.979 8.521,22.436 C9.071,22.532 9.277,22.203 9.277,21.914 C9.277,21.652 9.264,20.786 9.264,19.865 C6.5,20.374 5.785,19.191 5.565,18.573 C5.441,18.256 4.905,17.28 4.438,17.019 C4.053,16.812 3.502,16.304 4.424,16.29 C5.29,16.276 5.909,17.087 6.115,17.418 C7.105,19.081 8.686,18.614 9.319,18.325 C9.415,17.61 9.704,17.129 10.02,16.854 C7.613,16.579 5.097,15.658 5.097,11.491 C5.097,10.308 5.509,9.332 6.183,8.576 C6.073,8.301 5.702,7.188 6.286,5.689 C6.286,5.689 7.18,5.401 9.311,6.803 A10.2,10.2 0 0 1 12.061,6.432 C12.996,6.432 13.931,6.555 14.811,6.803 C16.943,5.387 17.836,5.689 17.836,5.689 C18.42,7.188 18.049,8.301 17.939,8.576 C18.613,9.332 19.025,10.295 19.025,11.491 C19.025,15.672 16.495,16.579 14.088,16.854 C14.473,17.184 14.817,17.83 14.817,18.834 C14.817,20.264 14.803,21.419 14.803,21.79 C14.803,22.079 15.009,22.422 15.559,22.312 A11.02,11.02 0 0 0 23,12 C23,5.923 18.078,1 12,1 Z" />
+                                    </Viewbox>
+                                    <TextBlock Text="GitHub" FontSize="11" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
+                        </Grid>
+
                         <!-- Hàng 2 nút điều khiển chân menu -->
                         <Grid>
                             <Grid.ColumnDefinitions>
@@ -61,11 +88,21 @@
                         </Grid>
                     </StackPanel>
 
+                    <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="8,6,8,14">
+                        <Border Width="44" Height="44" Margin="0,0,9,0">
+                            <Image Source="/Assets/logo.png" Stretch="Uniform" Margin="1"
+                                   RenderOptions.BitmapScalingMode="HighQuality" />
+                        </Border>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="VHWuWa" FontSize="15" FontWeight="Bold" />
+                            <TextBlock Text="VIỆT HÓA WUTHERING WAVES" FontSize="8" Foreground="#38bdf8" FontWeight="SemiBold" />
+                        </StackPanel>
+                    </StackPanel>
+
                     <ListBox x:Name="Nav" SelectionChanged="Nav_SelectionChanged"
                              BorderThickness="0" Background="Transparent">
                         <ListBoxItem Tag="home" Content="🏠  Trang chủ" />
                         <ListBoxItem Tag="install" Content="🌐  Cài Việt hóa" />
-                        <ListBoxItem Tag="mod" Content="🧩  Quản lý mod" />
                         <ListBoxItem Tag="font" Content="🔤  Font chữ" />
                         <ListBoxItem Tag="graphics" Content="🎮  Đồ họa" />
                         <ListBoxItem Tag="guide" Content="📖  Hướng dẫn" />

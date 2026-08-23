@@ -8,21 +8,25 @@ namespace VHWuWa.Infrastructure;
 
 public sealed class UpdateService : IUpdateService
 {
-    private static readonly string[] ReleaseEndpoints = new[]
+    private static readonly string[] DefaultReleaseEndpoints = new[]
     {
-        "https://api.github.com/repos/WahuVN/wuwa-vietnamese-launcher/releases/latest",
-        "https://api.github.com/repos/WahuVN/Viet-Hoa-WuWa/releases/latest"
+        "https://api.github.com/repos/WahuVN/Viet-Hoa-WuWa/releases/latest",
+        "https://api.github.com/repos/WahuVN/wuwa-vietnamese-launcher/releases/latest"
     };
-    private static readonly HttpClient Http = CreateClient();
     private readonly ILogService _log;
     private readonly IHashService _hash;
     private readonly string _currentVersion;
+    private readonly HttpClient _http;
+    private readonly IReadOnlyList<string> _releaseEndpoints;
 
-    public UpdateService(ILogService log, IHashService hash, string? currentVersion = null)
+    public UpdateService(ILogService log, IHashService hash, string? currentVersion = null,
+        HttpClient? httpClient = null, IEnumerable<string>? releaseEndpoints = null)
     {
         _log = log; _hash = hash;
         _currentVersion = currentVersion
             ?? Assembly.GetEntryAssembly()?.GetName().Version?.ToString(3) ?? "2.0.0";
+        _http = httpClient ?? CreateClient();
+        _releaseEndpoints = (releaseEndpoints ?? DefaultReleaseEndpoints).ToArray();
     }
 
     private static HttpClient CreateClient()
@@ -39,16 +43,17 @@ public sealed class UpdateService : IUpdateService
         HttpResponseMessage? resp = null;
         try
         {
-            foreach (var endpoint in ReleaseEndpoints)
+            foreach (var endpoint in _releaseEndpoints)
             {
                 try
                 {
-                    var r = await Http.GetAsync(endpoint, ct);
+                    var r = await _http.GetAsync(endpoint, ct);
                     if (r.IsSuccessStatusCode)
                     {
                         resp = r;
                         break;
                     }
+                    r.Dispose();
                 }
                 catch { }
             }
@@ -67,6 +72,7 @@ public sealed class UpdateService : IUpdateService
             if (string.IsNullOrWhiteSpace(version)) { res.Message = "Chưa có bản phát hành."; return res; }
 
             string zipUrl = "", updateJsonUrl = "";
+            var zipPriority = -1;
             if (root.TryGetProperty("assets", out var assets) && assets.ValueKind == JsonValueKind.Array)
             {
                 foreach (var a in assets.EnumerateArray())
@@ -77,13 +83,20 @@ public sealed class UpdateService : IUpdateService
                     {
                         updateJsonUrl = url;
                     }
-                    else if ((name.Contains("VietHoa", StringComparison.OrdinalIgnoreCase) || name.Contains("VHWuWa", StringComparison.OrdinalIgnoreCase)) && name.EndsWith(".zip", StringComparison.OrdinalIgnoreCase))
+                    else if (name.EndsWith(".zip", StringComparison.OrdinalIgnoreCase)
+                             && !name.Contains("Community", StringComparison.OrdinalIgnoreCase)
+                             && !name.Contains("App-Dich", StringComparison.OrdinalIgnoreCase))
                     {
-                        zipUrl = url; // Ưu tiên bản cài Việt Hóa
-                    }
-                    else if (string.IsNullOrEmpty(zipUrl) && name.EndsWith(".zip", StringComparison.OrdinalIgnoreCase) && !name.Contains("Community", StringComparison.OrdinalIgnoreCase) && !name.Contains("App-Dich", StringComparison.OrdinalIgnoreCase))
-                    {
-                        zipUrl = url;
+                        var expected = $"VietHoa-WuWa-v{version}.zip";
+                        var priority = name.Equals(expected, StringComparison.OrdinalIgnoreCase) ? 100
+                            : name.StartsWith("VietHoa-WuWa-", StringComparison.OrdinalIgnoreCase) ? 90
+                            : name.StartsWith("VHWuWa-", StringComparison.OrdinalIgnoreCase) ? 80
+                            : 10;
+                        if (priority > zipPriority)
+                        {
+                            zipPriority = priority;
+                            zipUrl = url;
+                        }
                     }
                 }
             }
@@ -91,10 +104,12 @@ public sealed class UpdateService : IUpdateService
             UpdateManifest manifest;
             if (!string.IsNullOrEmpty(updateJsonUrl))
             {
-                var mjson = await Http.GetStringAsync(updateJsonUrl, ct);
+                var mjson = await _http.GetStringAsync(updateJsonUrl, ct);
                 manifest = VhwJson.Deserialize<UpdateManifest>(mjson) ?? new UpdateManifest();
-                if (string.IsNullOrWhiteSpace(manifest.Version)) manifest.Version = version;
-                if (string.IsNullOrWhiteSpace(manifest.DownloadUrl)) manifest.DownloadUrl = zipUrl;
+                // Tag và asset của chính release là nguồn xác thực. Không dùng URL
+                // cũ hoặc URL ngoài release còn sót trong update.json.
+                manifest.Version = version;
+                manifest.DownloadUrl = zipUrl;
                 if (string.IsNullOrWhiteSpace(manifest.ReleaseNotes)) manifest.ReleaseNotes = notes;
             }
             else
@@ -102,6 +117,13 @@ public sealed class UpdateService : IUpdateService
                 manifest = new UpdateManifest { Version = version, ReleaseNotes = notes, DownloadUrl = zipUrl };
             }
 
+            if (string.IsNullOrWhiteSpace(manifest.DownloadUrl))
+            {
+                res.Message = $"Release v{version} thiếu gói VietHoa-WuWa-*.zip dành cho người chơi.";
+                return res;
+            }
+
+            res.CheckSucceeded = true;
             res.Manifest = manifest;
             res.UpdateAvailable = VersionComparer.IsNewer(manifest.Version, _currentVersion);
             res.Message = res.UpdateAvailable
@@ -133,7 +155,7 @@ public sealed class UpdateService : IUpdateService
             if (string.IsNullOrWhiteSpace(fileName)) fileName = $"VHWuWa-{manifest.Version}.zip";
             var dest = Path.Combine(destDir, fileName);
 
-            using var resp = await Http.GetAsync(manifest.DownloadUrl, HttpCompletionOption.ResponseHeadersRead, ct);
+            using var resp = await _http.GetAsync(manifest.DownloadUrl, HttpCompletionOption.ResponseHeadersRead, ct);
             resp.EnsureSuccessStatusCode();
             var total = resp.Content.Headers.ContentLength ?? -1;
             await using (var input = await resp.Content.ReadAsStreamAsync(ct))

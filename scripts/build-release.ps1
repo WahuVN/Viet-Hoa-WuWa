@@ -1,13 +1,18 @@
 ﻿#requires -Version 5
 <#
   Build bản phát hành VHWuWa (win-x64) vào thư mục dist/, kèm checksums + update.json.
-  Dùng: powershell -ExecutionPolicy Bypass -File scripts/build-release.ps1 [-Version 1.0.0]
+  Dùng: powershell -ExecutionPolicy Bypass -File scripts/build-release.ps1 [-Version 2.1.0]
 #>
-param([string]$Version = "1.0.0", [switch]$NoFonts)
+param([string]$Version = "", [switch]$NoFonts)
 
 $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $PSScriptRoot
 Set-Location $root
+if (-not $Version) {
+    [xml]$props = Get-Content (Join-Path $root 'Directory.Build.props')
+    $Version = [string]$props.Project.PropertyGroup.Version
+}
+if ($Version -notmatch '^\d+\.\d+\.\d+([-.+][0-9A-Za-z.-]+)?$') { throw "Version không hợp lệ: $Version" }
 
 $dist = Join-Path $root "dist"
 if (Test-Path $dist) { Remove-Item $dist -Recurse -Force }
@@ -19,7 +24,7 @@ dotnet test "$root/VHWuWa.sln" -c Release
 Write-Host "== Publish App + Updater (1 file .exe duy nhất) ==" -ForegroundColor Cyan
 $pub = @("-c","Release","-r","win-x64","--self-contained","true",
          "-p:PublishSingleFile=true","-p:IncludeNativeLibrariesForSelfExtract=true",
-         "-p:EnableCompressionInSingleFile=true")
+         "-p:EnableCompressionInSingleFile=true","-p:Version=$Version")
 dotnet publish "$root/src/VHWuWa.App/VHWuWa.App.csproj" @pub -o $dist
 dotnet publish "$root/src/VHWuWa.Updater/VHWuWa.Updater.csproj" @pub -o $dist
 Remove-Item (Join-Path $dist "*.pdb") -Force -ErrorAction SilentlyContinue
@@ -40,15 +45,25 @@ Copy-Item "$root/README.md" (Join-Path $dist "README.txt") -Force -ErrorAction S
 
 if (-not (Test-Path (Join-Path $dist "VHWuWa.exe"))) { throw "Thiếu VHWuWa.exe sau publish." }
 
-$zip = Join-Path $root "VHWuWa-$Version-win-x64.zip"
+$zip = Join-Path $root "VietHoa-WuWa-v$Version.zip"
 if (Test-Path $zip) { Remove-Item $zip -Force }
-Compress-Archive -Path (Join-Path $dist '*') -DestinationPath $zip -Force
+$updatePayload = Join-Path $root 'dist-update-payload'
+if (Test-Path $updatePayload) { Remove-Item $updatePayload -Recurse -Force }
+New-Item -ItemType Directory -Force $updatePayload | Out-Null
+Copy-Item (Join-Path $dist '*') $updatePayload -Recurse -Force
+$payloadUpdater = Join-Path $updatePayload 'VHWuWa.Updater.exe'
+if (Test-Path $payloadUpdater) {
+  Move-Item $payloadUpdater (Join-Path $updatePayload 'VHWuWa.Updater.next.exe') -Force
+}
+Compress-Archive -Path (Join-Path $updatePayload '*') -DestinationPath $zip -Force
+Remove-Item $updatePayload -Recurse -Force
 $sha = (Get-FileHash $zip -Algorithm SHA256).Hash.ToLower()
 "$sha  $(Split-Path $zip -Leaf)" | Out-File (Join-Path $root "checksums.txt") -Encoding utf8
 
-@{ version = $Version; minimumVersion = "1.0.0"; releaseNotes = "Bản phát hành $Version"; downloadUrl = "https://github.com/WahuVN/Viet-Hoa-WuWa/releases/download/v$Version/$(Split-Path $zip -Leaf)"; sha256 = $sha; signature = ""; mandatory = $false } |
+@{ version = $Version; minimumVersion = "2.0.0"; releaseNotes = "Bản phát hành $Version"; downloadUrl = "https://github.com/WahuVN/Viet-Hoa-WuWa/releases/download/v$Version/$(Split-Path $zip -Leaf)"; sha256 = $sha; signature = ""; mandatory = $false } |
   ConvertTo-Json | Out-File (Join-Path $root "update.json") -Encoding utf8
 
 Write-Host "XONG. Thư mục: $dist" -ForegroundColor Green
 Write-Host "ZIP: $zip"
 Write-Host "SHA-256: $sha"
+Write-Host "Upload ZIP + update.json + checksums.txt lên release v$Version."

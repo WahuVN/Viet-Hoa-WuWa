@@ -49,6 +49,7 @@ public sealed class BackupInfo
 /// <summary>Kết quả kiểm tra cập nhật.</summary>
 public sealed class UpdateCheckResult
 {
+    public bool CheckSucceeded { get; set; }
     public bool UpdateAvailable { get; set; }
     public string CurrentVersion { get; set; } = "";
     public UpdateManifest? Manifest { get; set; }

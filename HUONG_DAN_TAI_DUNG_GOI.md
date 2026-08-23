@@ -1,8 +1,8 @@
 # 📥 Hướng Dẫn Tải & Cài Đặt Đúng Gói VHWuWa
 
-[![Discord Server](https://img.shields.io/badge/Discord-Tham_Gia_Server_VHWuWa-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/c9ws4q9U7)
+[![Discord Server](https://img.shields.io/badge/Discord-Tham_Gia_Server_VHWuWa-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/tuRCj47sy)
 
-> 💬 **Server Discord VHWuWa (Windows):** **[https://discord.gg/c9ws4q9U7](https://discord.gg/c9ws4q9U7)** — Nhận hỗ trợ kỹ thuật và thông báo update!  
+> 💬 **Server Discord VHWuWa (Windows):** **[https://discord.gg/tuRCj47sy](https://discord.gg/tuRCj47sy)** — Nhận hỗ trợ kỹ thuật và thông báo update!
 > 📱 **Discord Android (DangDev):** [https://discord.gg/3t5NSyJEz](https://discord.gg/3t5NSyJEz)
 
 Truy cập **[Trang Phát Hành Mới Nhất (GitHub Releases)](https://github.com/WahuVN/Viet-Hoa-WuWa/releases/latest)**, sau đó chọn đúng **1 trong 2 gói** tùy theo nhu cầu của bạn:
@@ -13,8 +13,8 @@ Truy cập **[Trang Phát Hành Mới Nhất (GitHub Releases)](https://github.c
  
 | Nhu cầu của bạn | Tệp cần tải về | Thao tác sau khi giải nén |
 | :--- | :--- | :--- |
-| 🎮 **Chỉ muốn cài và chơi game** | `VietHoa-WuWa-v2.0.0.zip` (~107 MB) | Mở thư mục $\rightarrow$ Chạy file `Chay VHWuWa.bat` hoặc `app\VHWuWa.exe` |
-| 👥 **Muốn dịch, duyệt hoặc đóng góp** | `App-Dich-WuWa-v2.0.0.zip` (~245 MB) | Mở thư mục $\rightarrow$ Chạy file `Chay WAHU Community.bat` |
+| 🎮 **Chỉ muốn cài và chơi game** | `VietHoa-WuWa-v2.0.1.zip` (~108 MB) | Mở thư mục $\rightarrow$ Chạy file `Chay VHWuWa.bat` hoặc `app\VHWuWa.exe` |
+| 👥 **Muốn dịch, duyệt hoặc đóng góp** | `App-Dich-WuWa-v2.0.1.zip` (~244 MB) | Mở thư mục $\rightarrow$ Chạy file `Chay WAHU Community.bat` |
 
 > ⚠️ **Lưu ý:** Người chơi thông thường chỉ cần tải **`VietHoa-WuWa-v2.0.0.zip`**, **không cần tải** tool dịch hay mục **Source code**.
 

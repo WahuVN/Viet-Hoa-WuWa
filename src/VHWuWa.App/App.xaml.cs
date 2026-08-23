@@ -26,7 +26,6 @@ public partial class App : Application
         services.AddSingleton<MainViewModel>();
         services.AddSingleton<HomeViewModel>();
         services.AddSingleton<InstallViewModel>();
-        services.AddSingleton<ModViewModel>();
         services.AddSingleton<FontViewModel>();
         services.AddSingleton<GraphicsViewModel>();
         services.AddSingleton<GuideViewModel>();
@@ -35,7 +34,6 @@ public partial class App : Application
         // Pages
         services.AddSingleton<HomePage>();
         services.AddSingleton<InstallPage>();
-        services.AddSingleton<ModPage>();
         services.AddSingleton<FontPage>();
         services.AddSingleton<GraphicsPage>();
         services.AddSingleton<GuidePage>();
