@@ -50,7 +50,7 @@ jobs:
         run: if (-not (Test-Path dist/VHWuWa.exe)) { throw "Thiếu VHWuWa.exe" }
         shell: pwsh
 
-      - name: Đóng gói ZIP + checksum + update manifest
+      - name: Đóng gói ZIP
         run: |
           [xml]$props = Get-Content Directory.Build.props
           $ver = if ("${{ github.ref_type }}" -eq "tag") { "${{ github.ref_name }}".TrimStart('v') } else { [string]$props.Project.PropertyGroup.Version }
@@ -61,19 +61,13 @@ jobs:
             Move-Item update-payload/VHWuWa.Updater.exe update-payload/VHWuWa.Updater.next.exe -Force
           }
           Compress-Archive -Path update-payload/* -DestinationPath $zip -Force
-          $sha = (Get-FileHash $zip -Algorithm SHA256).Hash.ToLower()
-          "$sha  $zip" | Out-File checksums.txt -Encoding utf8
-          @{ version = $ver; minimumVersion = "2.0.0"; releaseNotes = "Bản phát hành $ver"; downloadUrl = "https://github.com/WahuVN/Viet-Hoa-WuWa/releases/download/v$ver/$zip"; sha256 = $sha; signature = ""; mandatory = $false } | ConvertTo-Json | Out-File update.json -Encoding utf8
         shell: pwsh
 
       - name: Upload artifact
         uses: actions/upload-artifact@v7
         with:
           name: VHWuWa-win-x64
-          path: |
-            VietHoa-WuWa-v*.zip
-            checksums.txt
-            update.json
+          path: VietHoa-WuWa-v*.zip
 
       # Bản public đầy đủ còn kèm PAK/font/loader và WAHU Community được dựng
       # trên máy phát hành bằng scripts/build-dist.ps1 + build-community.ps1.

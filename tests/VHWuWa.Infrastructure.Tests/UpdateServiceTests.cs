@@ -10,28 +10,22 @@ namespace VHWuWa.Infrastructure.Tests;
 public sealed class UpdateServiceTests
 {
     [Fact]
-    public async Task CheckAsync_PrefersExactPlayerAssetAndUsesReleaseTag()
+    public async Task CheckAsync_PrefersExactPlayerAssetAndUsesGitHubDigest()
     {
         const string playerUrl = "https://github.test/VietHoa-WuWa-v2.1.0.zip";
+        const string playerSha = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
         var release = """
         {
           "tag_name":"v2.1.0",
           "body":"Ghi chú từ release",
           "assets":[
-            {"name":"App-Dich-WuWa-v2.1.0.zip","browser_download_url":"https://github.test/App-Dich.zip"},
-            {"name":"VHWuWa-v2.1.0-win-x64.zip","browser_download_url":"https://github.test/app-only.zip"},
-            {"name":"VietHoa-WuWa-v2.1.0.zip","browser_download_url":"https://github.test/VietHoa-WuWa-v2.1.0.zip"},
-            {"name":"update.json","browser_download_url":"https://github.test/update.json"}
+            {"name":"App-Dich-WuWa-v2.1.0.zip","browser_download_url":"https://github.test/App-Dich.zip","digest":"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
+            {"name":"VHWuWa-v2.1.0-win-x64.zip","browser_download_url":"https://github.test/app-only.zip","digest":"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"},
+            {"name":"VietHoa-WuWa-v2.1.0.zip","browser_download_url":"https://github.test/VietHoa-WuWa-v2.1.0.zip","digest":"sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"}
           ]
         }
         """;
-        var manifest = """
-        {"version":"9.9.9","downloadUrl":"https://evil.test/stale.zip","sha256":"abc","releaseNotes":"Ghi chú manifest"}
-        """;
-        var service = CreateService("2.0.0", request =>
-            request.RequestUri!.AbsolutePath.EndsWith("update.json", StringComparison.OrdinalIgnoreCase)
-                ? Json(manifest)
-                : Json(release));
+        var service = CreateService("2.0.0", _ => Json(release));
 
         var result = await service.CheckAsync();
 
@@ -40,7 +34,8 @@ public sealed class UpdateServiceTests
         Assert.NotNull(result.Manifest);
         Assert.Equal("2.1.0", result.Manifest!.Version);
         Assert.Equal(playerUrl, result.Manifest.DownloadUrl);
-        Assert.Equal("Ghi chú manifest", result.Manifest.ReleaseNotes);
+        Assert.Equal(playerSha, result.Manifest.Sha256);
+        Assert.Equal("Ghi chú từ release", result.Manifest.ReleaseNotes);
     }
 
     [Fact]
@@ -65,7 +60,7 @@ public sealed class UpdateServiceTests
     {
         var release = """
         {"tag_name":"v2.0.0","body":"notes","assets":[
-          {"name":"VietHoa-WuWa-v2.0.0.zip","browser_download_url":"https://github.test/player.zip"}
+          {"name":"VietHoa-WuWa-v2.0.0.zip","browser_download_url":"https://github.test/player.zip","digest":"sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"}
         ]}
         """;
         var service = CreateService("2.0.0", _ => Json(release));
@@ -75,6 +70,26 @@ public sealed class UpdateServiceTests
         Assert.True(result.CheckSucceeded);
         Assert.False(result.UpdateAvailable);
         Assert.Equal("Bạn đang sử dụng phiên bản mới nhất.", result.Message);
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("sha256:abc")]
+    [InlineData("md5:0123456789abcdef0123456789abcdef")]
+    public async Task CheckAsync_RejectsPlayerAssetWithoutValidGitHubSha256(string digest)
+    {
+        var release = $$"""
+        {"tag_name":"v2.1.0","body":"notes","assets":[
+          {"name":"VietHoa-WuWa-v2.1.0.zip","browser_download_url":"https://github.test/player.zip","digest":"{{digest}}"}
+        ]}
+        """;
+        var service = CreateService("2.0.0", _ => Json(release));
+
+        var result = await service.CheckAsync();
+
+        Assert.False(result.CheckSucceeded);
+        Assert.False(result.UpdateAvailable);
+        Assert.Contains("SHA-256", result.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]

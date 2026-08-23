@@ -1,6 +1,6 @@
 ﻿#requires -Version 5
 <#
-  Build bản phát hành VHWuWa (win-x64) vào thư mục dist/, kèm checksums + update.json.
+  Build bản phát hành VHWuWa (win-x64) vào thư mục dist/.
   Dùng: powershell -ExecutionPolicy Bypass -File scripts/build-release.ps1 [-Version 2.1.0]
 #>
 param([string]$Version = "", [switch]$NoFonts)
@@ -8,6 +8,8 @@ param([string]$Version = "", [switch]$NoFonts)
 $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $PSScriptRoot
 Set-Location $root
+Remove-Item (Join-Path $root 'update.json'), (Join-Path $root 'checksums.txt'), (Join-Path $root 'SHA256SUMS.txt') `
+  -Force -ErrorAction SilentlyContinue
 if (-not $Version) {
     [xml]$props = Get-Content (Join-Path $root 'Directory.Build.props')
     $Version = [string]$props.Project.PropertyGroup.Version
@@ -58,12 +60,8 @@ if (Test-Path $payloadUpdater) {
 Compress-Archive -Path (Join-Path $updatePayload '*') -DestinationPath $zip -Force
 Remove-Item $updatePayload -Recurse -Force
 $sha = (Get-FileHash $zip -Algorithm SHA256).Hash.ToLower()
-"$sha  $(Split-Path $zip -Leaf)" | Out-File (Join-Path $root "checksums.txt") -Encoding utf8
-
-@{ version = $Version; minimumVersion = "2.0.0"; releaseNotes = "Bản phát hành $Version"; downloadUrl = "https://github.com/WahuVN/Viet-Hoa-WuWa/releases/download/v$Version/$(Split-Path $zip -Leaf)"; sha256 = $sha; signature = ""; mandatory = $false } |
-  ConvertTo-Json | Out-File (Join-Path $root "update.json") -Encoding utf8
 
 Write-Host "XONG. Thư mục: $dist" -ForegroundColor Green
 Write-Host "ZIP: $zip"
 Write-Host "SHA-256: $sha"
-Write-Host "Upload ZIP + update.json + checksums.txt lên release v$Version."
+Write-Host "Chỉ cần upload ZIP lên release v$Version; app đọc phiên bản và SHA-256 trực tiếp từ GitHub."

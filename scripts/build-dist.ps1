@@ -22,6 +22,8 @@ if ($Version -notmatch '^\d+\.\d+\.\d+([-.+][0-9A-Za-z.-]+)?$') { throw "Version
 
 Write-Host "== 1/4  Publish VHWuWa (self-contained, single-file, nen) ==" -ForegroundColor Cyan
 New-Item -ItemType Directory -Force $distRoot, $buildRoot | Out-Null
+Remove-Item (Join-Path $distRoot 'update.json'), (Join-Path $distRoot 'checksums.txt'), (Join-Path $distRoot 'SHA256SUMS.txt') `
+  -Force -ErrorAction SilentlyContinue
 if (Test-Path $out) { Remove-Item $out -Recurse -Force }
 # Single-file + nen: gom toan bo runtime .NET vao 1 file VHWuWa.exe (~66 MB thay vi ~140 MB roi rac).
 # SatelliteResourceLanguages=en: bo cac ban dich dialog he thong (ja/ko/ru...) khong can thiet.
@@ -163,39 +165,17 @@ if (Test-Path $releaseZip) { Remove-Item $releaseZip -Force }
 Compress-Archive -Path (Join-Path $updatePayload '*') -DestinationPath $releaseZip -CompressionLevel Optimal
 Remove-Item $updatePayload -Recurse -Force
 $sha = (Get-FileHash $releaseZip -Algorithm SHA256).Hash.ToLowerInvariant()
-$checksumPath = Join-Path $distRoot 'checksums.txt'
-$checksumLines = Get-ChildItem -LiteralPath $distRoot -File -Filter '*.zip' |
-  Where-Object { $_.Name -like 'VietHoa-WuWa-v*.zip' -or $_.Name -like 'App-Dich-WuWa-v*.zip' } |
-  Sort-Object Name |
-  ForEach-Object { "$((Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant())  $($_.Name)" }
-Set-Content -LiteralPath $checksumPath -Value $checksumLines -Encoding utf8
-$updateManifest = [ordered]@{
-  version = $Version
-  minimumVersion = '2.0.0'
-  releaseNotes = "Bản phát hành $Version"
-  downloadUrl = "https://github.com/WahuVN/Viet-Hoa-WuWa/releases/download/v$Version/$(Split-Path $releaseZip -Leaf)"
-  sha256 = $sha
-  signature = ''
-  mandatory = $false
-}
-$updatePath = Join-Path $distRoot 'update.json'
-$updateManifest | ConvertTo-Json | Set-Content $updatePath -Encoding utf8
 Write-Host "   Bo cai (thu muc): $out  ($sz MB)"
 Write-Host "   File gui (ZIP):   $zip  ($zsz MB)"
 Write-Host "   File Release:     $releaseZip"
-Write-Host "   Manifest Release: $updatePath"
-Write-Host "   Checksum:          $checksumPath"
-Write-Host "   -> Upload ZIP + update.json + checksums.txt lên release v$Version."
+Write-Host "   SHA-256:           $sha"
+Write-Host "   -> Chỉ upload các ZIP/PAK cần phát hành; app đọc SHA-256 trực tiếp từ GitHub."
 $uploadGuide = @"
 CAC FILE CAN UPLOAD LEN GITHUB RELEASE v$Version
 ================================================
 
 BAT BUOC CHO NGUOI CHOI / TU CAP NHAT
   VietHoa-WuWa-v$Version.zip
-  update.json
-
-NEN CO DE KIEM TRA FILE
-  checksums.txt
 
 NEU PHAT HANH KEM APP DICH
   App-Dich-WuWa-v$Version.zip
@@ -205,5 +185,6 @@ KHONG UPLOAD
   RELEASE_BODY.md         Noi dung de copy vao phan mo ta Release
 
 Neu phat hanh kem PAK rieng, chi upload asset da build dung phien ban.
+Khong can update.json/checksums.txt: app doc phien ban va SHA-256 tu GitHub Release API.
 "@
 [System.IO.File]::WriteAllText((Join-Path $distRoot '00_CAN_UPLOAD_GITHUB.txt'), $uploadGuide, [System.Text.UTF8Encoding]::new($true))

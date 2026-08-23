@@ -1,9 +1,0 @@
-{
-  "version": "2.0.1",
-  "minimumVersion": "2.0.0",
-  "releaseNotes": "Bản 2.0.1: sửa tự cập nhật, cài font, giao diện và công cụ đặt tên nhân vật.",
-  "downloadUrl": "https://github.com/WahuVN/Viet-Hoa-WuWa/releases/download/v2.0.1/VietHoa-WuWa-v2.0.1.zip",
-  "sha256": "edbd978e11a8bd7a083177bc24ff97c0d4632ba4753372db4281212c434c1d65",
-  "signature": "",
-  "mandatory": false
-}

@@ -8,8 +8,8 @@ Bộ cài đặt và công cụ quản lý bản dịch tiếng Việt cho **Wut
 
 | Tệp tải về | Mục đích |
 | :--- | :--- |
-| 🎮 [**VietHoa-WuWa-v2.0.0.zip**](https://github.com/WahuVN/Viet-Hoa-WuWa/releases/download/v2.0.0/VietHoa-WuWa-v2.0.0.zip) | **Dành cho người chơi** — Bộ cài Tool Việt hóa chính thức trên Windows (có sẵn bản Tiếng Anh + 72 Font) |
-| 🛠️ [**App-Dich-WuWa-v2.0.0.zip**](https://github.com/WahuVN/Viet-Hoa-WuWa/releases/download/v2.0.0/App-Dich-WuWa-v2.0.0.zip) | **Dành cho dịch giả & modder** — Bộ công cụ Studio chỉnh sửa dữ liệu, QA và đóng gói |
+| 🎮 [**VietHoa-WuWa-v2.0.1.zip**](https://github.com/WahuVN/Viet-Hoa-WuWa/releases/download/v2.0.1/VietHoa-WuWa-v2.0.1.zip) | **Dành cho người chơi** — Bộ cài Tool Việt hóa chính thức trên Windows (có sẵn bản Tiếng Anh + 72 Font) |
+| 🛠️ [**App-Dich-WuWa-v2.0.1.zip**](https://github.com/WahuVN/Viet-Hoa-WuWa/releases/download/v2.0.1/App-Dich-WuWa-v2.0.1.zip) | **Dành cho dịch giả & modder** — Bộ công cụ Studio chỉnh sửa dữ liệu, QA và đóng gói |
 
 > 📌 *Tải bản mới nhất tại: **[GitHub Releases](https://github.com/WahuVN/Viet-Hoa-WuWa/releases/latest)***
 
@@ -63,15 +63,13 @@ Mã nguồn được phân phối theo giấy phép [MIT License](LICENSE).
 powershell -ExecutionPolicy Bypass -File scripts\build-dist.ps1 -Version 2.1.0
 ```
 
-Tạo release có tag đúng dạng **`v2.1.0`**, sau đó tải ba tệp bắt buộc trong `dist` lên:
+Tạo release có tag đúng dạng **`v2.1.0`**, sau đó tải gói dành cho người chơi trong `dist` lên:
 
 - `VietHoa-WuWa-v2.1.0.zip`
-- `update.json`
-- `checksums.txt`
 
 Khi phát hành kèm công cụ dịch hoặc PAK cài thủ công, tải thêm:
 
 - `App-Dich-WuWa-v2.1.0.zip`
 - `WuWaVH_HanViet_99_P.pak`
 
-Không đổi tên riêng từng tệp sau khi build. `update.json` chứa đúng phiên bản, URL tải và SHA-256 để ứng dụng kiểm tra rồi tự cập nhật an toàn.
+Không đổi tên tệp sau khi build. Ứng dụng tự đọc phiên bản, URL tải và SHA-256 của asset trực tiếp từ GitHub Release API để kiểm tra rồi cập nhật an toàn; không cần `update.json` hoặc `checksums.txt`.
