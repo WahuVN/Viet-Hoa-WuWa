@@ -2,6 +2,10 @@
 
 Tất cả các thay đổi đáng chú ý của dự án VHWuWa được ghi lại tại đây theo chuẩn [SemVer](https://semver.org/lang/vi/).
 
+## [3.0.5] - 2026-08-24
+### Hot fix
+- Hot fix.
+
 ## [3.0.4] - 2026-08-24
 ### Dữ liệu Việt hóa
 - Rà soát 11.788 key từ bộ part 01–09 trên các mốc game 3.4, 3.5 và 3.6.

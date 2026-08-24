@@ -2,7 +2,7 @@
 
 ## Chuẩn bị
 
-1. Tải `VietHoa-WuWa-v3.0.4.zip` ở trang Releases.
+1. Tải `VietHoa-WuWa-v3.0.5.zip` ở trang Releases.
 2. Giải nén toàn bộ ZIP ra thư mục riêng; không chạy EXE trực tiếp bên trong ZIP.
 3. Tắt Wuthering Waves và các launcher đang cập nhật game.
 4. Chạy `Chay VHWuWa.bat`.
