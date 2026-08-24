@@ -191,7 +191,8 @@ public partial class InstallViewModel : ObservableObject
         var dir = Path.GetDirectoryName(dst);
         if (!string.IsNullOrEmpty(dir)) Directory.CreateDirectory(dir);
 
-        var url = "https://github.com/WahuVN/Viet-Hoa-WuWa/releases/download/v2.0.3/WuWaVH_HanViet_99_P.pak";
+        // Luôn lấy asset của release mới nhất để bản app cũ không bị khóa vào một tag cố định.
+        var url = "https://github.com/WahuVN/Viet-Hoa-WuWa/releases/latest/download/WuWaVH_HanViet_99_P.pak";
         try
         {
             using var response = await _http.GetAsync(url, System.Net.Http.HttpCompletionOption.ResponseHeadersRead, ct);

@@ -176,6 +176,7 @@ CAC FILE CAN UPLOAD LEN GITHUB RELEASE v$Version
 
 BAT BUOC CHO NGUOI CHOI / TU CAP NHAT
   VietHoa-WuWa-v$Version.zip
+  WuWaVH_HanViet_99_P.pak    App tai asset nay khi nguoi dung chon ban Han Viet
 
 NEU PHAT HANH KEM APP DICH
   App-Dich-WuWa-v$Version.zip
@@ -184,7 +185,7 @@ KHONG UPLOAD
   _build\                  Toan bo thu muc va ZIP build trung gian
   RELEASE_BODY.md         Noi dung de copy vao phan mo ta Release
 
-Neu phat hanh kem PAK rieng, chi upload asset da build dung phien ban.
+Copy WuWaVH_HanViet_99_P.pak tu wuwavh_tool\Wahu\dist vao release.
 Khong can update.json/checksums.txt: app doc phien ban va SHA-256 tu GitHub Release API.
 "@
 [System.IO.File]::WriteAllText((Join-Path $distRoot '00_CAN_UPLOAD_GITHUB.txt'), $uploadGuide, [System.Text.UTF8Encoding]::new($true))

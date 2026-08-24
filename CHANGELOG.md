@@ -2,6 +2,24 @@
 
 Tất cả các thay đổi đáng chú ý của dự án VHWuWa được ghi lại tại đây theo chuẩn [SemVer](https://semver.org/lang/vi/).
 
+## [3.0.4] - 2026-08-24
+### Dữ liệu Việt hóa
+- Rà soát 11.788 key từ bộ part 01–09 trên các mốc game 3.4, 3.5 và 3.6.
+- Xác nhận 4.845 bản dịch trùng hoặc tương đương với dữ liệu hiện tại; bổ sung 5 mô tả thuộc tính đã đối chiếu chắc chắn.
+- Loại khỏi lần nhập các câu còn trống, còn chữ Trung/Anh, sai placeholder, sai thẻ định dạng hoặc chưa đủ ngữ cảnh.
+- Giảm số dòng thiếu chắc chắn trong PAK thực tế từ 12.935 xuống 8.203.
+- Áp dụng MASTER V5.1 cho tên nhân vật, địa danh và tổ chức trên cả bản Tên Anh lẫn Hán Việt.
+- Sửa 603 vị trí đã xác nhận trong 342 key: tên cũ, viết hoa, câu trống, nội dung fallback, thẻ định dạng, placeholder và số phần trăm.
+- Chuẩn hóa `Sí Hà`, `Phục Linh`, `Black Shores`/`Hắc Hải Ngạn`, `Vùng Huyền Phương` và các địa danh liên quan.
+- Hoàn thiện Part 10: kiểm tra 1.147 key, nhập 915 bản dịch mới/đã chỉnh và xác nhận lại 226 bản dịch hiện có.
+- Sửa lỗi đóng file làm lặp trường VI/HV ở 35 block; chỉ giữ ngoài PAK 6 nhãn nội bộ `dnt/` không có nguồn EN.
+- Chỉnh lại 8 câu thoại của Rebecca trong hồ sơ, vật phẩm và câu chuyện 3.4 để thống nhất giọng nói thẳng, mạnh và cách xưng hô `tao/mày`.
+
+### Phát hành
+- Đồng bộ phiên bản ứng dụng, tài liệu và liên kết tải gói Hán Việt cho v3.0.4.
+- Thêm lớp hậu kiểm khóa tên sau khi gộp dữ liệu để nguồn lịch sử không ghi đè quy chuẩn mới.
+- Gói Hán Việt được tải từ asset của release mới nhất, không còn khóa cứng vào một phiên bản cũ.
+
 ## [2.0.3] - 2026-08-23
 ### Cài đặt và quản lý xung đột
 - Cài, gỡ và chuyển đổi Việt hóa/font an toàn hơn, theo dõi đúng các file do ứng dụng quản lý.
