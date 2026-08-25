@@ -19,9 +19,9 @@
 
 | Tệp | Dành cho |
 | --- | --- |
-| `VietHoa-WuWa-v3.0.6.zip` | Người chơi: cài và quản lý Việt hóa |
-| `App-Dich-WuWa-v3.0.6.zip` | Dịch giả/người đóng góp: chỉnh tên và thuật ngữ |
-| `WuWaVH_EN_99_P.pak` | Chỉ dùng khi cần PAK Tên Anh riêng |
-| `WuWaVH_HanViet_99_P.pak` | Chỉ dùng khi cần PAK Hán Việt riêng |
+| **Bộ cài Việt hóa** | Người chơi: cài và quản lý Việt hóa |
+| **WAHU Community** | Dịch giả/người đóng góp: chỉnh tên và thuật ngữ |
+| **PAK Tên Anh** | Chỉ dùng khi cần bản Tên Anh riêng |
+| **PAK Hán Việt** | Chỉ dùng khi cần bản Hán Việt riêng |
 
 Hỗ trợ: [Discord WAHU](https://discord.gg/tuRCj47sy) · [GitHub Issues](https://github.com/WahuVN/Viet-Hoa-WuWa/issues)
