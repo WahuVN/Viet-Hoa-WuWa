@@ -2,6 +2,7 @@ using System.IO;
 using System.Windows;
 using System.Windows.Threading;
 using Microsoft.Extensions.DependencyInjection;
+using VHWuWa.App.Services;
 using VHWuWa.App.ViewModels;
 using VHWuWa.App.Views;
 using VHWuWa.Core.Abstractions;
@@ -26,14 +27,19 @@ public partial class App : Application
         services.AddSingleton<MainViewModel>();
         services.AddSingleton<HomeViewModel>();
         services.AddSingleton<InstallViewModel>();
+        services.AddSingleton<CharacterNamesViewModel>();
+        services.AddSingleton<TermsEditorViewModel>();
         services.AddSingleton<FontViewModel>();
         services.AddSingleton<GraphicsViewModel>();
         services.AddSingleton<GuideViewModel>();
         services.AddSingleton<SettingsViewModel>();
+        services.AddSingleton<PakEditorBridge>();
 
         // Pages
         services.AddSingleton<HomePage>();
         services.AddSingleton<InstallPage>();
+        services.AddSingleton<CharacterNamesPage>();
+        services.AddSingleton<TermsEditorPage>();
         services.AddSingleton<FontPage>();
         services.AddSingleton<GraphicsPage>();
         services.AddSingleton<GuidePage>();

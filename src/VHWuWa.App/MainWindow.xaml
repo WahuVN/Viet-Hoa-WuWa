@@ -103,6 +103,8 @@
                              BorderThickness="0" Background="Transparent">
                         <ListBoxItem Tag="home" Content="🏠  Trang chủ" />
                         <ListBoxItem Tag="install" Content="🌐  Cài Việt hóa" />
+                        <ListBoxItem Tag="characters" Content="👤  Đặt tên nhân vật" />
+                        <ListBoxItem Tag="terms" Content="📚  Thuật ngữ" />
                         <ListBoxItem Tag="font" Content="🔤  Font chữ" />
                         <ListBoxItem Tag="graphics" Content="🎮  Đồ họa" />
                         <ListBoxItem Tag="guide" Content="📖  Hướng dẫn" />

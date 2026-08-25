@@ -20,7 +20,7 @@ if (-not $Version) {
 }
 if ($Version -notmatch '^\d+\.\d+\.\d+([-.+][0-9A-Za-z.-]+)?$') { throw "Version không hợp lệ: $Version" }
 
-Write-Host "== 1/4  Publish VHWuWa (self-contained, single-file, nen) ==" -ForegroundColor Cyan
+Write-Host "== 1/5  Publish VHWuWa (self-contained, single-file, nen) ==" -ForegroundColor Cyan
 New-Item -ItemType Directory -Force $distRoot, $buildRoot | Out-Null
 Remove-Item (Join-Path $distRoot 'update.json'), (Join-Path $distRoot 'checksums.txt'), (Join-Path $distRoot 'SHA256SUMS.txt') `
   -Force -ErrorAction SilentlyContinue
@@ -43,21 +43,11 @@ if (-not (Test-Path (Join-Path $app 'VHWuWa.exe'))) {
 }
 Write-Host "   + Da build thanh cong VHWuWa.exe ($([math]::Round((Get-Item (Join-Path $app 'VHWuWa.exe')).Length/1MB, 1)) MB)"
 
-# Publish VHWuWa.Updater (Trình tự động cập nhật đè bản mới và mở lại app)
-dotnet publish (Join-Path $root 'src\VHWuWa.Updater\VHWuWa.Updater.csproj') `
-  -c Release -r win-x64 --self-contained true `
-  -p:PublishSingleFile=true `
-  -p:EnableCompressionInSingleFile=true `
-  -p:IncludeNativeLibrariesForSelfExtract=true `
-  -p:DebugType=none `
-  -p:Version=$Version `
-  -p:SatelliteResourceLanguages=en `
-  -o $app | Out-Null
-if (Test-Path (Join-Path $app 'VHWuWa.Updater.exe')) {
-  Write-Host "   + Da build thanh cong VHWuWa.Updater.exe ($([math]::Round((Get-Item (Join-Path $app 'VHWuWa.Updater.exe')).Length/1MB, 1)) MB)"
-}
+# Không chép runtime .NET lần hai cho updater (~33,5 MB). App dùng trình cập
+# nhật PowerShell có backup/rollback; PowerShell đã có sẵn trên Windows 10/11.
+Write-Host '   + Trinh cap nhat gon dung PowerShell cua Windows (khong lap runtime .NET)'
 
-Write-Host "== 2/4  Gói nội dung Việt hóa (pak EN + 10 font + loader) ==" -ForegroundColor Cyan
+Write-Host "== 2/5  Gói nội dung Việt hóa (PAK VI + font + loader) ==" -ForegroundColor Cyan
 New-Item -ItemType Directory -Force -Path $content, (Join-Path $content 'font'), (Join-Path $content 'loader') | Out-Null
 
 # Danh mục 72 font (tải on-demand khi người dùng chọn trong App)
@@ -79,7 +69,8 @@ function CopyIf($src, $dst, $label) {
   if (Test-Path $src) { Copy-Item $src $dst -Force; Write-Host "   + $label" }
   else { Write-Host "   ! THIEU: $label ($src)" -ForegroundColor Yellow }
 }
-# Đóng gói sẵn bản chuẩn Tiếng Anh (Bản Hán Việt và 72 Font được App tự động tải online khi chọn)
+# Chỉ đóng gói bản VI/tên quốc tế mặc định. Bản Hán Việt được tải từ asset
+# GitHub khi người dùng chọn, hoặc được công cụ chỉnh sửa tự dựng sau khi lưu.
 CopyIf (Join-Path $wahu 'dist\WuWaVH_EN_99_P.pak') $content 'pak Tieng Anh (Co san)'
 
 # Loader + font: lấy từ bộ cài chuẩn của Wahu (_files), fallback sang Wahu\loader / data
@@ -97,7 +88,12 @@ $font = $fontCandidates | Where-Object { Test-Path $_ } | Select-Object -First 1
 if ($font) { CopyIf $font (Join-Path $content 'font') ('font (' + (Split-Path $font -Leaf) + ')') }
 else { Write-Host '   ! THIEU: font mac dinh' -ForegroundColor Yellow }
 
-Write-Host "== 3/4  Tao launcher + huong dan ==" -ForegroundColor Cyan
+Write-Host "== 3/5  Đóng gói bộ Đặt tên nhân vật / Thuật ngữ ==" -ForegroundColor Cyan
+$editor = Join-Path $app 'editor'
+& (Join-Path $PSScriptRoot 'prepare-pak-editor.ps1') -Target $editor
+if (-not $?) { throw 'Đóng gói Pak Editor thất bại.' }
+
+Write-Host "== 4/5  Tao launcher + huong dan ==" -ForegroundColor Cyan
 @'
 @echo off
 chcp 65001 >nul
@@ -139,7 +135,7 @@ HỖ TRỢ & BÁO LỖI
 $docTruoc = $docTruoc.Replace('__VERSION__', $Version)
 [System.IO.File]::WriteAllText((Join-Path $out 'DOC TRUOC.txt'), $docTruoc, [System.Text.UTF8Encoding]::new($true))
 
-Write-Host "== 4/4  Nen ZIP de gui ==" -ForegroundColor Green
+Write-Host "== 5/5  Nen ZIP de gui ==" -ForegroundColor Green
 $sz = [math]::Round(((Get-ChildItem $out -Recurse -File | Measure-Object Length -Sum).Sum)/1MB,1)
 $zip = Join-Path $buildRoot 'VHWuWa_BanCai.zip'
 if (Test-Path $zip) { Remove-Item $zip -Force }
@@ -154,13 +150,6 @@ $updatePayload = Join-Path $distRoot '_update_payload'
 if (Test-Path $updatePayload) { Remove-Item $updatePayload -Recurse -Force }
 New-Item -ItemType Directory -Force $updatePayload | Out-Null
 Copy-Item (Join-Path $app '*') $updatePayload -Recurse -Force
-# Updater 2.0.0 chạy ngay trong app nên Windows không cho nó tự ghi đè.
-# Đổi tên updater mới trong gói giúp người dùng 2.0.0 cập nhật trực tiếp
-# lên bất kỳ bản mới nào; app mới sẽ ưu tiên file .next này.
-$payloadUpdater = Join-Path $updatePayload 'VHWuWa.Updater.exe'
-if (Test-Path $payloadUpdater) {
-  Move-Item $payloadUpdater (Join-Path $updatePayload 'VHWuWa.Updater.next.exe') -Force
-}
 if (Test-Path $releaseZip) { Remove-Item $releaseZip -Force }
 Compress-Archive -Path (Join-Path $updatePayload '*') -DestinationPath $releaseZip -CompressionLevel Optimal
 Remove-Item $updatePayload -Recurse -Force
@@ -176,7 +165,8 @@ CAC FILE CAN UPLOAD LEN GITHUB RELEASE v$Version
 
 BAT BUOC CHO NGUOI CHOI / TU CAP NHAT
   VietHoa-WuWa-v$Version.zip
-  WuWaVH_HanViet_99_P.pak    App tai asset nay khi nguoi dung chon ban Han Viet
+  WuWaVH_EN_99_P.pak         Nut khoi phuc mac dinh tai truc tiep asset nay
+  WuWaVH_HanViet_99_P.pak    Nut khoi phuc mac dinh tai truc tiep asset nay
 
 NEU PHAT HANH KEM APP DICH
   App-Dich-WuWa-v$Version.zip
@@ -185,7 +175,17 @@ KHONG UPLOAD
   _build\                  Toan bo thu muc va ZIP build trung gian
   RELEASE_BODY.md         Noi dung de copy vao phan mo ta Release
 
-Copy WuWaVH_HanViet_99_P.pak tu wuwavh_tool\Wahu\dist vao release.
+Copy hai PAK tu wuwavh_tool\Wahu\dist vao release.
 Khong can update.json/checksums.txt: app doc phien ban va SHA-256 tu GitHub Release API.
 "@
 [System.IO.File]::WriteAllText((Join-Path $distRoot '00_CAN_UPLOAD_GITHUB.txt'), $uploadGuide, [System.Text.UTF8Encoding]::new($true))
+$releaseNotes = Join-Path $root "RELEASE_NOTES_v$Version.md"
+$releaseBody = Join-Path $distRoot 'RELEASE_BODY.md'
+if (Test-Path -LiteralPath $releaseNotes) {
+  Copy-Item -LiteralPath $releaseNotes -Destination $releaseBody -Force
+  Write-Host "   Release body:      $releaseBody"
+}
+elseif (Test-Path -LiteralPath $releaseBody) {
+  Remove-Item -LiteralPath $releaseBody -Force
+  Write-Host "   ! Chưa có RELEASE_NOTES_v$Version.md; không giữ release body cũ" -ForegroundColor Yellow
+}

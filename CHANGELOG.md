@@ -2,6 +2,22 @@
 
 Tất cả các thay đổi đáng chú ý của dự án VHWuWa được ghi lại tại đây theo chuẩn [SemVer](https://semver.org/lang/vi/).
 
+## [3.0.6] - 2026-08-25
+
+### Dữ liệu Việt hóa
+- Rà soát lại trọn bộ 12.935 record thuộc 10 part bằng đúng định danh `DB + bảng + key`; không nhập hàng loạt các câu chỉ vượt qua kiểm tra hình thức nhưng còn sai ngữ cảnh.
+- Đồng bộ quy chuẩn tên nhân vật, địa danh, tổ chức, boss và thuật ngữ giữa bản Tên Anh và bản Hán Việt.
+- Bổ sung phần phụ đề Vocal OST còn thiếu: hoàn thiện 186 key phụ đề ở cả hai biến thể, giữ nguyên 186 key lời gốc, token `{KeepOrigin}` và thẻ định dạng.
+- Tăng kiểm tra placeholder, thứ tự token, nhánh giới tính, nội dung trong tag và các câu còn lẫn Trung/Anh trước khi đóng PAK.
+- Hai PAK Tên Anh/Hán Việt đã được build V12 và hậu kiểm trên 97 cơ sở dữ liệu, 351.866 ô nội dung.
+
+### WAHU Community
+- Hoàn thiện bảng đặt tên nhân vật riêng cho Tên Tiếng Việt và Tên Hán Việt; ẩn các biến Rover nam/nữ nội bộ không dành cho chỉnh sửa.
+- Thêm khu vực Thuật ngữ theo nhóm với các cột CN, EN, VI và HV; hỗ trợ sao chép tiếng Anh, sửa đúng key và tạo lại PAK sau khi lưu.
+- Bổ sung kiểm tra đồng bộ thuật ngữ/boss theo MASTER, xem trước thay đổi và chỉ sửa các vị trí khớp đúng dữ liệu nguồn.
+- Bảo đảm bốn trường UID riêng tư được ẩn ở bước build cuối cho cả hai biến thể, không bị hiện lại khi đổi font hoặc tạo lại PAK.
+- Tinh gọn bố cục, thông báo và thao tác chính để phần đặt tên, thuật ngữ, font và hướng dẫn dễ dùng hơn.
+
 ## [3.0.5] - 2026-08-24
 ### Hot fix
 - Hot fix.

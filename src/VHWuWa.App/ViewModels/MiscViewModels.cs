@@ -12,22 +12,46 @@ namespace VHWuWa.App.ViewModels;
 public partial class GuideViewModel : ObservableObject
 {
     private readonly string _guidesDir = Path.Combine(AppContext.BaseDirectory, "Guides", "vi-VN");
-    private List<string> _all = new();
+    private List<GuideEntry> _all = new();
+
+    private static readonly Dictionary<string, (string Title, string Icon, string Summary)> Metadata =
+        new(StringComparer.OrdinalIgnoreCase)
+        {
+            ["01-bat-dau.md"] = ("Bắt đầu nhanh", "🚀", "Cài và mở game trong vài bước"),
+            ["02-chon-thu-muc-game.md"] = ("Chọn thư mục game", "📁", "Tự dò hoặc chọn đúng thư mục Client"),
+            ["03-cai-viet-hoa.md"] = ("Cài Việt hóa", "🌐", "Chọn bản tên và cài an toàn"),
+            ["04-go-viet-hoa.md"] = ("Gỡ Việt hóa", "🧹", "Trả game về trạng thái sạch"),
+            ["05-cai-go-mod.md"] = ("Xử lý xung đột", "🛡", "Kiểm tra và dọn mod cũ"),
+            ["06-doi-font.md"] = ("Font chữ", "🔤", "Chọn, xem thử và khôi phục font"),
+            ["07-do-hoa.md"] = ("Đồ họa", "🎮", "Preset, tùy chỉnh và sao lưu"),
+            ["08-loi-thuong-gap.md"] = ("Khắc phục lỗi", "🧰", "Các bước kiểm tra nhanh"),
+            ["09-dong-gop-ban-dich.md"] = ("Đóng góp bản dịch", "✍", "Quy trình sửa và gửi nội dung"),
+        };
 
     [ObservableProperty] private string _search = "";
-    [ObservableProperty] private string? _selected;
+    [ObservableProperty] private GuideEntry? _selected;
 
-    public ObservableCollection<string> Guides { get; } = new();
-    /// <summary>Các khối nội dung đã định dạng (tiêu đề / gạch đầu dòng / đoạn) để hiển thị rõ ràng.</summary>
+    public ObservableCollection<GuideEntry> Guides { get; } = new();
     public ObservableCollection<GuideBlock> Blocks { get; } = new();
 
     public void OnActivated()
     {
         _all = Directory.Exists(_guidesDir)
-            ? Directory.GetFiles(_guidesDir, "*.md").Select(Path.GetFileName).OfType<string>().OrderBy(x => x).ToList()
+            ? Directory.GetFiles(_guidesDir, "*.md")
+                .Select(Path.GetFileName).OfType<string>()
+                .OrderBy(name => name)
+                .Select(CreateEntry).ToList()
             : new();
         ApplyFilter();
-        if (Selected is null && Guides.Count > 0) Selected = Guides[0];   // mở sẵn mục đầu
+        if (Selected is null && Guides.Count > 0) Selected = Guides[0];
+    }
+
+    private static GuideEntry CreateEntry(string fileName)
+    {
+        var fallback = Path.GetFileNameWithoutExtension(fileName).Replace('-', ' ');
+        return Metadata.TryGetValue(fileName, out var meta)
+            ? new GuideEntry(fileName, meta.Title, meta.Icon, meta.Summary)
+            : new GuideEntry(fileName, fallback, "📄", "Tài liệu hướng dẫn");
     }
 
     partial void OnSearchChanged(string value) => ApplyFilter();
@@ -36,17 +60,21 @@ public partial class GuideViewModel : ObservableObject
     {
         Guides.Clear();
         foreach (var g in _all)
-            if (string.IsNullOrWhiteSpace(Search) || g.Contains(Search, StringComparison.OrdinalIgnoreCase))
+            if (string.IsNullOrWhiteSpace(Search)
+                || g.Title.Contains(Search, StringComparison.OrdinalIgnoreCase)
+                || g.Summary.Contains(Search, StringComparison.OrdinalIgnoreCase))
                 Guides.Add(g);
+        if (Selected is not null && !Guides.Any(item => item.FileName == Selected.FileName))
+            Selected = Guides.FirstOrDefault();
     }
 
-    partial void OnSelectedChanged(string? value)
+    partial void OnSelectedChanged(GuideEntry? value)
     {
         Blocks.Clear();
-        if (string.IsNullOrWhiteSpace(value)) return;
+        if (value is null) return;
         try
         {
-            var path = Path.Combine(_guidesDir, value);
+            var path = Path.Combine(_guidesDir, value.FileName);
             if (!File.Exists(path)) { Blocks.Add(new GuideBlock("p", "(Không đọc được nội dung.)")); return; }
             foreach (var b in ParseMarkdown(File.ReadAllText(path, Encoding.UTF8))) Blocks.Add(b);
         }
@@ -72,18 +100,21 @@ public partial class GuideViewModel : ObservableObject
 
     private static IEnumerable<GuideBlock> ParseMarkdown(string md)
     {
+        var inCode = false;
         foreach (var raw in md.Replace("\r", "").Split('\n'))
         {
             var line = raw.TrimEnd();
             var t = line.TrimStart();
+            if (t.StartsWith("```")) { inCode = !inCode; continue; }
+            if (inCode) { yield return new GuideBlock("code", line); continue; }
             if (t.Length == 0) { yield return new GuideBlock("space", ""); continue; }
             if (t.StartsWith("### ")) { yield return new GuideBlock("h3", Clean(t[4..])); continue; }
             if (t.StartsWith("## ")) { yield return new GuideBlock("h2", Clean(t[3..])); continue; }
             if (t.StartsWith("# ")) { yield return new GuideBlock("h1", Clean(t[2..])); continue; }
             if (t.StartsWith("- ") || t.StartsWith("* ")) { yield return new GuideBlock("li", "•  " + Clean(t[2..])); continue; }
-            if (t.Length > 2 && char.IsDigit(t[0]) && (t[1] == '.' || (t.Length > 2 && t[1] == ')' )))
-            { yield return new GuideBlock("li", Clean(t)); continue; }
-            if (t.StartsWith("> ")) { yield return new GuideBlock("quote", Clean(t[2..])); continue; }
+            if (System.Text.RegularExpressions.Regex.IsMatch(t, @"^\d+[.)]\s+"))
+            { yield return new GuideBlock("step", Clean(t)); continue; }
+            if (t.StartsWith("> ")) { yield return new GuideBlock("note", Clean(t[2..])); continue; }
             if (t.StartsWith("|")) { yield return new GuideBlock("p", Clean(t.Trim('|').Replace("|", "   "))); continue; }
             if (t.StartsWith("---")) { yield return new GuideBlock("space", ""); continue; }
             yield return new GuideBlock("p", Clean(t));
@@ -97,7 +128,8 @@ public partial class GuideViewModel : ObservableObject
     }
 }
 
-/// <summary>Một khối nội dung hướng dẫn đã phân loại (h1/h2/h3/li/quote/p/space).</summary>
+public sealed record GuideEntry(string FileName, string Title, string Icon, string Summary);
+
 public sealed record GuideBlock(string Kind, string Text);
 
 public partial class SettingsViewModel : ObservableObject

@@ -1,22 +1,17 @@
-# Chọn đúng thư mục game
+# Chọn thư mục game
 
-App cần thư mục **Wuthering Waves Game** (thư mục chứa `Client`).
+## Cách nhanh nhất
 
-## Cách nhanh
+1. Ở **Trang chủ**, bấm **Tự tìm game**.
+2. Kiểm tra trạng thái chuyển sang **Game hợp lệ**.
 
-Bấm **Tự tìm game**. App sẽ tự động dò tìm vị trí cài đặt của bản Kuro Launcher và Steam.
+## Nếu app không tự tìm thấy
 
-## Chọn thủ công
-
-Chọn thư mục game theo mẫu sau:
+Bấm **Chọn thư mục** và chọn thư mục chứa `Client`, thường có dạng:
 
 ```text
 D:\Game\Wuthering Waves Game
-D:\Games\Wuthering Waves\Wuthering Waves Game
-C:\Wuthering Waves\Wuthering Waves Game
-D:\SteamLibrary\steamapps\common\Wuthering Waves
+D:\SteamLibrary\steamapps\common\Wuthering Waves\Wuthering Waves Game
 ```
 
-Đảm bảo thư mục bạn chọn có chứa thư mục con `Client`.
-
-Sau khi chọn, bấm **Kiểm tra file**. Nút **Mở thư mục** giúp bạn mở xem trực tiếp vị trí game.
+Không chọn riêng thư mục `Client` hoặc file EXE. Sau khi chọn, dùng **Kiểm tra file** để xác nhận.

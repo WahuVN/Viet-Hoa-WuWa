@@ -172,54 +172,50 @@ public partial class MainViewModel : ObservableObject
             UpdateStatusMessage = "Đang giải nén và cập nhật...";
             var zipPath = dlRes.Value;
             var appDir = AppContext.BaseDirectory.TrimEnd('\\', '/');
-            // Gói cập nhật dùng tên .next để bản updater 2.0.0 đang chạy
-            // không phải tự ghi đè chính nó. App mới luôn ưu tiên bản này.
-            var nextUpdaterExe = Path.Combine(appDir, "VHWuWa.Updater.next.exe");
-            var updaterExe = File.Exists(nextUpdaterExe)
-                ? nextUpdaterExe
-                : Path.Combine(appDir, "VHWuWa.Updater.exe");
             var pid = Environment.ProcessId;
 
-            if (File.Exists(updaterExe))
+            // Dùng PowerShell có sẵn trên Windows thay cho một updater self-contained
+            // mang lặp toàn bộ runtime .NET. Script vẫn kiểm tra ZIP, sao lưu và
+            // rollback trước khi mở lại app.
+            var scriptPath = Path.Combine(tempDir, "apply_update.ps1");
+            var script = """
+                param([string]$Zip,[string]$Target,[int]$AppPid)
+                $ErrorActionPreference='Stop'
+                try { Wait-Process -Id $AppPid -Timeout 30 -ErrorAction SilentlyContinue } catch {}
+                $stage=Join-Path $env:TEMP ('VHWuWa_Extract_'+[guid]::NewGuid().ToString('N'))
+                $backup=$Target.TrimEnd('\\','/')+'_backup_'+(Get-Date -Format 'yyyyMMdd_HHmmss')
+                try {
+                  Expand-Archive -LiteralPath $Zip -DestinationPath $stage -Force
+                  $exe=Get-ChildItem -LiteralPath $stage -Recurse -Filter 'VHWuWa.exe' -File | Where-Object { $_.Directory.Name -ieq 'app' } | Sort-Object { $_.FullName.Length } | Select-Object -First 1
+                  if(-not $exe){$exe=Get-Item -LiteralPath (Join-Path $stage 'VHWuWa.exe') -ErrorAction SilentlyContinue}
+                  if(-not $exe){throw 'ZIP cập nhật không có VHWuWa.exe hợp lệ'}
+                  New-Item -ItemType Directory -Path $backup -Force | Out-Null
+                  Get-ChildItem -LiteralPath $Target -Force | Copy-Item -Destination $backup -Recurse -Force
+                  Get-ChildItem -LiteralPath $exe.Directory.FullName -Force | Copy-Item -Destination $Target -Recurse -Force
+                  if(-not (Test-Path -LiteralPath (Join-Path $Target 'VHWuWa.exe'))){throw 'Thiếu VHWuWa.exe sau cập nhật'}
+                  Remove-Item -LiteralPath (Join-Path $Target 'VHWuWa.Updater.exe') -Force -ErrorAction SilentlyContinue
+                  Remove-Item -LiteralPath (Join-Path $Target 'VHWuWa.Updater.next.exe') -Force -ErrorAction SilentlyContinue
+                  Start-Process -FilePath (Join-Path $Target 'VHWuWa.exe') -WorkingDirectory $Target
+                  Remove-Item -LiteralPath $backup -Recurse -Force -ErrorAction SilentlyContinue
+                } catch {
+                  if(Test-Path -LiteralPath $backup){
+                    Get-ChildItem -LiteralPath $backup -Force | Copy-Item -Destination $Target -Recurse -Force
+                    if(Test-Path -LiteralPath (Join-Path $Target 'VHWuWa.exe')){Start-Process -FilePath (Join-Path $Target 'VHWuWa.exe') -WorkingDirectory $Target}
+                  }
+                  throw
+                } finally {
+                  Remove-Item -LiteralPath $stage -Recurse -Force -ErrorAction SilentlyContinue
+                }
+                """;
+            File.WriteAllText(scriptPath, script, new System.Text.UTF8Encoding(true));
+            Process.Start(new ProcessStartInfo
             {
-                // Chạy updater từ thư mục tạm để file trong thư mục ứng dụng
-                // có thể được thay thế an toàn.
-                var stagedUpdater = Path.Combine(tempDir, "VHWuWa.Updater.exe");
-                File.Copy(updaterExe, stagedUpdater, overwrite: true);
-                var psi = new ProcessStartInfo
-                {
-                    FileName = stagedUpdater,
-                    Arguments = $"--zip \"{zipPath}\" --target \"{appDir}\" --relaunch \"VHWuWa.exe\" --pid {pid}",
-                    UseShellExecute = true,
-                    WorkingDirectory = tempDir
-                };
-                Process.Start(psi);
-            }
-            else
-            {
-                // Fallback cho bản rất cũ chưa kèm updater riêng. PowerShell tự
-                // tìm đúng payload app trong cả ZIP đầy đủ lẫn ZIP app-only.
-                var scriptPath = Path.Combine(tempDir, "apply_update.ps1");
-                var script = "param([string]$Zip,[string]$Target,[int]$AppPid)\r\n"
-                    + "$ErrorActionPreference='Stop'\r\n"
-                    + "try { Wait-Process -Id $AppPid -Timeout 30 -ErrorAction SilentlyContinue } catch {}\r\n"
-                    + "$stage=Join-Path $env:TEMP ('VHWuWa_Extract_'+[guid]::NewGuid().ToString('N'))\r\n"
-                    + "Expand-Archive -LiteralPath $Zip -DestinationPath $stage -Force\r\n"
-                    + "$exe=Get-ChildItem -LiteralPath $stage -Recurse -Filter 'VHWuWa.exe' -File | Where-Object { $_.Directory.Name -ieq 'app' } | Sort-Object { $_.FullName.Length } | Select-Object -First 1\r\n"
-                    + "if(-not $exe){$exe=Get-Item -LiteralPath (Join-Path $stage 'VHWuWa.exe') -ErrorAction SilentlyContinue}\r\n"
-                    + "if(-not $exe){throw 'ZIP cập nhật không có VHWuWa.exe hợp lệ'}\r\n"
-                    + "Get-ChildItem -LiteralPath $exe.Directory.FullName -Force | Copy-Item -Destination $Target -Recurse -Force\r\n"
-                    + "Start-Process -FilePath (Join-Path $Target 'VHWuWa.exe') -WorkingDirectory $Target\r\n";
-                File.WriteAllText(scriptPath, script, new System.Text.UTF8Encoding(true));
-                Process.Start(new ProcessStartInfo
-                {
-                    FileName = "powershell.exe",
-                    Arguments = $"-NoProfile -ExecutionPolicy Bypass -File \"{scriptPath}\" -Zip \"{zipPath}\" -Target \"{appDir}\" -AppPid {pid}",
-                    UseShellExecute = true,
-                    WindowStyle = ProcessWindowStyle.Hidden,
-                    WorkingDirectory = tempDir
-                });
-            }
+                FileName = "powershell.exe",
+                Arguments = $"-NoProfile -ExecutionPolicy Bypass -File \"{scriptPath}\" -Zip \"{zipPath}\" -Target \"{appDir}\" -AppPid {pid}",
+                UseShellExecute = true,
+                WindowStyle = ProcessWindowStyle.Hidden,
+                WorkingDirectory = tempDir
+            });
 
             System.Windows.Application.Current.Shutdown();
         }

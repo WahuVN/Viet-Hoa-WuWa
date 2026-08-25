@@ -29,10 +29,10 @@ public partial class HomeViewModel : ObservableObject
     [ObservableProperty] private string _currentFont = "-";
     [ObservableProperty] private string _pathStatus = "Chưa chọn";
     [ObservableProperty] private bool _pathOk;
-    [ObservableProperty] private string _message = "";
+    [ObservableProperty] private string _message = "Sẵn sàng.";
     [ObservableProperty] private bool _busy;
     [ObservableProperty] private bool _forceCSharpEnvironment;
-    [ObservableProperty] private string _launchButtonText = "▶ Mở game trực tiếp";
+    [ObservableProperty] private string _launchButtonText = "Mở game";
 
     public MainViewModel Main => _main;
 
@@ -98,7 +98,7 @@ public partial class HomeViewModel : ObservableObject
     {
         _settings.Settings.ForceCSharpEnvironment = value;
         _settings.Save();
-        LaunchButtonText = value ? "▶ Mở game với C# thử nghiệm" : "▶ Mở game trực tiếp";
+        LaunchButtonText = value ? "Mở game · C#" : "Mở game";
     }
 
     [RelayCommand]
@@ -125,24 +125,24 @@ public partial class HomeViewModel : ObservableObject
         var result = _gameLaunch.Launch(GamePath, ForceCSharpEnvironment);
         Message = result.Success
             ? ForceCSharpEnvironment
-                ? "Đã mở game với môi trường C# thử nghiệm. Hãy kiểm tra dấu * ở cuối phiên bản trong game."
-                : "Đã mở game trực tiếp ở chế độ thường."
-            : "Lỗi: " + result.Error;
+                ? "Đã mở game với môi trường C# thử nghiệm."
+                : "Game đã được mở."
+            : "Không thể mở game: " + result.Error;
     }
 
     [RelayCommand]
     private void CopyCSharpArgument()
     {
         Clipboard.SetText(GameLaunchOptions.ForceCSharpEnvironment);
-        Message = "Đã chép -ForceEnableCSharpEnvironment. Với Steam, dán vào Properties → Launch Options.";
+        Message = "Đã sao chép tham số. Dán vào Steam → Properties → Launch Options.";
     }
 
     [RelayCommand]
     private void AutoDetect()
     {
         var found = _detect.AutoDetect();
-        if (found.Count > 0) { SetPath(found[0]); Message = "Đã tự tìm thấy đúng thư mục game chứa Client."; }
-        else Message = "Không tự tìm thấy game. Hãy chọn thủ công (ví dụ: D:\\Game\\Wuthering Waves Game).";
+        if (found.Count > 0) { SetPath(found[0]); Message = "Đã tìm thấy thư mục game."; }
+        else Message = "Không tìm thấy game. Hãy chọn thư mục thủ công.";
     }
 
     public void SetPath(string path)
@@ -157,7 +157,7 @@ public partial class HomeViewModel : ObservableObject
     private void CheckFiles()
     {
         var v = _detect.Validate(GamePath);
-        Message = v.IsValid ? "Tất cả file bắt buộc đều có." : v.Message;
+        Message = v.IsValid ? "Các file game cần thiết đều đầy đủ." : v.Message;
     }
 
     [RelayCommand]
@@ -192,7 +192,7 @@ public partial class HomeViewModel : ObservableObject
                 .Concat(Process.GetProcessesByName("Wuthering Waves")).ToList();
             if (procs.Count == 0)
             {
-                Message = "✔ Không có tiến trình game nào đang chạy hoặc treo.";
+                Message = "Game hiện không chạy.";
                 return;
             }
             int count = 0;
@@ -200,7 +200,7 @@ public partial class HomeViewModel : ObservableObject
             {
                 try { p.Kill(true); count++; } catch { }
             }
-            Message = $"✅ Đã đóng {count} tiến trình game và giải phóng bộ nhớ RAM thành công.";
+            Message = count > 0 ? "Đã tắt game." : "Không thể đóng tiến trình game.";
         }
         catch (Exception ex)
         {

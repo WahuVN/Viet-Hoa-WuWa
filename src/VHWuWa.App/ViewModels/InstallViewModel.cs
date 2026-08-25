@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using VHWuWa.Core.Abstractions;
 using VHWuWa.Core.Models;
+using VHWuWa.Infrastructure;
 
 namespace VHWuWa.App.ViewModels;
 
@@ -14,9 +15,9 @@ public partial class InstallViewModel : ObservableObject
     private readonly IViethoaInstaller _viet;
     private CancellationTokenSource? _cts;
 
-    // Biến thể tên nhân vật: true = Hán Việt (mặc định), false = Tiếng Anh
-    [ObservableProperty] private bool _variantHanViet = true;
-    [ObservableProperty] private bool _variantEnglish;
+    // Gói nhẹ mặc định dùng bản Việt hóa giữ tên quốc tế. Hán Việt tải khi cần.
+    [ObservableProperty] private bool _variantHanViet;
+    [ObservableProperty] private bool _variantEnglish = true;
     [ObservableProperty] private bool _applyFont = true;
 
     [ObservableProperty] private string _gamePathText = "";
@@ -58,7 +59,8 @@ public partial class InstallViewModel : ObservableObject
             : "✔ Không phát hiện mod khác có thể xung đột.";
         FontAvailable = content.FontPak is not null;
         HasHanViet = File.Exists(HanVietPakPath);
-        HanVietDownloadBtnText = HasHanViet ? "✔ Đã tải gói Hán Việt" : "⬇️ Tải gói Hán Việt (61 MB)";
+        ShowHanVietDownload = !HasHanViet;
+        HanVietDownloadBtnText = HasHanViet ? "Đã có bản Hán Việt" : "Tải bản Hán Việt (~60 MB)";
 
         if (!content.HasLoader)
         {
@@ -67,10 +69,9 @@ public partial class InstallViewModel : ObservableObject
         }
         else
         {
-            var have = new List<string>();
-            if (HasHanViet) have.Add("Hán Việt");
-            if (content.HasEnglish) have.Add("Tiếng Anh");
-            ContentText = "✔ Sẵn sàng cài đặt — Bản Tiếng Anh có sẵn" + (HasHanViet ? " + Bản Hán Việt đã tải" : " (Bản Hán Việt có thể tải online)");
+            ContentText = HasHanViet
+                ? "Sẵn sàng · Bản Việt hóa và Hán Việt đã có trên máy."
+                : "Sẵn sàng · Bản Việt hóa có sẵn; Hán Việt tải khi cần.";
             CanInstall = valid && !HasConflicts;
         }
 
@@ -86,14 +87,7 @@ public partial class InstallViewModel : ObservableObject
 
     partial void OnVariantHanVietChanged(bool value)
     {
-        if (value)
-        {
-            VariantEnglish = false;
-            if (!File.Exists(HanVietPakPath) && !Busy)
-            {
-                _ = DownloadHanVietAsync();
-            }
-        }
+        if (value) VariantEnglish = false;
     }
     partial void OnVariantEnglishChanged(bool value) { if (value) VariantHanViet = false; }
     partial void OnCanInstallChanged(bool value) => InstallCommand.NotifyCanExecuteChanged();
@@ -179,6 +173,7 @@ public partial class InstallViewModel : ObservableObject
     }
 
     [ObservableProperty] private bool _hasHanViet;
+    [ObservableProperty] private bool _showHanVietDownload = true;
     [ObservableProperty] private string _hanVietDownloadBtnText = "⬇️ Tải gói Hán Việt";
 
     private static readonly System.Net.Http.HttpClient _http = new() { Timeout = TimeSpan.FromMinutes(5) };
@@ -188,6 +183,7 @@ public partial class InstallViewModel : ObservableObject
     private async Task<bool> DownloadHanVietInternalAsync(IProgress<InstallProgress>? prog = null, CancellationToken ct = default)
     {
         var dst = HanVietPakPath;
+        var tempFile = dst + ".tmp";
         var dir = Path.GetDirectoryName(dst);
         if (!string.IsNullOrEmpty(dir)) Directory.CreateDirectory(dir);
 
@@ -199,7 +195,6 @@ public partial class InstallViewModel : ObservableObject
             if (!response.IsSuccessStatusCode) return false;
 
             var totalBytes = response.Content.Headers.ContentLength ?? 61846666L;
-            var tempFile = dst + ".tmp";
 
             using (var stream = await response.Content.ReadAsStreamAsync(ct))
             using (var fileStream = new FileStream(tempFile, FileMode.Create, FileAccess.Write, FileShare.None, 81920, true))
@@ -211,16 +206,26 @@ public partial class InstallViewModel : ObservableObject
                 {
                     await fileStream.WriteAsync(buffer, 0, read, ct);
                     totalRead += read;
-                    var pct = (int)((totalRead * 100) / totalBytes);
+                    var pct = Math.Min(100, (int)((totalRead * 100) / totalBytes));
                     prog?.Report(new InstallProgress(pct, $"Tải gói Hán Việt ({totalRead / 1048576.0:F1}/{totalBytes / 1048576.0:F1} MB)", 1, 2));
                 }
+            }
+
+            if (!PakV12Converter.TryVerifyV12(tempFile, out _))
+            {
+                File.Delete(tempFile);
+                return false;
             }
 
             if (File.Exists(dst)) File.Delete(dst);
             File.Move(tempFile, dst);
             return true;
         }
-        catch { return false; }
+        catch
+        {
+            try { if (File.Exists(tempFile)) File.Delete(tempFile); } catch { }
+            return false;
+        }
     }
 
     [RelayCommand]

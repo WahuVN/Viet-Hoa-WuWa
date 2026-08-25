@@ -1,10 +1,13 @@
 # Gỡ Việt hóa
 
-1. Tắt game và launcher.
-2. Mở VHWuWa, chọn đúng thư mục game.
-3. Vào **Cài Việt hóa** → bấm **Gỡ Việt hóa**.
-4. Chờ app báo đã gỡ và kiểm tra không còn file do VHWuWa cài.
+## Gỡ an toàn
 
-Nếu từng cài mod/Việt hóa bằng công cụ khác, các file đó không thuộc VHWuWa và
-có thể vẫn còn. Khi game lỗi sau khi gỡ, dùng **Verify/Repair** trong launcher
-chính thức để khôi phục file game.
+1. Tắt game và launcher.
+2. Mở tab **Cài Việt hóa**.
+3. Bấm **Gỡ Việt hóa** và chờ kiểm tra hoàn tất.
+
+## Nếu game vẫn còn file lạ
+
+VHWuWa không tự xóa mod do công cụ khác cài. Hãy gỡ bằng đúng công cụ đó hoặc dùng **Verify/Repair** của launcher chính thức.
+
+> Không xóa ngẫu nhiên DLL/PAK trong thư mục game khi chưa biết file thuộc mod nào.

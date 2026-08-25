@@ -17,12 +17,14 @@ public partial class FontViewModel : ObservableObject
     private readonly IFontService _fonts;
     private readonly IFontPreviewService _preview;
 
-    [ObservableProperty] private string _message = "Chọn gói font (.vhwpack) để áp dụng.";
+    [ObservableProperty] private string _message = "Sẵn sàng.";
     [ObservableProperty] private string _currentFont = "Mặc định";
     [ObservableProperty] private bool _busy;
-    [ObservableProperty] private string _sampleText = "Tiếng Việt Wuthering Waves";
+    [ObservableProperty] private string _sampleText = "Wuthering Waves Việt hóa — Sóng Gió, Hoàng Long, Kim Châu";
     [ObservableProperty] private ImageSource? _previewImage;
-    [ObservableProperty] private string _previewMessage = "Chọn file font (.ttf/.otf/.ttc) để xem trước.";
+    [ObservableProperty] private string _previewMessage = "Chọn một font để xem trước.";
+    [ObservableProperty] private int _previewFontSize = 30;
+    public string PreviewFontSizeLabel => $"{PreviewFontSize} px";
 
     private readonly List<FontLibraryItem> _allFonts = new();
     public ObservableCollection<FontLibraryItem> Library { get; } = new();
@@ -45,7 +47,7 @@ public partial class FontViewModel : ObservableObject
         var catalog = Path.Combine(FontDir, "fonts.json");
         if (!File.Exists(catalog))
         {
-            LibraryMessage = "Chưa có thư viện font (thiếu thư mục Fonts\\). Tải thêm font để chọn.";
+            LibraryMessage = "Không tìm thấy thư viện font.";
             return;
         }
         try
@@ -62,9 +64,10 @@ public partial class FontViewModel : ObservableObject
                 _allFonts.Add(item);
                 Library.Add(item);
             }
-            LibraryMessage = $"Thư viện có {Library.Count} font tiếng Việt sẵn sàng áp dụng.";
+            SelectedLibraryFont = Library.FirstOrDefault();
+            LibraryMessage = $"{Library.Count} font có sẵn";
         }
-        catch (Exception ex) { LibraryMessage = "Lỗi đọc thư viện font: " + ex.Message; }
+        catch (Exception ex) { LibraryMessage = "Không đọc được thư viện: " + ex.Message; }
     }
 
     partial void OnSearchTextChanged(string value)
@@ -88,8 +91,8 @@ public partial class FontViewModel : ObservableObject
             SelectedLibraryFont = Library[0];
         }
         LibraryMessage = string.IsNullOrWhiteSpace(term)
-            ? $"Thư viện có {_allFonts.Count} font tiếng Việt."
-            : $"Tìm thấy {Library.Count} / {_allFonts.Count} font phù hợp với '{term}'.";
+            ? $"{_allFonts.Count} font có sẵn"
+            : $"{Library.Count}/{_allFonts.Count} kết quả";
     }
 
     public void OnActivated()
@@ -110,7 +113,7 @@ public partial class FontViewModel : ObservableObject
         try
         {
             var r = await _fonts.ApplyFontAsync(path, dlg.FileName);
-            Message = r.Success ? "Đã áp dụng font." : "Lỗi: " + r.Error;
+            Message = r.Success ? "✅ Đã áp dụng gói font." : "❌ " + r.Error;
         }
         finally { Busy = false; OnActivated(); }
     }
@@ -122,7 +125,7 @@ public partial class FontViewModel : ObservableObject
         try
         {
             var r = await _fonts.RestoreDefaultAsync(_settings.Settings.GamePath);
-            Message = r.Success ? "Đã khôi phục font mặc định." : "Lỗi: " + r.Error;
+            Message = r.Success ? "✅ Đã khôi phục font mặc định." : "❌ " + r.Error;
         }
         finally { Busy = false; OnActivated(); }
     }
@@ -146,7 +149,7 @@ public partial class FontViewModel : ObservableObject
     {
         _lastFontPath = fontPath;
         HasCustomFontSelected = !string.IsNullOrWhiteSpace(fontPath) && File.Exists(fontPath);
-        var png = _preview.RenderPreview(fontPath, SampleText);
+        var png = _preview.RenderPreview(fontPath, SampleText, PreviewFontSize);
         if (png is null)
         {
             PreviewImage = null;
@@ -164,6 +167,37 @@ public partial class FontViewModel : ObservableObject
         PreviewMessage = Path.GetFileName(fontPath);
     }
 
+    private CancellationTokenSource? _previewRefreshCts;
+
+    partial void OnPreviewFontSizeChanged(int value)
+    {
+        OnPropertyChanged(nameof(PreviewFontSizeLabel));
+        if (string.IsNullOrWhiteSpace(_lastFontPath)) return;
+        _previewRefreshCts?.Cancel();
+        _previewRefreshCts = new CancellationTokenSource();
+        _ = RefreshPreviewAfterDelayAsync(_previewRefreshCts.Token);
+    }
+
+    private async Task RefreshPreviewAfterDelayAsync(CancellationToken token)
+    {
+        try
+        {
+            await Task.Delay(120, token);
+            if (!token.IsCancellationRequested && !string.IsNullOrWhiteSpace(_lastFontPath))
+                RenderPreview(_lastFontPath);
+        }
+        catch (OperationCanceledException) { }
+    }
+
+    [RelayCommand]
+    private void IncreasePreviewSize() => PreviewFontSize = Math.Min(72, PreviewFontSize + 2);
+
+    [RelayCommand]
+    private void DecreasePreviewSize() => PreviewFontSize = Math.Max(12, PreviewFontSize - 2);
+
+    [RelayCommand]
+    private void ResetPreviewSize() => PreviewFontSize = 30;
+
     [RelayCommand]
     private async Task ApplyCustomFontAsync()
     {
@@ -176,11 +210,11 @@ public partial class FontViewModel : ObservableObject
         }
 
         Busy = true;
-        Message = $"Đang đóng gói font '{Path.GetFileName(_lastFontPath)}' chuẩn V12 và nạp vào game...";
+        Message = $"Đang tạo và cài {Path.GetFileName(_lastFontPath)}…";
         try
         {
             var r = await _fonts.BuildAndApplyCustomFontAsync(path, _lastFontPath);
-            Message = r.Success ? $"✅ Đã đóng gói & áp dụng font '{Path.GetFileName(_lastFontPath)}' vào game thành công!" : "Lỗi: " + r.Error;
+            Message = r.Success ? $"✅ Đã cài {Path.GetFileName(_lastFontPath)}." : "❌ " + r.Error;
         }
         finally
         {
@@ -196,8 +230,8 @@ public partial class FontViewModel : ObservableObject
 
     [ObservableProperty] private bool _isFontDownloaded = true;
     [ObservableProperty] private bool _showDownloadButton;
-    [ObservableProperty] private string _applyButtonText = "✅ Đổi sang font này";
-    [ObservableProperty] private string _downloadButtonText = "⬇️ Tải font này";
+    [ObservableProperty] private string _applyButtonText = "Áp dụng";
+    [ObservableProperty] private string _downloadButtonText = "Tải font";
 
     private static readonly System.Net.Http.HttpClient _http = new() { Timeout = TimeSpan.FromSeconds(45) };
 
@@ -234,8 +268,6 @@ public partial class FontViewModel : ObservableObject
         return false;
     }
 
-    private CancellationTokenSource? _fontDownloadCts;
-
     partial void OnSelectedLibraryFontChanged(FontLibraryItem? value)
     {
         if (value is null) return;
@@ -250,37 +282,14 @@ public partial class FontViewModel : ObservableObject
 
         if (IsFontDownloaded)
         {
-            ApplyButtonText = "✅ Đổi sang font này";
-            LibraryMessage = $"Font '{value.Name}' đã có sẵn trên máy.";
+            ApplyButtonText = "Áp dụng";
+            LibraryMessage = $"Sẵn sàng · {value.Name}";
         }
         else
         {
-            ApplyButtonText = "⏳ Đang tải & chuẩn bị font...";
-            DownloadButtonText = $"⬇️ Tải font ({value.SizeKb:0} KB)";
-            LibraryMessage = $"Đang tự động tải font '{value.Name}' từ GitHub về máy...";
-
-            _fontDownloadCts?.Cancel();
-            _fontDownloadCts = new CancellationTokenSource();
-            var ct = _fontDownloadCts.Token;
-            var currentItem = value;
-
-            _ = Task.Run(async () =>
-            {
-                var ok = await DownloadFontPakAsync(currentItem.Pak, pak);
-                if (ok && File.Exists(pak) && !ct.IsCancellationRequested)
-                {
-                    System.Windows.Application.Current?.Dispatcher?.Invoke(() =>
-                    {
-                        if (SelectedLibraryFont == currentItem)
-                        {
-                            IsFontDownloaded = true;
-                            ShowDownloadButton = false;
-                            ApplyButtonText = "✅ Đổi sang font này";
-                            LibraryMessage = $"✅ Đã tải xong font '{currentItem.Name}', sẵn sàng áp dụng!";
-                        }
-                    });
-                }
-            }, ct);
+            ApplyButtonText = "Tải và áp dụng";
+            DownloadButtonText = $"Tải · {value.SizeKb:0} KB";
+            LibraryMessage = $"Chưa tải · {value.Name}";
         }
     }
 
@@ -291,15 +300,15 @@ public partial class FontViewModel : ObservableObject
         var pak = Path.Combine(FontDir, SelectedLibraryFont.Pak);
         if (File.Exists(pak))
         {
-            LibraryMessage = $"Font '{SelectedLibraryFont.Name}' đã có sẵn trên máy.";
+            LibraryMessage = $"Sẵn sàng · {SelectedLibraryFont.Name}";
             IsFontDownloaded = true;
             ShowDownloadButton = false;
-            ApplyButtonText = "✅ Đổi sang font này";
+            ApplyButtonText = "Áp dụng";
             return;
         }
 
         Busy = true;
-        LibraryMessage = $"Đang tải font '{SelectedLibraryFont.Name}' từ GitHub...";
+        LibraryMessage = $"Đang tải {SelectedLibraryFont.Name}…";
         try
         {
             var ok = await DownloadFontPakAsync(SelectedLibraryFont.Pak, pak);
@@ -307,8 +316,8 @@ public partial class FontViewModel : ObservableObject
             {
                 IsFontDownloaded = true;
                 ShowDownloadButton = false;
-                ApplyButtonText = "✅ Đổi sang font này";
-                LibraryMessage = $"✅ Đã tải xong font '{SelectedLibraryFont.Name}' về máy!";
+                ApplyButtonText = "Áp dụng";
+                LibraryMessage = $"✅ Đã tải {SelectedLibraryFont.Name}.";
             }
             else
             {
@@ -333,7 +342,7 @@ public partial class FontViewModel : ObservableObject
         {
             if (!File.Exists(pak))
             {
-                LibraryMessage = $"Đang tải font '{SelectedLibraryFont.Name}' từ GitHub...";
+                LibraryMessage = $"Đang tải {SelectedLibraryFont.Name}…";
                 var ok = await DownloadFontPakAsync(SelectedLibraryFont.Pak, pak);
                 if (!ok || !File.Exists(pak))
                 {
@@ -342,17 +351,17 @@ public partial class FontViewModel : ObservableObject
                 }
                 IsFontDownloaded = true;
                 ShowDownloadButton = false;
-                ApplyButtonText = "✅ Đổi sang font này";
+                ApplyButtonText = "Áp dụng";
             }
 
             var r = await _fonts.ApplyFontPakAsync(path, pak);
             LibraryMessage = r.Success
-                ? $"✅ Đã áp dụng font: {SelectedLibraryFont.Name}. Khởi động lại game để thấy."
-                : "Lỗi: " + r.Error;
+                ? $"✅ Đã áp dụng {SelectedLibraryFont.Name}."
+                : "❌ " + r.Error;
         }
         catch (Exception ex)
         {
-            LibraryMessage = "Lỗi: " + ex.Message;
+            LibraryMessage = "❌ " + ex.Message;
         }
         finally { Busy = false; OnActivated(); }
     }
@@ -366,7 +375,7 @@ public partial class FontViewModel : ObservableObject
         try
         {
             var r = await _fonts.RemoveFontPaksAsync(path);
-            LibraryMessage = r.Success ? "Đã gỡ font (về font mặc định của bản VH)." : "Lỗi: " + r.Error;
+            LibraryMessage = r.Success ? "✅ Đã gỡ font tùy chỉnh." : "❌ " + r.Error;
         }
         finally { Busy = false; OnActivated(); }
     }

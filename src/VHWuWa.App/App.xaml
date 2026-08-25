@@ -19,15 +19,31 @@
             <!-- Bảng dữ liệu dễ đọc -->
             <Style TargetType="DataGrid">
                 <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
+                <Setter Property="Background" Value="{DynamicResource ApplicationBackgroundBrush}" />
                 <Setter Property="RowBackground" Value="Transparent" />
                 <Setter Property="AlternatingRowBackground" Value="{DynamicResource ControlFillColorDefaultBrush}" />
                 <Setter Property="GridLinesVisibility" Value="Horizontal" />
+                <Setter Property="HorizontalGridLinesBrush" Value="{DynamicResource ControlElevationBorderBrush}" />
+                <Setter Property="BorderBrush" Value="{DynamicResource ControlElevationBorderBrush}" />
                 <Setter Property="HeadersVisibility" Value="Column" />
                 <Setter Property="RowHeight" Value="34" />
                 <Setter Property="FontSize" Value="14" />
                 <Setter Property="IsReadOnly" Value="True" />
                 <Setter Property="AutoGenerateColumns" Value="False" />
                 <Setter Property="CanUserAddRows" Value="False" />
+            </Style>
+            <Style TargetType="DataGridColumnHeader">
+                <Setter Property="Background" Value="{DynamicResource ControlFillColorDefaultBrush}" />
+                <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
+                <Setter Property="BorderBrush" Value="{DynamicResource ControlElevationBorderBrush}" />
+                <Setter Property="BorderThickness" Value="0,0,1,1" />
+                <Setter Property="Padding" Value="9,7" />
+                <Setter Property="FontWeight" Value="SemiBold" />
+            </Style>
+            <Style TargetType="DataGridCell">
+                <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
+                <Setter Property="BorderBrush" Value="{DynamicResource ControlElevationBorderBrush}" />
+                <Setter Property="VerticalContentAlignment" Value="Center" />
             </Style>
         </ResourceDictionary>
     </Application.Resources>
