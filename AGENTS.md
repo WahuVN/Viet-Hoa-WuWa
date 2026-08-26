@@ -26,12 +26,33 @@ Mọi bản release trên `WahuVN/Viet-Hoa-WuWa` bắt buộc phải có đúng 
 
 ---
 
-## 📝 3. NỘI DUNG RELEASE NOTES CHUẨN
-Bài đăng Release bắt buộc gồm 4 phần:
-1. `# Tiêu đề phiên bản`
-2. `## Thay đổi chính` (Ghi ngắn gọn, đúng tính năng người dùng cần biết, không ghi thuật ngữ nội bộ).
-3. `## Cách cập nhật`
-4. `## Tải gì?` (Bảng phân loại 4 tệp) + Link hỗ trợ Discord / GitHub.
+## 📝 3. NỘI DUNG RELEASE NOTES CHUẨN (TỐI ƯU EMBED DISCORD/FACEBOOK)
+*Không để tiêu đề `# Tên Release` ở dòng 1 (tránh bị lặp tiêu đề 2 lần trên card ảnh OpenGraph và link preview).*
+*Dòng 1 luôn là một câu tóm tắt nổi bật, ngắn gọn về bản cập nhật:*
+
+```markdown
+Bản cập nhật vX.X.X ... [tóm tắt điểm nổi bật nhất trong 1-2 câu] ...
+
+### 🌟 Điểm mới nổi bật
+- **[Tính năng 1]:** Mô tả ngắn gọn, dễ hiểu.
+- **[Tính năng 2]:** ...
+
+### 📥 Cách cập nhật & Cài đặt
+- **Đang dùng bản cũ:** Mở app, nhận thông báo cập nhật tự động và bấm Cập nhật.
+- **Cài mới:** Tải `VietHoa-WuWa-vX.X.X.zip` bên dưới, giải nén và mở `VHWuWa.exe`.
+
+### 📦 Bảng tải tệp phát hành
+
+| Tệp đính kèm | Mục đích sử dụng |
+| :--- | :--- |
+| **`VietHoa-WuWa-vX.X.X.zip`** | **Người chơi:** Cài đặt, đổi font, ẩn UID và quản lý Việt hóa trọn gói |
+| **`App-Dich-WuWa-vX.X.X.zip`** | **Dịch giả / Đóng góp:** Bộ công cụ WAHU Community kèm Database SQLite |
+| **`WuWaVH_EN_99_P.pak`** | File PAK bản Tên Tiếng Anh độc lập |
+| **`WuWaVH_HanViet_99_P.pak`** | File PAK bản Tên Hán Việt độc lập |
+
+---
+💬 **Cộng đồng & Hỗ trợ:** [Discord WAHU](https://discord.gg/tuRCj47sy) · [Báo lỗi GitHub](https://github.com/WahuVN/Viet-Hoa-WuWa/issues)
+```
 
 ---
 
