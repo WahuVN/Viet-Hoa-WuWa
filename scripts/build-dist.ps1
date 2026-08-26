@@ -1,4 +1,4 @@
-﻿# build-dist.ps1 — Đóng gói VHWuWa thành BỘ CÀI phát cho người khác
+# build-dist.ps1 — Đóng gói VHWuWa thành BỘ CÀI phát cho người khác
 # Publish self-contained (không cần cài .NET) + gói sẵn nội dung Việt hóa (pak Hán Việt/EN + font + loader).
 #
 #   powershell -ExecutionPolicy Bypass -File scripts\build-dist.ps1 -Version 3.0.6
@@ -18,7 +18,12 @@ if (-not $Version) {
   [xml]$props = Get-Content (Join-Path $root 'Directory.Build.props')
   $Version = [string]$props.Project.PropertyGroup.Version
 }
-if ($Version -notmatch '^\d+\.\d+\.\d+([-.+][0-9A-Za-z.-]+)?$') { throw "Version không hợp lệ: $Version" }
+Write-Host "== 0/5  Kiem tra chat luong ma nguon (dotnet test & XAML validation) ==" -ForegroundColor Magenta
+dotnet test (Join-Path $root 'VHWuWa.sln') -c Release --nologo
+if ($LASTEXITCODE -ne 0) {
+  throw "Loi nghiem trong: Unit Tests hoac XAML Resource Validation that bai! Build bi huy bo lap tuc."
+}
+Write-Host "   + Tat ca bai kiem thu deu DAT (100% Passed)" -ForegroundColor Green
 
 Write-Host "== 1/5  Publish VHWuWa (self-contained, single-file, nen) ==" -ForegroundColor Cyan
 New-Item -ItemType Directory -Force $distRoot, $buildRoot | Out-Null
