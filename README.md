@@ -6,7 +6,7 @@
 
 Bộ công cụ mã nguồn mở hỗ trợ cài đặt, tùy biến phông chữ và quản lý bản dịch tiếng Việt cho **Wuthering Waves (PC / Windows)**.
 
-[![Phiên bản](https://img.shields.io/badge/phiên_bản-3.0.6-blue?style=flat-square)](https://github.com/WahuVN/Viet-Hoa-WuWa/releases/latest)
+[![Phiên bản](https://img.shields.io/badge/phiên_bản-3.0.7-blue?style=flat-square)](https://github.com/WahuVN/Viet-Hoa-WuWa/releases/latest)
 [![Tương thích Game](https://img.shields.io/badge/Wuthering_Waves-3.6+-informational?style=flat-square)](https://github.com/WahuVN/Viet-Hoa-WuWa/releases/latest)
 [![Nền tảng](https://img.shields.io/badge/Nền_tảng-Windows_10_%7C_11_x64-0078D4?style=flat-square&logo=windows&logoColor=white)](https://github.com/WahuVN/Viet-Hoa-WuWa/releases/latest)
 [![Giấy phép](https://img.shields.io/badge/Giấy_phép-MIT-green?style=flat-square)](LICENSE)
@@ -30,7 +30,9 @@ Bộ công cụ mã nguồn mở hỗ trợ cài đặt, tùy biến phông ch�
 
 VHWuWa được thiết kế nhằm hỗ trợ người chơi trải nghiệm trọn vẹn cốt truyện và hệ thống Wuthering Waves bằng tiếng Việt với thao tác trực quan, an toàn:
 
-- **Tự động nhận diện thư mục game:** Định vị chính xác thư mục cài đặt game với một cú nhấp chuột.
+- **Tự động nhận diện & Cài đặt 1-Click:** Tự động tìm thư mục game ngay khi mở app và thiết lập trọn gói bản dịch, font chữ chỉ với 1 click.
+- **Ẩn hoặc đổi biệt hiệu UID:** Tùy biến hoặc ẩn hoàn toàn UID ở góc màn hình, thẻ Profile Esc, khung Chat/Co-op và chế độ Chụp ảnh giúp bảo vệ riêng tư khi stream, quay clip.
+- **Làm mới 100% Danh Hiệu Nhân Vật:** Tinh chỉnh danh hiệu ngắn gọn, chuẩn tiếng Việt (2 - 4 từ), không bị tràn viền giao diện.
 - **Tùy chọn phong cách hiển thị tên nhân vật:**
   - **Bản Tiếng Việt (Tên EN):** Giữ nguyên tên nhân vật theo chuẩn quốc tế (`Jinhsi`, `Changli`, `Jiyan`, `Yangyang`...).
   - **Bản Hán Việt:** Hiển thị tên nhân vật theo âm Hán Việt cổ phong (`Kim Tịch`, `Trường Ly`, `Kỵ Viêm`, `Ương Ương`...).
@@ -44,11 +46,11 @@ VHWuWa được thiết kế nhằm hỗ trợ người chơi trải nghiệm tr
 
 | Gói tải về | Đối tượng | Mô tả |
 | :--- | :--- | :--- |
-| 🎮 [**VietHoa-WuWa-v3.0.6.zip**](https://github.com/WahuVN/Viet-Hoa-WuWa/releases/latest) | **Người chơi** | Ứng dụng cài đặt Việt hóa trên Windows (Khuyên dùng) |
-| 🛠️ [**App-Dich-WuWa-v3.0.6.zip**](https://github.com/WahuVN/Viet-Hoa-WuWa/releases/latest) | **Dịch giả / Modder** | Bộ công cụ WAHU Community hỗ trợ duyệt ngữ cảnh, QA và đóng gói PAK |
+| 🎮 [**VietHoa-WuWa-v3.0.7.zip**](https://github.com/WahuVN/Viet-Hoa-WuWa/releases/latest) | **Người chơi** | Ứng dụng cài đặt Việt hóa trên Windows (Khuyên dùng) |
+| 🛠️ [**App-Dich-WuWa-v3.0.7.zip**](https://github.com/WahuVN/Viet-Hoa-WuWa/releases/latest) | **Dịch giả / Modder** | Bộ công cụ WAHU Community hỗ trợ duyệt ngữ cảnh, QA và đóng gói PAK |
 
 > [!IMPORTANT]
-> Người chơi chỉ cần tải gói **`VietHoa-WuWa-v3.0.6.zip`**. Ứng dụng sẽ tự động tải các gói tài nguyên cần thiết khi cài đặt.
+> Người chơi chỉ cần tải gói **`VietHoa-WuWa-v3.0.7.zip`**. Ứng dụng sẽ tự động tải các gói tài nguyên cần thiết khi cài đặt.
 
 ---
 
@@ -59,7 +61,7 @@ VHWuWa được thiết kế nhằm hỗ trợ người chơi trải nghiệm tr
 - **Game:** Wuthering Waves phiên bản PC (Launcher chính thức hoặc Epic Games Store).
 
 ### Các bước thực hiện
-1. Tải file **`VietHoa-WuWa-v3.0.6.zip`** mới nhất và giải nén ra một thư mục riêng.
+1. Tải file **`VietHoa-WuWa-v3.0.7.zip`** mới nhất và giải nén ra một thư mục riêng.
 2. Mở file **`VHWuWa.exe`** (hoặc `Chay VHWuWa.bat`).
 3. Chọn **"Tự tìm game"** (nếu chưa tìm thấy, hãy chọn thủ công thư mục game có chứa thư mục `Client`).
 4. Chọn kiểu tên nhân vật mong muốn (**Tiếng Anh** hoặc **Hán Việt**) và chọn phông chữ yêu thích.

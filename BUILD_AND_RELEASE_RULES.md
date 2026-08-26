@@ -5,9 +5,10 @@ Tài liệu này quy định các kiểm tra logic bắt buộc khi chỉnh sử
 ---
 
 ## 🚫 1. KIỂM TRA BẮT BUỘC TRƯỚC KHI BUILD / RELEASE
-1. **Kiểm tra XAML:** Mọi `{StaticResource Key}` phải có `x:Key` tương ứng trong `App.xaml` hoặc ResourceDictionary cục bộ. Không dùng resource khi chưa khai báo vì sẽ gây crash `XamlParseException` khi mở file exe.
+1. **Kiểm tra XAML:** Mọi `{StaticResource Key}` phải có `x:Key` tương ứng trong `App.xaml` hoặc ResourceDictionary cục bộ (tránh lỗi `XamlParseException` làm văng app khi mở).
 2. **Kiểm tra Unit Test:** Bắt buộc chạy `dotnet test VHWuWa\VHWuWa.sln` đạt 100% Passed (bao gồm bài test tự động `XamlResourceValidationTests`).
-3. **Kiểm tra Logic Game & 2 Biến Thể:**
+3. **Cập nhật README.md chính:** Khi tăng version (ví dụ `v3.0.7`), **BẮT BUỘC** phải cập nhật lại badge phiên bản, tên tệp tải về trong bảng download và các tính năng mới trong `README.md` (cả ở thư mục gốc và thư mục `VHWuWa`), sau đó commit & push lên GitHub.
+4. **Kiểm tra Logic Game & 2 Biến Thể:**
    - Dữ liệu `project.db` phải đồng bộ cả 2 biến thể: `English` (Tên Anh chuẩn quốc tế) và `HanViet` (Tên Hán Việt).
    - Thư mục game hợp lệ phải có `Client\Binaries\Win64\Client-Win64-Shipping.exe`.
    - File PAK đặt tại `Client\Content\Paks\~mods\`.
@@ -34,7 +35,7 @@ Bài đăng Release bắt buộc gồm 4 phần:
 
 ---
 
-## 🛠️ 4. CÁC LỆNH BUILD CHUẨN
+## 🛠️ 4. CÁC LỆNH BUILD & RELEASE CHUẨN
 ```powershell
 # 1. Chạy toàn bộ test
 dotnet test VHWuWa\VHWuWa.sln -c Release
@@ -47,4 +48,9 @@ powershell -ExecutionPolicy Bypass -File wuwavh_tool\Wahu\build-community.ps1 -V
 
 # 4. Upload GitHub Release
 gh release upload vX.X.X "VHWuWa\dist\VietHoa-WuWa-vX.X.X.zip" "VHWuWa\dist\App-Dich-WuWa-vX.X.X.zip" "VHWuWa\dist\WuWaVH_EN_99_P.pak" "VHWuWa\dist\WuWaVH_HanViet_99_P.pak" --repo WahuVN/Viet-Hoa-WuWa --clobber
+
+# 5. Cập nhật README.md & commit push
+git add README.md VHWuWa\README.md
+git commit -m "docs: Update README for vX.X.X"
+git push origin main
 ```
