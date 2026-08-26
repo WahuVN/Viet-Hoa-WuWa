@@ -1,7 +1,7 @@
 ﻿# build-dist.ps1 — Đóng gói VHWuWa thành BỘ CÀI phát cho người khác
 # Publish self-contained (không cần cài .NET) + gói sẵn nội dung Việt hóa (pak Hán Việt/EN + font + loader).
 #
-#   powershell -ExecutionPolicy Bypass -File scripts\build-dist.ps1 -Version 2.1.0
+#   powershell -ExecutionPolicy Bypass -File scripts\build-dist.ps1 -Version 3.0.6
 #
 param([string]$Version = "")
 

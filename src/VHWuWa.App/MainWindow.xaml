@@ -105,6 +105,7 @@
                         <ListBoxItem Tag="install" Content="🌐  Cài Việt hóa" />
                         <ListBoxItem Tag="characters" Content="👤  Đặt tên nhân vật" />
                         <ListBoxItem Tag="terms" Content="📚  Thuật ngữ" />
+                        <ListBoxItem Tag="uid" Content="🆔  Tên / Ẩn UID" />
                         <ListBoxItem Tag="font" Content="🔤  Font chữ" />
                         <ListBoxItem Tag="graphics" Content="🎮  Đồ họa" />
                         <ListBoxItem Tag="guide" Content="📖  Hướng dẫn" />

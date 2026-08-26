@@ -88,6 +88,9 @@ public abstract partial class PakEditorViewModelBase : ObservableObject
     [ObservableProperty] private bool _busy;
     [ObservableProperty] private string _status = "Đang chuẩn bị dữ liệu…";
     [ObservableProperty] private bool _canInstall;
+    [ObservableProperty] private string _installPromptMessage = "";
+    [ObservableProperty] private Wpf.Ui.Controls.ControlAppearance _viAppearance = Wpf.Ui.Controls.ControlAppearance.Primary;
+    [ObservableProperty] private Wpf.Ui.Controls.ControlAppearance _hvAppearance = Wpf.Ui.Controls.ControlAppearance.Secondary;
 
     protected PakEditorViewModelBase(PakEditorBridge bridge, IViethoaInstaller installer,
         ISettingsService settings)
@@ -111,12 +114,61 @@ public abstract partial class PakEditorViewModelBase : ObservableObject
         finally { Busy = false; }
     }
 
+    protected void UpdateInstallPrompt(bool hasVi, bool hasHv, bool uidChanged)
+    {
+        CanInstall = true;
+        var game = _settings.Settings.GamePath;
+        var st = !string.IsNullOrWhiteSpace(game) ? _installer.GetStatus(game) : null;
+        bool isInstalled = st?.Installed == true;
+        string currentVariant = st?.Variant ?? "";
+
+        if (hasHv && !hasVi && !uidChanged)
+        {
+            ViAppearance = Wpf.Ui.Controls.ControlAppearance.Secondary;
+            HvAppearance = Wpf.Ui.Controls.ControlAppearance.Primary;
+            if (isInstalled && currentVariant == "en")
+                InstallPromptMessage = "⚠️ Game của bạn hiện đang dùng bản Việt hóa. Bạn vừa cập nhật bản Hán Việt (chưa được áp dụng vào game). Bạn có muốn cài bản Hán Việt vào game ngay không?";
+            else if (isInstalled && currentVariant == "hanviet")
+                InstallPromptMessage = "📦 File PAK Hán Việt mới đã được tạo lại. Bấm nút dưới để ghi đè cập nhật vào game:";
+            else
+                InstallPromptMessage = "📦 File PAK Hán Việt mới đã sẵn sàng. Bấm nút dưới để cài vào game:";
+        }
+        else if (hasVi && !hasHv && !uidChanged)
+        {
+            ViAppearance = Wpf.Ui.Controls.ControlAppearance.Primary;
+            HvAppearance = Wpf.Ui.Controls.ControlAppearance.Secondary;
+            if (isInstalled && currentVariant == "hanviet")
+                InstallPromptMessage = "⚠️ Game của bạn hiện đang dùng bản Hán Việt. Bạn vừa cập nhật bản Việt hóa (chưa được áp dụng vào game). Bạn có muốn cài bản Việt hóa vào game ngay không?";
+            else if (isInstalled && currentVariant == "en")
+                InstallPromptMessage = "📦 File PAK Việt hóa mới đã được tạo lại. Bấm nút dưới để ghi đè cập nhật vào game:";
+            else
+                InstallPromptMessage = "📦 File PAK Việt hóa mới đã sẵn sàng. Bấm nút dưới để cài vào game:";
+        }
+        else
+        {
+            if (isInstalled && currentVariant == "hanviet")
+            {
+                ViAppearance = Wpf.Ui.Controls.ControlAppearance.Secondary;
+                HvAppearance = Wpf.Ui.Controls.ControlAppearance.Primary;
+                InstallPromptMessage = "📦 Đã tạo lại cả 2 gói PAK. Game đang dùng bản Hán Việt, hãy bấm cài Hán Việt để cập nhật (hoặc chọn Việt hóa nếu muốn đổi):";
+            }
+            else
+            {
+                ViAppearance = Wpf.Ui.Controls.ControlAppearance.Primary;
+                HvAppearance = Wpf.Ui.Controls.ControlAppearance.Secondary;
+                InstallPromptMessage = isInstalled
+                    ? "📦 Đã tạo lại cả 2 gói PAK. Game đang dùng bản Việt hóa, hãy bấm cài Việt hóa để cập nhật (hoặc chọn Hán Việt nếu muốn đổi):"
+                    : "📦 Đã tạo lại cả 2 gói PAK (Việt hóa & Hán Việt). Chọn bản bạn muốn cài vào thư mục game:";
+            }
+        }
+    }
+
     [RelayCommand]
     private async Task RestorePaksAsync() => await RunAsync(
         "Đang tải và xác minh hai PAK mặc định từ GitHub…", async () =>
         {
             var result = await Bridge.RequestAsync(new { command = "restore-defaults" });
-            CanInstall = true;
+            UpdateInstallPrompt(hasVi: true, hasHv: true, uidChanged: false);
             Status = "✅ Đã khôi phục hai PAK mặc định từ " + (result["tag"]?.GetValue<string>() ?? "GitHub") + ".";
         });
 
@@ -127,14 +179,16 @@ public abstract partial class PakEditorViewModelBase : ObservableObject
     private async Task InstallHvAsync() => await InstallAsync(NameVariant.HanViet, "Hán Việt");
 
     private async Task InstallAsync(NameVariant variant, string label)
-        => await RunAsync($"Đang cài lại bản {label}…", async () =>
+        => await RunAsync($"Đang ghi đè bản {label} vào game…", async () =>
         {
             var game = _settings.Settings.GamePath;
             if (string.IsNullOrWhiteSpace(game))
                 throw new InvalidOperationException("Chưa chọn thư mục game ở Trang chủ.");
             var result = await _installer.InstallAsync(game, variant, withFont: true);
             if (!result.Success) throw new InvalidOperationException(result.Error);
-            Status = $"✅ Đã cài lại bản {label} vào game.";
+            var pakPath = Path.Combine(game, "Client", "Content", "Paks", "~WuWaMods", "WuWaVH_99_P.pak");
+            Status = $"✅ Đã ghi đè bản {label} thành công vào game ({pakPath}).";
+            InstallPromptMessage = $"✅ Đang sử dụng bản {label} trong game ({pakPath}).";
         });
 
     protected static object ToPayload(EditableMatrixRow row) => new
@@ -198,13 +252,26 @@ public partial class CharacterNamesViewModel : PakEditorViewModelBase
     {
         var changed = Items.Where(item => item.IsDirty).ToList();
         if (changed.Count == 0) { Status = "Chưa có tên nào thay đổi."; return; }
-        await RunAsync($"Đang lưu {changed.Count:N0} nhân vật và tạo lại hai PAK…", async () =>
+        bool hasVi = changed.Any(item => item.ViDirty);
+        bool hasHv = changed.Any(item => item.HvDirty);
+        string modeLabel = (hasVi && hasHv) ? "cả 2 bản PAK" : (hasVi ? "gói PAK Việt hóa" : "gói PAK Hán Việt");
+
+        await RunAsync($"Đang lưu {changed.Count:N0} nhân vật và tạo lại {modeLabel}…", async () =>
         {
-            await Bridge.RequestAsync(new { command = "save-build", category = "char", items = changed.Select(ToPayload).ToArray() });
+            var modes = new List<string>();
+            if (hasVi) modes.Add("vi");
+            if (hasHv) modes.Add("hv");
+
+            await Bridge.RequestAsync(new {
+                command = "save-build",
+                category = "char",
+                items = changed.Select(ToPayload).ToArray(),
+                modes
+            });
             foreach (var item in changed) item.AcceptCurrent();
             OnPropertyChanged(nameof(DirtyCount));
-            CanInstall = true;
-            Status = "✅ Đã lưu tên và tạo lại đủ hai PAK. Chọn bản muốn cài vào game.";
+            UpdateInstallPrompt(hasVi, hasHv, uidChanged: false);
+            Status = $"✅ Đã lưu tên và tạo xong {modeLabel} trong app\\content\\.";
         });
     }
 
@@ -216,10 +283,10 @@ public partial class CharacterNamesViewModel : PakEditorViewModelBase
         await RunAsync("Đang khôi phục tên mặc định và tạo lại hai PAK…", async () =>
         {
             await Bridge.RequestAsync(new { command = "reset-build", category = "char" });
-            CanInstall = true;
+            UpdateInstallPrompt(hasVi: true, hasHv: true, uidChanged: false);
             Loaded = false;
             await PopulateAsync();
-            Status = "✅ Đã khôi phục tên mặc định và tạo lại hai PAK.";
+            Status = "✅ Đã khôi phục tên mặc định và tạo lại cả 2 gói PAK.";
         });
     }
 }
@@ -240,9 +307,15 @@ public partial class TermsEditorViewModel : PakEditorViewModelBase
     public ObservableCollection<EditableMatrixRow> Items { get; } = [];
     [ObservableProperty] private TermCategoryOption? _selectedCategory;
     [ObservableProperty] private bool _loaded;
+    [ObservableProperty] private string _customUid = "";
+    private string _originalUid = "";
     private bool _suppressCategoryChange;
     private int _categoryLoadVersion;
+
+    public bool IsUidDirty => !string.Equals((CustomUid ?? "").Trim(), (_originalUid ?? "").Trim(), StringComparison.Ordinal);
     public int DirtyCount => Items.Count(item => item.IsDirty);
+
+    partial void OnCustomUidChanged(string value) => OnPropertyChanged(nameof(IsUidDirty));
 
     public TermsEditorViewModel(PakEditorBridge bridge, IViethoaInstaller installer,
         ISettingsService settings) : base(bridge, installer, settings) { }
@@ -264,7 +337,7 @@ public partial class TermsEditorViewModel : PakEditorViewModelBase
     public async Task LoadAsync(bool force = false)
     {
         if (Loaded && !force) return;
-        await RunAsync("Đang nạp danh sách loại thuật ngữ…", async () =>
+        await RunAsync("Đang nạp danh sách loại thuật ngữ và thiết lập UID…", async () =>
         {
             var response = await Bridge.RequestAsync(new { command = "categories" });
             var all = response["items"]?.AsArray() ?? [];
@@ -274,6 +347,17 @@ public partial class TermsEditorViewModel : PakEditorViewModelBase
             Categories.Clear();
             foreach (var id in Order.Where(counts.ContainsKey))
                 Categories.Add(new TermCategoryOption(id, Labels[id], counts[id]));
+
+            try
+            {
+                var uidResponse = await Bridge.RequestAsync(new { command = "get-uid" });
+                var uidVal = uidResponse["uid_text"]?.GetValue<string>() ?? "";
+                _originalUid = uidVal;
+                CustomUid = uidVal;
+                OnPropertyChanged(nameof(IsUidDirty));
+            }
+            catch { }
+
             Loaded = true;
             var selected = SelectedCategory is not null
                 ? Categories.FirstOrDefault(item => item.Id == SelectedCategory.Id)
@@ -336,18 +420,80 @@ public partial class TermsEditorViewModel : PakEditorViewModelBase
     }
 
     [RelayCommand]
+    private async Task SaveUidAsync()
+    {
+        var text = (CustomUid ?? "").Trim();
+        await RunAsync(string.IsNullOrWhiteSpace(text)
+            ? "Đang lưu cấu hình ẩn UID và tạo lại hai PAK…"
+            : $"Đang lưu tên UID “{text}” và tạo lại hai PAK…", async () =>
+        {
+            await Bridge.RequestAsync(new { command = "save-uid", uid_text = text });
+            _originalUid = text;
+            CustomUid = text;
+            OnPropertyChanged(nameof(IsUidDirty));
+            UpdateInstallPrompt(true, true, true);
+            Status = string.IsNullOrWhiteSpace(text)
+                ? "✅ Đã đặt lại ẩn UID mặc định và tạo lại hai PAK."
+                : $"✅ Đã đặt tên UID thành “{text}” và tạo lại hai PAK.";
+        });
+    }
+
+    [RelayCommand]
+    private async Task ResetUidAsync()
+    {
+        await RunAsync("Đang khôi phục ẩn UID mặc định và tạo lại hai PAK…", async () =>
+        {
+            await Bridge.RequestAsync(new { command = "reset-uid" });
+            CustomUid = "";
+            _originalUid = "";
+            OnPropertyChanged(nameof(IsUidDirty));
+            UpdateInstallPrompt(true, true, true);
+            Status = "✅ Đã khôi phục ẩn UID mặc định và tạo lại hai PAK.";
+        });
+    }
+
+    [RelayCommand]
     private async Task SaveBuildAsync()
     {
         var category = SelectedCategory?.Id;
         var changed = Items.Where(item => item.IsDirty).ToList();
-        if (category is null || changed.Count == 0) { Status = "Chưa có thuật ngữ nào thay đổi."; return; }
-        await RunAsync($"Đang đối chiếu đúng key, lưu {changed.Count:N0} mục và tạo lại hai PAK…", async () =>
+        var uidChanged = IsUidDirty;
+        if (category is null || (changed.Count == 0 && !uidChanged))
         {
-            await Bridge.RequestAsync(new { command="save-build", category, items=changed.Select(ToPayload).ToArray() });
+            Status = "Chưa có thuật ngữ hoặc tên UID nào thay đổi.";
+            return;
+        }
+        bool hasVi = changed.Any(item => item.ViDirty);
+        bool hasHv = changed.Any(item => item.HvDirty);
+        string modeLabel = (uidChanged || (hasVi && hasHv)) ? "cả 2 bản PAK" : (hasVi ? "gói PAK Việt hóa" : "gói PAK Hán Việt");
+
+        await RunAsync($"Đang đối chiếu đúng key, lưu dữ liệu và tạo lại {modeLabel}…", async () =>
+        {
+            var modes = new List<string>();
+            if (hasVi || uidChanged) modes.Add("vi");
+            if (hasHv || uidChanged) modes.Add("hv");
+
+            var req = new Dictionary<string, object>
+            {
+                ["command"] = "save-build",
+                ["category"] = category,
+                ["items"] = changed.Select(ToPayload).ToArray(),
+                ["modes"] = modes
+            };
+            if (uidChanged)
+            {
+                req["uid_text"] = (CustomUid ?? "").Trim();
+            }
+            await Bridge.RequestAsync(req);
             foreach (var item in changed) item.AcceptCurrent();
+            if (uidChanged)
+            {
+                _originalUid = (CustomUid ?? "").Trim();
+                OnPropertyChanged(nameof(IsUidDirty));
+            }
             OnPropertyChanged(nameof(DirtyCount));
-            CanInstall = true;
-            Status = "✅ Đã lưu đúng key và tạo lại đủ hai PAK. Chọn bản muốn cài.";
+            UpdateInstallPrompt(hasVi || uidChanged, hasHv || uidChanged, uidChanged);
+            Status = $"✅ Đã đối chiếu đúng key và tạo xong {modeLabel} trong app\\content\\.";
         });
     }
 
@@ -361,9 +507,9 @@ public partial class TermsEditorViewModel : PakEditorViewModelBase
         await RunAsync("Đang khôi phục phân khu và tạo lại hai PAK…", async () =>
         {
             await Bridge.RequestAsync(new { command="reset-build", category });
-            CanInstall = true;
+            UpdateInstallPrompt(hasVi: true, hasHv: true, uidChanged: false);
             await PopulateCategoryAsync(category);
-            Status = "✅ Đã khôi phục phân khu và tạo lại hai PAK.";
+            Status = "✅ Đã khôi phục phân khu và tạo lại cả 2 gói PAK.";
         });
     }
 }

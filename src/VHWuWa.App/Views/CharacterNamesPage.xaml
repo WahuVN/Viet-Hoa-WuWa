@@ -88,18 +88,42 @@
         </Border>
 
         <Grid Grid.Row="3" Margin="0,10,0,0">
-            <ProgressBar IsIndeterminate="True" Height="4" VerticalAlignment="Top"
-                         Visibility="{Binding Busy, Converter={StaticResource BoolToVis}}" />
-            <Border Background="#112b20" BorderBrush="#18794e" BorderThickness="1" CornerRadius="7" Padding="10,8"
+            <!-- Khung trạng thái và tiến độ xử lý nổi bật -->
+            <Border Background="#15233a" BorderBrush="#3b82f6" BorderThickness="1" CornerRadius="7" Padding="12,9"
+                    Visibility="{Binding Busy, Converter={StaticResource BoolToVis}}" Margin="0,0,0,7">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <TextBlock Grid.Row="0" Text="{Binding Status, StringFormat='⏳ {0}'}" Foreground="#93c5fd"
+                               FontWeight="SemiBold" FontSize="12" Margin="0,0,0,6" TextWrapping="Wrap" />
+                    <ProgressBar Grid.Row="1" IsIndeterminate="True" Height="5" Foreground="#3b82f6" />
+                </Grid>
+            </Border>
+
+            <Border Background="#0d231a" BorderBrush="#15803d" BorderThickness="1" CornerRadius="8" Padding="14,10"
                     Visibility="{Binding CanInstall, Converter={StaticResource BoolToVis}}" Margin="0,7,0,0">
-                <DockPanel>
-                    <TextBlock Text="PAK mới đã sẵn sàng. Cài lại bản bạn muốn dùng vào game."
-                               VerticalAlignment="Center" TextWrapping="Wrap" />
-                    <WrapPanel DockPanel.Dock="Right" Margin="12,0,0,0">
-                        <ui:Button Content="Cài bản Việt hóa" Appearance="Primary" Command="{Binding InstallViCommand}" Margin="0,0,8,0" />
-                        <Button Content="Cài bản Hán Việt" Command="{Binding InstallHvCommand}" />
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <TextBlock Grid.Row="0" Text="{Binding InstallPromptMessage}"
+                               Foreground="#86efac" FontWeight="SemiBold" FontSize="12.5" Margin="0,0,0,8" TextWrapping="Wrap" />
+                    <WrapPanel Grid.Row="1" VerticalAlignment="Center">
+                        <ui:Button Content="🎮 Cài bản Việt hóa vào Game"
+                                   Appearance="{Binding ViAppearance}"
+                                   Command="{Binding InstallViCommand}"
+                                   ToolTip="Ghi đè file PAK bản Việt hóa vào: &lt;Game&gt;\Client\Content\Paks\~WuWaMods\WuWaVH_99_P.pak"
+                                   Margin="0,0,10,0" Padding="14,6" FontWeight="SemiBold" />
+                        <ui:Button Content="🀄 Cài bản Hán Việt vào Game"
+                                   Appearance="{Binding HvAppearance}"
+                                   Command="{Binding InstallHvCommand}"
+                                   ToolTip="Ghi đè file PAK bản Hán Việt vào: &lt;Game&gt;\Client\Content\Paks\~WuWaMods\WuWaVH_99_P.pak"
+                                   Padding="14,6" FontWeight="SemiBold" />
                     </WrapPanel>
-                </DockPanel>
+                </Grid>
             </Border>
         </Grid>
     </Grid>

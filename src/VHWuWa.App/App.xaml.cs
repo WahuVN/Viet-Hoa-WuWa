@@ -29,6 +29,7 @@ public partial class App : Application
         services.AddSingleton<InstallViewModel>();
         services.AddSingleton<CharacterNamesViewModel>();
         services.AddSingleton<TermsEditorViewModel>();
+        services.AddSingleton<UidEditorViewModel>();
         services.AddSingleton<FontViewModel>();
         services.AddSingleton<GraphicsViewModel>();
         services.AddSingleton<GuideViewModel>();
@@ -40,6 +41,7 @@ public partial class App : Application
         services.AddSingleton<InstallPage>();
         services.AddSingleton<CharacterNamesPage>();
         services.AddSingleton<TermsEditorPage>();
+        services.AddSingleton<UidEditorPage>();
         services.AddSingleton<FontPage>();
         services.AddSingleton<GraphicsPage>();
         services.AddSingleton<GuidePage>();

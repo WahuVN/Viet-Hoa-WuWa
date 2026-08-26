@@ -68,32 +68,30 @@
                                     </Grid.ColumnDefinitions>
                                     <TextBlock Text="{Binding En}" VerticalAlignment="Center" TextWrapping="Wrap" Margin="3,0,6,0" />
                                     <Button Grid.Column="1" Content="📋 EN" ToolTip="Sao chép nguyên văn tiếng Anh"
-                                            Padding="7,4" MinWidth="48"
-                                            Command="{Binding DataContext.CopyEnglishCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                            CommandParameter="{Binding}" />
+                                            Command="{Binding DataContext.CopyEnglishCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                            CommandParameter="{Binding}"
+                                            Padding="4,2" FontSize="10" VerticalAlignment="Center" Opacity="0.85" />
                                 </Grid>
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
-                    <DataGridTemplateColumn Header="Tiếng Việt (VI)" Width="*" MinWidth="180">
+
+                    <DataGridTemplateColumn Header="Tiếng Việt (VI)" Width="*">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <TextBox Text="{Binding Vi, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                         Padding="7,5" Margin="3" VerticalContentAlignment="Center" TextWrapping="Wrap"
-                                         Background="{DynamicResource ControlFillColorDefaultBrush}"
-                                         Foreground="{DynamicResource TextFillColorPrimaryBrush}"
-                                         BorderBrush="{DynamicResource ControlElevationBorderBrush}" />
+                                         TextWrapping="Wrap" AcceptsReturn="True" VerticalScrollBarVisibility="Auto"
+                                         VerticalAlignment="Center" Margin="3" Padding="4,2" />
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
-                    <DataGridTemplateColumn Header="Hán Việt (HV)" Width="*" MinWidth="180">
+
+                    <DataGridTemplateColumn Header="Hán Việt (HV)" Width="*">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <TextBox Text="{Binding Hv, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                         Padding="7,5" Margin="3" VerticalContentAlignment="Center" TextWrapping="Wrap"
-                                         Background="{DynamicResource ControlFillColorDefaultBrush}"
-                                         Foreground="{DynamicResource TextFillColorPrimaryBrush}"
-                                         BorderBrush="{DynamicResource ControlElevationBorderBrush}" />
+                                         TextWrapping="Wrap" AcceptsReturn="True" VerticalScrollBarVisibility="Auto"
+                                         VerticalAlignment="Center" Margin="3" Padding="4,2" />
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
@@ -101,20 +99,27 @@
             </DataGrid>
         </Border>
 
-        <Grid Grid.Row="3" Margin="0,10,0,0">
-            <ProgressBar IsIndeterminate="True" Height="4" VerticalAlignment="Top"
-                         Visibility="{Binding Busy, Converter={StaticResource BoolToVis}}" />
-            <Border Background="#112b20" BorderBrush="#18794e" BorderThickness="1" CornerRadius="7" Padding="10,8"
-                    Visibility="{Binding CanInstall, Converter={StaticResource BoolToVis}}" Margin="0,7,0,0">
-                <DockPanel>
-                    <TextBlock Text="PAK mới đã sẵn sàng. Cài lại bản bạn muốn dùng vào game."
-                               VerticalAlignment="Center" TextWrapping="Wrap" />
-                    <WrapPanel DockPanel.Dock="Right" Margin="12,0,0,0">
-                        <ui:Button Content="Cài bản Việt hóa" Appearance="Primary" Command="{Binding InstallViCommand}" Margin="0,0,8,0" />
-                        <Button Content="Cài bản Hán Việt" Command="{Binding InstallHvCommand}" />
-                    </WrapPanel>
-                </DockPanel>
-            </Border>
-        </Grid>
+        <!-- Banner thông báo cài đặt sau khi tạo PAK -->
+        <Border Grid.Row="3" Margin="0,10,0,0"
+                Visibility="{Binding CanInstall, Converter={StaticResource BoolToVis}}"
+                Background="#0e2338" BorderBrush="#0284c7" BorderThickness="1"
+                CornerRadius="8" Padding="14,10">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <StackPanel VerticalAlignment="Center" Margin="0,0,12,0">
+                    <TextBlock Text="⚡ ĐÃ TẠO XONG FILE PAK MỚI" FontWeight="Bold" FontSize="12" Foreground="#38bdf8" />
+                    <TextBlock Text="{Binding InstallPromptMessage}" Margin="0,3,0,0" TextWrapping="Wrap" FontSize="12" Foreground="#e0f2fe" />
+                </StackPanel>
+                <WrapPanel Grid.Column="1" VerticalAlignment="Center">
+                    <ui:Button Content="📥 Cài Việt hóa vào game" Appearance="{Binding ViAppearance}"
+                               Command="{Binding InstallViCommand}" Padding="12,7" Margin="0,0,8,0" FontWeight="SemiBold" FontSize="12" />
+                    <ui:Button Content="📥 Cài Hán Việt vào game" Appearance="{Binding HvAppearance}"
+                               Command="{Binding InstallHvCommand}" Padding="12,7" FontWeight="SemiBold" FontSize="12" />
+                </WrapPanel>
+            </Grid>
+        </Border>
     </Grid>
 </UserControl>
