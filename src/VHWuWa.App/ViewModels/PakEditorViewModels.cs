@@ -110,7 +110,7 @@ public abstract partial class PakEditorViewModelBase : ObservableObject
         Busy = true;
         Status = workingText;
         try { await action(); }
-        catch (Exception ex) { Status = "❌ " + ex.Message; }
+        catch (Exception ex) { Status = "❌ " + VHWuWa.Core.Services.ErrorFormatter.Humanize(null, ex); }
         finally { Busy = false; }
     }
 

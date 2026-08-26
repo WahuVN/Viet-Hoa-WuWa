@@ -83,7 +83,7 @@
                                        Visibility="{Binding CanOneClickInstall, Converter={StaticResource BoolToVis}}" />
                             <!-- Nút Mở game -->
                             <ui:Button Content="{Binding LaunchButtonText}"
-                                       Appearance="{Binding IsInstalled, Converter={StaticResource BoolToPrimaryDangerConverter}, FallbackValue=Primary}"
+                                       Appearance="Primary"
                                        Command="{Binding LaunchGameCommand}" MinWidth="135"
                                        Padding="18,10" Margin="0,0,8,0" FontSize="13"
                                        FontWeight="SemiBold" ToolTip="Mở Client-Win64-Shipping.exe" />

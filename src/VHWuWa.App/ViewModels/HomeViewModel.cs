@@ -141,13 +141,16 @@ public partial class HomeViewModel : ObservableObject
             }
             else
             {
-                Message = "❌ Lỗi khi cài: " + r.Error;
-                MessageBox.Show("Lỗi cài đặt:\n" + r.Error, "VHWuWa", MessageBoxButton.OK, MessageBoxImage.Error);
+                var err = VHWuWa.Core.Services.ErrorFormatter.Humanize(r.Error);
+                Message = "❌ " + err;
+                MessageBox.Show(err, "VHWuWa — Lỗi cài đặt", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
         catch (Exception ex)
         {
-            Message = "❌ Lỗi ngoại lệ: " + ex.Message;
+            var err = VHWuWa.Core.Services.ErrorFormatter.Humanize(null, ex);
+            Message = "❌ " + err;
+            MessageBox.Show(err, "VHWuWa — Lỗi cài đặt", MessageBoxButton.OK, MessageBoxImage.Error);
         }
         finally
         {
@@ -184,13 +187,16 @@ public partial class HomeViewModel : ObservableObject
             }
             else
             {
-                Message = "❌ Lỗi khi cài: " + r.Error;
-                MessageBox.Show("Lỗi cài đặt:\n" + r.Error, "VHWuWa", MessageBoxButton.OK, MessageBoxImage.Error);
+                var err = VHWuWa.Core.Services.ErrorFormatter.Humanize(r.Error);
+                Message = "❌ " + err;
+                MessageBox.Show(err, "VHWuWa — Lỗi cài đặt", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
         catch (Exception ex)
         {
-            Message = "❌ Lỗi ngoại lệ: " + ex.Message;
+            var err = VHWuWa.Core.Services.ErrorFormatter.Humanize(null, ex);
+            Message = "❌ " + err;
+            MessageBox.Show(err, "VHWuWa — Lỗi cài đặt", MessageBoxButton.OK, MessageBoxImage.Error);
         }
         finally
         {

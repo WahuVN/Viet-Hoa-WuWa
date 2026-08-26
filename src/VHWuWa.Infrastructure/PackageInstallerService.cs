@@ -109,7 +109,7 @@ public sealed class PackageInstallerService : IPackageInstallerService
 
             // Kiểm dung lượng trống + quyền ghi
             var need = manifest.Files.Sum(f => reader.OpenPayloadLength(f.Source));
-            if (!HasFreeSpace(gamePath, need + 64L * 1024 * 1024))
+            if (!HasFreeSpace(gamePath, need))
                 return Result.Fail("Không đủ dung lượng trống trên ổ đĩa game.");
             if (!CanWrite(gamePath))
                 return Result.Fail("Không có quyền ghi vào thư mục game. Hãy đóng game hoặc chạy lại.");

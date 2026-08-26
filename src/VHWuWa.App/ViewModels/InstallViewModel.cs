@@ -288,7 +288,7 @@ public partial class InstallViewModel : ObservableObject
             var r = await _viet.InstallAsync(game, variant, ApplyFont && FontAvailable, progress, _cts.Token);
             Summary = r.Success
                 ? "✅ Cài xong! Vào game đặt Text Language = English. Có thể dùng DirectX 11 hoặc 12."
-                : "❌ Lỗi: " + r.Error;
+                : (r.Error?.StartsWith("❌") == true ? r.Error : "❌ " + r.Error);
         }
         finally { Busy = false; _cts?.Dispose(); _cts = null; Refresh(); }
     }
@@ -312,7 +312,7 @@ public partial class InstallViewModel : ObservableObject
                 if (answer == System.Windows.MessageBoxResult.Yes)
                     r = await _viet.UninstallAsync(game, forceRemoveChangedFiles: true);
             }
-            Summary = r.Success ? "✅ Đã gỡ Việt hóa và khôi phục file gốc." : "❌ Lỗi: " + r.Error;
+            Summary = r.Success ? "✅ Đã gỡ Việt hóa và khôi phục file gốc." : (r.Error?.StartsWith("❌") == true ? r.Error : "❌ " + r.Error);
         }
         finally { Busy = false; Refresh(); }
     }

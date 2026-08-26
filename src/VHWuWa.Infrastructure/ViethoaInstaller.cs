@@ -768,8 +768,8 @@ public sealed class ViethoaInstaller : IViethoaInstaller
         catch (OperationCanceledException) { return Result.Fail("Đã hủy cài đặt."); }
         catch (Exception ex)
         {
-            _log.Error("Viethoa", "Cài lỗi: " + ex.Message, ex);
-            return Result.Fail("Cài lỗi: " + ex.Message, ex);
+            _log.Error("Viethoa", "Cài đặt thất bại: " + ex.Message, ex);
+            return Result.Fail("Cài đặt thất bại: " + ex.Message, ex);
         }
     }
 
@@ -840,8 +840,8 @@ public sealed class ViethoaInstaller : IViethoaInstaller
         }
         catch (Exception ex)
         {
-            _log.Error("Viethoa", "Gỡ lỗi: " + ex.Message, ex);
-            return Result.Fail("Gỡ lỗi: " + ex.Message, ex);
+            _log.Error("Viethoa", "Gỡ cài đặt thất bại: " + ex.Message, ex);
+            return Result.Fail("Gỡ cài đặt thất bại: " + ex.Message, ex);
         }
     }
 }

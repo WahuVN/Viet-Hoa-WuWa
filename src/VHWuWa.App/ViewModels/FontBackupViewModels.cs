@@ -67,7 +67,7 @@ public partial class FontViewModel : ObservableObject
             SelectedLibraryFont = Library.FirstOrDefault();
             LibraryMessage = $"{Library.Count} font có sẵn";
         }
-        catch (Exception ex) { LibraryMessage = "Không đọc được thư viện: " + ex.Message; }
+        catch (Exception ex) { LibraryMessage = "Không đọc được thư viện: " + VHWuWa.Core.Services.ErrorFormatter.Humanize(null, ex); }
     }
 
     partial void OnSearchTextChanged(string value)
@@ -357,11 +357,11 @@ public partial class FontViewModel : ObservableObject
             var r = await _fonts.ApplyFontPakAsync(path, pak);
             LibraryMessage = r.Success
                 ? $"✅ Đã áp dụng {SelectedLibraryFont.Name}."
-                : "❌ " + r.Error;
+                : (r.Error?.StartsWith("❌") == true ? r.Error : "❌ " + r.Error);
         }
         catch (Exception ex)
         {
-            LibraryMessage = "❌ " + ex.Message;
+            LibraryMessage = "❌ " + VHWuWa.Core.Services.ErrorFormatter.Humanize(null, ex);
         }
         finally { Busy = false; OnActivated(); }
     }
@@ -375,7 +375,11 @@ public partial class FontViewModel : ObservableObject
         try
         {
             var r = await _fonts.RemoveFontPaksAsync(path);
-            LibraryMessage = r.Success ? "✅ Đã gỡ font tùy chỉnh." : "❌ " + r.Error;
+            LibraryMessage = r.Success ? "✅ Đã gỡ font tùy chỉnh." : (r.Error?.StartsWith("❌") == true ? r.Error : "❌ " + r.Error);
+        }
+        catch (Exception ex)
+        {
+            LibraryMessage = "❌ " + VHWuWa.Core.Services.ErrorFormatter.Humanize(null, ex);
         }
         finally { Busy = false; OnActivated(); }
     }

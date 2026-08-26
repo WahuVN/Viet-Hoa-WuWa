@@ -1,3 +1,5 @@
+using VHWuWa.Core.Services;
+
 namespace VHWuWa.Core.Models;
 
 /// <summary>Kết quả thao tác không có giá trị trả về.</summary>
@@ -9,6 +11,8 @@ public class Result
 
     public static Result Ok() => new() { Success = true };
     public static Result Fail(string error, Exception? ex = null) =>
+        new() { Success = false, Error = ErrorFormatter.Humanize(error, ex), Exception = ex };
+    public static Result FailRaw(string error, Exception? ex = null) =>
         new() { Success = false, Error = error, Exception = ex };
 }
 
@@ -19,5 +23,7 @@ public sealed class Result<T> : Result
 
     public static Result<T> Ok(T value) => new() { Success = true, Value = value };
     public static new Result<T> Fail(string error, Exception? ex = null) =>
+        new() { Success = false, Error = ErrorFormatter.Humanize(error, ex), Exception = ex };
+    public static new Result<T> FailRaw(string error, Exception? ex = null) =>
         new() { Success = false, Error = error, Exception = ex };
 }
