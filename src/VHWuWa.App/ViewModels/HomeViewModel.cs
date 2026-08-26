@@ -29,6 +29,8 @@ public partial class HomeViewModel : ObservableObject
     [ObservableProperty] private string _currentFont = "-";
     [ObservableProperty] private string _pathStatus = "Chưa chọn";
     [ObservableProperty] private bool _pathOk;
+    [ObservableProperty] private bool _isInstalled;
+    [ObservableProperty] private bool _canOneClickInstall;
     [ObservableProperty] private string _message = "Sẵn sàng.";
     [ObservableProperty] private bool _busy;
     [ObservableProperty] private bool _forceCSharpEnvironment;
@@ -48,6 +50,15 @@ public partial class HomeViewModel : ObservableObject
     public void OnActivated()
     {
         GamePath = _settings.Settings.GamePath;
+        // Tự động tìm thư mục game nếu chưa chọn hoặc đường dẫn hiện tại không hợp lệ
+        if (string.IsNullOrWhiteSpace(GamePath) || !_detect.Validate(GamePath).IsValid)
+        {
+            var found = _detect.AutoDetect();
+            if (found.Count > 0)
+            {
+                SetPath(found[0]);
+            }
+        }
         Refresh();
     }
 
@@ -61,26 +72,131 @@ public partial class HomeViewModel : ObservableObject
 
         var state = _settings.LoadState();
         var tr = state.InstalledPackages.FirstOrDefault(p => p.PackageType == PackageType.Translation);
-        var vst = (PathOk) ? _viet.GetStatus(GamePath) : null;
+        var vst = PathOk ? _viet.GetStatus(GamePath) : null;
         if (vst is { Installed: true })
         {
+            IsInstalled = true;
             TranslationStatus = "Đã cài";
             TranslationVersion = string.IsNullOrWhiteSpace(vst.Version)
                 ? "-"
                 : "v" + vst.Version.TrimStart('v', 'V');
             CurrentVariant = vst.VariantLabel;
             CurrentFont = (PathOk ? _fonts.CurrentFontPak(GamePath) : null) ?? "Mặc định";
+            CanOneClickInstall = false;
         }
         else
         {
+            IsInstalled = false;
             TranslationStatus = tr is null ? "Chưa cài" : "Đã cài";
             TranslationVersion = tr is null || string.IsNullOrWhiteSpace(tr.Version)
                 ? "-"
                 : "v" + tr.Version.TrimStart('v', 'V');
             CurrentVariant = "-";
             CurrentFont = "-";
+            CanOneClickInstall = PathOk;
         }
+
+        if (PathOk && !IsInstalled)
+        {
+            Message = "⚡ Đã tìm thấy thư mục game! Bấm “Cài Việt Hóa (Tự Động)” để thiết lập trọn gói.";
+        }
+        else if (PathOk && IsInstalled)
+        {
+            Message = "✅ Đã cài Việt hóa. Sẵn sàng vào game!";
+        }
+
         _main.RefreshStatus();
+    }
+
+    [RelayCommand]
+    private async Task OneClickInstallAsync()
+    {
+        if (!PathOk)
+        {
+            Message = "Đường dẫn game chưa hợp lệ. Hãy dùng Tự tìm hoặc chọn thư mục game.";
+            return;
+        }
+
+        var res = MessageBox.Show(
+            $"Bạn có muốn tự động cài đặt bản Việt Hóa chuẩn vào thư mục game:\n{GamePath}\n\n(Hệ thống sẽ tự động cài file PAK Việt Hóa, Font chữ và Loader chống lỗi).",
+            "Cài đặt Việt Hóa tự động",
+            MessageBoxButton.OKCancel,
+            MessageBoxImage.Information);
+
+        if (res != MessageBoxResult.OK && res != MessageBoxResult.Yes) return;
+
+        Busy = true;
+        Message = "Đang tự động cài đặt Việt hóa vào game…";
+        try
+        {
+            var r = await _viet.InstallAsync(GamePath, NameVariant.English, withFont: true);
+            if (r.Success)
+            {
+                Message = "✅ Cài đặt Việt Hóa thành công! Bạn có thể bấm “Mở game” ngay bây giờ.";
+                MessageBox.Show(
+                    "Cài đặt Việt Hóa thành công 100%!\nBạn có thể bấm “Mở game” để trải nghiệm ngay.",
+                    "VHWuWa — Cài đặt hoàn tất",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+            }
+            else
+            {
+                Message = "❌ Lỗi khi cài: " + r.Error;
+                MessageBox.Show("Lỗi cài đặt:\n" + r.Error, "VHWuWa", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Message = "❌ Lỗi ngoại lệ: " + ex.Message;
+        }
+        finally
+        {
+            Busy = false;
+            Refresh();
+        }
+    }
+
+    [RelayCommand]
+    private async Task OneClickInstallHvAsync()
+    {
+        if (!PathOk) return;
+        var res = MessageBox.Show(
+            $"Bạn có muốn tự động cài đặt bản Hán Việt vào thư mục game:\n{GamePath}?",
+            "Cài đặt Hán Việt tự động",
+            MessageBoxButton.OKCancel,
+            MessageBoxImage.Information);
+
+        if (res != MessageBoxResult.OK && res != MessageBoxResult.Yes) return;
+
+        Busy = true;
+        Message = "Đang tự động cài đặt bản Hán Việt vào game…";
+        try
+        {
+            var r = await _viet.InstallAsync(GamePath, NameVariant.HanViet, withFont: true);
+            if (r.Success)
+            {
+                Message = "✅ Cài đặt bản Hán Việt thành công! Bạn có thể bấm “Mở game” ngay bây giờ.";
+                MessageBox.Show(
+                    "Cài đặt bản Hán Việt thành công 100%!\nBạn có thể bấm “Mở game” để trải nghiệm ngay.",
+                    "VHWuWa — Cài đặt hoàn tất",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+            }
+            else
+            {
+                Message = "❌ Lỗi khi cài: " + r.Error;
+                MessageBox.Show("Lỗi cài đặt:\n" + r.Error, "VHWuWa", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Message = "❌ Lỗi ngoại lệ: " + ex.Message;
+        }
+        finally
+        {
+            Busy = false;
+            Refresh();
+        }
     }
 
     [RelayCommand]
@@ -141,8 +257,15 @@ public partial class HomeViewModel : ObservableObject
     private void AutoDetect()
     {
         var found = _detect.AutoDetect();
-        if (found.Count > 0) { SetPath(found[0]); Message = "Đã tìm thấy thư mục game."; }
-        else Message = "Không tìm thấy game. Hãy chọn thư mục thủ công.";
+        if (found.Count > 0)
+        {
+            SetPath(found[0]);
+            Message = "Đã tìm thấy thư mục game.";
+        }
+        else
+        {
+            Message = "Không tìm thấy game. Hãy chọn thư mục thủ công.";
+        }
     }
 
     public void SetPath(string path)
@@ -166,21 +289,6 @@ public partial class HomeViewModel : ObservableObject
         if (Directory.Exists(GamePath))
             Process.Start(new ProcessStartInfo(GamePath) { UseShellExecute = true });
         else Message = "Thư mục game không tồn tại.";
-    }
-
-    [RelayCommand]
-    private async Task InstallAsync()
-    {
-        if (!PathOk) { Message = "Đường dẫn game chưa hợp lệ."; return; }
-        var dlg = new OpenFileDialog { Title = "Chọn gói Việt hóa", Filter = "Gói VHWuWa (*.vhwpack)|*.vhwpack" };
-        if (dlg.ShowDialog() != true) return;
-        Busy = true; Message = "Đang cài Việt hóa...";
-        try
-        {
-            var r = await _installer.InstallAsync(GamePath, dlg.FileName);
-            Message = r.Success ? "Cài Việt hóa thành công." : "Lỗi: " + r.Error;
-        }
-        finally { Busy = false; Refresh(); }
     }
 
     [RelayCommand]

@@ -6,11 +6,11 @@
         <StackPanel Margin="24,20,24,22">
             <StackPanel Margin="0,0,0,15">
                 <TextBlock Text="Trang chủ" FontSize="22" FontWeight="Bold" />
-                <TextBlock Text="Mở game và xem nhanh trạng thái Việt hóa."
+                <TextBlock Text="Mở game, tự động nhận diện thư mục và cài đặt Việt hóa nhanh."
                            FontSize="12" Opacity="0.7" Margin="0,3,0,0" />
             </StackPanel>
 
-            <!-- Chỉ hiện khi có bản mới, dùng màu chuẩn của giao diện -->
+            <!-- Banner thông báo khi có bản cập nhật mới -->
             <ui:Card Padding="14" Margin="0,0,0,12"
                      Visibility="{Binding Main.HasUpdate, Converter={StaticResource BoolToVis}}">
                 <Grid>
@@ -34,7 +34,35 @@
                 </Grid>
             </ui:Card>
 
-            <!-- Khu vực chính: ít khung, hai hành động rõ ràng -->
+            <!-- CARD NỔI BẬT: TỰ ĐỘNG PHÁT HIỆN GAME & NÚT CÀI VIỆT HÓA 1-CLICK -->
+            <Border Margin="0,0,0,14" Background="#0b233a" BorderBrush="#0284c7" BorderThickness="1"
+                    CornerRadius="8" Padding="16,14"
+                    Visibility="{Binding CanOneClickInstall, Converter={StaticResource BoolToVis}}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel VerticalAlignment="Center" Margin="0,0,16,0">
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,3">
+                            <TextBlock Text="⚡" FontSize="16" Margin="0,0,6,0" VerticalAlignment="Center" />
+                            <TextBlock Text="ĐÃ TÌM THẤY GAME — SẴN SÀNG CÀI VIỆT HÓA" FontWeight="Bold" FontSize="14" Foreground="#38bdf8" />
+                        </StackPanel>
+                        <TextBlock Text="Đã phát hiện thư mục game hợp lệ. Bấm nút bên cạnh để tự động thiết lập toàn bộ bản dịch tiếng Việt, font chữ và loader chỉ với 1 click!"
+                                   FontSize="12" Foreground="#e0f2fe" TextWrapping="Wrap" Opacity="0.9" />
+                    </StackPanel>
+                    <WrapPanel Grid.Column="1" VerticalAlignment="Center">
+                        <ui:Button Content="📥 Cài Việt Hóa (Tự Động)" Appearance="Primary"
+                                   Command="{Binding OneClickInstallCommand}"
+                                   Padding="18,10" Margin="0,0,8,0" FontSize="13" FontWeight="Bold" />
+                        <Button Content="📥 Cài Hán Việt"
+                                Command="{Binding OneClickInstallHvCommand}"
+                                Padding="14,10" FontSize="12" />
+                    </WrapPanel>
+                </Grid>
+            </Border>
+
+            <!-- Khu vực chính: Mở Game & Trạng thái -->
             <ui:Card Padding="18" Margin="0,0,0,12">
                 <StackPanel>
                     <Grid>
@@ -44,17 +72,25 @@
                         </Grid.ColumnDefinitions>
                         <StackPanel VerticalAlignment="Center" Margin="0,0,18,0">
                             <TextBlock Text="Wuthering Waves" FontSize="18" FontWeight="SemiBold" />
-                            <TextBlock Text="Mở trực tiếp bằng thiết lập hiện tại."
+                            <TextBlock Text="Mở trực tiếp game bằng thiết lập hiện tại."
                                        FontSize="12" Opacity="0.65" Margin="0,3,0,0" />
                         </StackPanel>
                         <WrapPanel Grid.Column="1" VerticalAlignment="Center">
-                            <ui:Button Content="{Binding LaunchButtonText}" Appearance="Primary"
-                                       Command="{Binding LaunchGameCommand}" MinWidth="145"
+                            <!-- Nút Cài đặt nhanh nếu chưa cài -->
+                            <ui:Button Content="📥 Cài Việt Hóa" Appearance="Primary"
+                                       Command="{Binding OneClickInstallCommand}" MinWidth="130"
+                                       Padding="16,10" Margin="0,0,8,0" FontSize="13" FontWeight="Bold"
+                                       Visibility="{Binding CanOneClickInstall, Converter={StaticResource BoolToVis}}" />
+                            <!-- Nút Mở game -->
+                            <ui:Button Content="{Binding LaunchButtonText}"
+                                       Appearance="{Binding IsInstalled, Converter={StaticResource BoolToPrimaryDangerConverter}, FallbackValue=Primary}"
+                                       Command="{Binding LaunchGameCommand}" MinWidth="135"
                                        Padding="18,10" Margin="0,0,8,0" FontSize="13"
                                        FontWeight="SemiBold" ToolTip="Mở Client-Win64-Shipping.exe" />
+                            <!-- Nút Tắt game -->
                             <ui:Button Content="Tắt game" Appearance="Danger"
-                                       Command="{Binding KillGameProcessesCommand}" MinWidth="104"
-                                       Padding="16,10" FontSize="13"
+                                       Command="{Binding KillGameProcessesCommand}" MinWidth="96"
+                                       Padding="14,10" FontSize="13"
                                        ToolTip="Đóng tiến trình game đang chạy" />
                         </WrapPanel>
                     </Grid>
@@ -101,7 +137,7 @@
                 </StackPanel>
             </ui:Card>
 
-            <!-- Thiết lập hiện tại và thư mục game dùng chung một mặt phẳng -->
+            <!-- Thiết lập hiện tại và thư mục game -->
             <ui:Card Padding="18" Margin="0,0,0,12">
                 <Grid>
                     <Grid.ColumnDefinitions>
