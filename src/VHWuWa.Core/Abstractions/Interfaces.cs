@@ -144,4 +144,6 @@ public interface IUpdateService
     Task<UpdateCheckResult> CheckAsync(CancellationToken ct = default);
     Task<Result<string>> DownloadAsync(UpdateManifest manifest, string destDir,
         IProgress<double>? progress = null, CancellationToken ct = default);
+    Task<Result<string>> DownloadFileAsync(string fileUrl, string expectedSha256, string destinationPath,
+        IProgress<double>? progress = null, CancellationToken ct = default);
 }

@@ -129,6 +129,74 @@ public sealed class UpdateServiceTests
         }
     }
 
+    [Fact]
+    public async Task DownloadAsync_ValidatesZipIntegrity_WhenSha256IsEmpty()
+    {
+        // Tạo một tệp ZIP hợp lệ trong bộ nhớ
+        byte[] validZipBytes;
+        using (var ms = new MemoryStream())
+        {
+            using (var archive = new System.IO.Compression.ZipArchive(ms, System.IO.Compression.ZipArchiveMode.Create, true))
+            {
+                var entry = archive.CreateEntry("VHWuWa.exe");
+                using var writer = new StreamWriter(entry.Open());
+                writer.Write("dummy exe content");
+            }
+            validZipBytes = ms.ToArray();
+        }
+
+        var service = CreateService("2.0.0", _ => new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = new ByteArrayContent(validZipBytes)
+        });
+
+        var temp = Path.Combine(Path.GetTempPath(), "VHWuWa_ZipTest_" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            var res = await service.DownloadAsync(new UpdateManifest
+            {
+                Version = "2.1.0",
+                DownloadUrl = "https://github.test/VietHoa-WuWa-v2.1.0.zip",
+                Sha256 = "", // Không có SHA256 (fallback mode)
+            }, temp);
+
+            Assert.True(res.Success);
+            Assert.True(File.Exists(res.Value));
+        }
+        finally
+        {
+            if (Directory.Exists(temp)) Directory.Delete(temp, recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task DownloadAsync_RejectsCorruptZip_WhenSha256IsEmpty()
+    {
+        var corruptBytes = Encoding.UTF8.GetBytes("not a valid zip file content");
+        var service = CreateService("2.0.0", _ => new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = new ByteArrayContent(corruptBytes)
+        });
+
+        var temp = Path.Combine(Path.GetTempPath(), "VHWuWa_CorruptZipTest_" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            var res = await service.DownloadAsync(new UpdateManifest
+            {
+                Version = "2.1.0",
+                DownloadUrl = "https://github.test/VietHoa-WuWa-v2.1.0.zip",
+                Sha256 = "",
+            }, temp);
+
+            Assert.False(res.Success);
+            Assert.Contains("bị hỏng", res.Error);
+        }
+        finally
+        {
+            if (Directory.Exists(temp)) Directory.Delete(temp, recursive: true);
+        }
+    }
+
     private static UpdateService CreateService(string currentVersion,
         Func<HttpRequestMessage, HttpResponseMessage> responder)
     {

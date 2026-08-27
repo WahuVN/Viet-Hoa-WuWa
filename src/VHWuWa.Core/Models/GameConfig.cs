@@ -50,4 +50,10 @@ public sealed class UpdateManifest
     [JsonPropertyName("sha256")] public string Sha256 { get; set; } = "";
     [JsonPropertyName("signature")] public string Signature { get; set; } = "";
     [JsonPropertyName("mandatory")] public bool Mandatory { get; set; }
+
+    [JsonPropertyName("pakEnUrl")] public string PakEnUrl { get; set; } = "";
+    [JsonPropertyName("pakEnSha256")] public string PakEnSha256 { get; set; } = "";
+    [JsonPropertyName("pakHanVietUrl")] public string PakHanVietUrl { get; set; } = "";
+    [JsonPropertyName("pakHanVietSha256")] public string PakHanVietSha256 { get; set; } = "";
+    [JsonPropertyName("hasDeltaPak")] public bool HasDeltaPak => !string.IsNullOrWhiteSpace(PakEnUrl) || !string.IsNullOrWhiteSpace(PakHanVietUrl);
 }

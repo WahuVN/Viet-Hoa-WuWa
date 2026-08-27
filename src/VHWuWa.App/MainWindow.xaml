@@ -35,9 +35,22 @@
                             <StackPanel>
                                 <TextBlock Text="{Binding LatestVersion, StringFormat='🎉 Có bản mới v{0}'}"
                                            FontWeight="SemiBold" FontSize="11" Foreground="#4ade80" />
-                                <ui:Button Content="⬇ Cập nhật" Appearance="Primary"
-                                           Command="{Binding ApplyUpdateCommand}"
-                                           HorizontalAlignment="Stretch" Margin="0,4,0,0" Padding="6,3" FontSize="11" />
+                                <Grid Margin="0,4,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="4" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <ui:Button Grid.Column="0" Content="⚡ Nhanh" Appearance="Secondary"
+                                               ToolTip="Cập nhật nhanh tệp Việt hóa (~60MB)"
+                                               Command="{Binding ApplyDeltaPakUpdateCommand}"
+                                               IsEnabled="{Binding HasDeltaPak}"
+                                               HorizontalAlignment="Stretch" Padding="2,3" FontSize="10" />
+                                    <ui:Button Grid.Column="2" Content="⬇ Đầy đủ" Appearance="Primary"
+                                               ToolTip="Cập nhật toàn bộ ứng dụng (~190MB)"
+                                               Command="{Binding ApplyUpdateCommand}"
+                                               HorizontalAlignment="Stretch" Padding="2,3" FontSize="10" />
+                                </Grid>
                                 <ProgressBar Value="{Binding UpdateProgress}" Maximum="100" Height="3" Margin="0,4,0,0"
                                              Visibility="{Binding IsUpdating, Converter={StaticResource BoolToVis}}" />
                             </StackPanel>
