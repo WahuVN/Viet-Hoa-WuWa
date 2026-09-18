@@ -12,7 +12,7 @@ namespace VHWuWa.App.ViewModels;
 
 public partial class MainViewModel : ObservableObject
 {
-    private const string DiscordUrl = "https://discord.gg/tuRCj47sy";
+    private const string DiscordUrl = "https://discord.gg/Gy5YQ84Yc2";
     private const string GitHubUrl = "https://github.com/WahuVN/Viet-Hoa-WuWa";
     private readonly ISettingsService _settings;
     private readonly IGameDetectionService _detect;
@@ -39,7 +39,7 @@ public partial class MainViewModel : ObservableObject
 
     /// <summary>Phiên bản bản dịch đi cùng bản build hiện tại.</summary>
     public string VhVersion => "Bản dịch v"
-        + (Assembly.GetEntryAssembly()?.GetName().Version?.ToString(3) ?? "2.0.0")
+        + (Assembly.GetEntryAssembly()?.GetName().Version?.ToString(3) ?? "0.0.0")
         + " · game 3.6";
 
     public MainViewModel(ISettingsService settings, IGameDetectionService detect, IUpdateService update, ILogService log, IViethoaInstaller? vietHoa = null)
@@ -49,7 +49,7 @@ public partial class MainViewModel : ObservableObject
         _update = update;
         _log = log;
         _vietHoa = vietHoa;
-        _appVersion = "VHWuWa v" + (Assembly.GetEntryAssembly()?.GetName().Version?.ToString(3) ?? "2.0.0");
+        _appVersion = "VHWuWa v" + (Assembly.GetEntryAssembly()?.GetName().Version?.ToString(3) ?? "0.0.0");
         _isDark = !settings.Settings.Theme.Equals("Light", StringComparison.OrdinalIgnoreCase);
         RefreshStatus();
 

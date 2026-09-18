@@ -23,15 +23,15 @@ public sealed class UpdateService : IUpdateService
     {
         _log = log; _hash = hash;
         _currentVersion = currentVersion
-            ?? Assembly.GetEntryAssembly()?.GetName().Version?.ToString(3) ?? "2.0.0";
-        _http = httpClient ?? CreateClient();
+            ?? Assembly.GetEntryAssembly()?.GetName().Version?.ToString(3) ?? "0.0.0";
+        _http = httpClient ?? CreateClient(_currentVersion);
         _releaseEndpoints = (releaseEndpoints ?? DefaultReleaseEndpoints).ToArray();
     }
 
-    private static HttpClient CreateClient()
+    private static HttpClient CreateClient(string version)
     {
         var c = new HttpClient { Timeout = TimeSpan.FromSeconds(30) };
-        c.DefaultRequestHeaders.UserAgent.ParseAdd("VHWuWa-Updater/2.0");
+        c.DefaultRequestHeaders.UserAgent.ParseAdd($"VHWuWa-Updater/{version}");
         c.DefaultRequestHeaders.Accept.ParseAdd("application/vnd.github+json");
         c.DefaultRequestHeaders.Add("X-GitHub-Api-Version", "2022-11-28");
         return c;

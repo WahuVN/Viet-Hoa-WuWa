@@ -7,10 +7,10 @@
 Bộ công cụ mã nguồn mở hỗ trợ cài đặt, tùy biến phông chữ và quản lý bản dịch tiếng Việt cho **Wuthering Waves (PC / Windows)**.
 
 [![Phiên bản](https://img.shields.io/badge/phiên_bản-3.0.9-blue?style=flat-square)](https://github.com/WahuVN/Viet-Hoa-WuWa/releases/latest)
-[![Tương thích Game](https://img.shields.io/badge/Wuthering_Waves-3.6+-informational?style=flat-square)](https://github.com/WahuVN/Viet-Hoa-WuWa/releases/latest)
+[![Game đã kiểm thử](https://img.shields.io/badge/Wuthering_Waves-3.6_đã_kiểm_thử-informational?style=flat-square)](https://github.com/WahuVN/Viet-Hoa-WuWa/releases/latest)
 [![Nền tảng](https://img.shields.io/badge/Nền_tảng-Windows_10_%7C_11_x64-0078D4?style=flat-square&logo=windows&logoColor=white)](https://github.com/WahuVN/Viet-Hoa-WuWa/releases/latest)
 [![Giấy phép](https://img.shields.io/badge/Giấy_phép-MIT-green?style=flat-square)](LICENSE)
-[![Discord](https://img.shields.io/badge/Discord-Cộng_đồng_VHWuWa-5865F2?style=flat-square&logo=discord&logoColor=white)](https://discord.gg/c9ws4q9U7)
+[![Discord](https://img.shields.io/badge/Discord-Cộng_đồng_VHWuWa-5865F2?style=flat-square&logo=discord&logoColor=white)](https://discord.gg/Gy5YQ84Yc2)
 
 [Tải Xuống](#-tải-xuống) • [Hướng Dẫn Cài Đặt](#-hướng-dẫn-cài-đặt) • [Tính Năng Chính](#-tính-năng-chính) • [Dành Cho Nhà Phát Triển](#-dành-cho-nhà-phát-triển) • [Lưu Ý](#-lưu-ý--tuyên-bố-miễn-trừ)
 
@@ -64,7 +64,7 @@ VHWuWa được thiết kế nhằm hỗ trợ người chơi trải nghiệm tr
 
 ### Các bước thực hiện
 1. Tải file **`VietHoa-WuWa-v3.0.9.zip`** mới nhất và giải nén ra một thư mục riêng.
-2. Mở file **`VHWuWa.exe`** (hoặc `Chay VHWuWa.bat`).
+2. Mở file **`VHWuWa.exe`**.
 3. Chọn **"Tự tìm game"** (nếu chưa tìm thấy, hãy chọn thủ công thư mục game có chứa thư mục `Client`).
 4. Chọn kiểu tên nhân vật mong muốn (**Tiếng Anh** hoặc **Hán Việt**) và chọn phông chữ yêu thích.
 5. Bấm **"Cài Việt Hóa"** và đợi thông báo hoàn tất.
@@ -80,16 +80,20 @@ VHWuWa được thiết kế nhằm hỗ trợ người chơi trải nghiệm tr
 ### Cấu trúc thư mục
 
 ```text
-WuwaVH/
-├── VHWuWa/                  # Mã nguồn ứng dụng C# (.NET 8 WPF/WinForms)
-│   ├── Assets/              # Logo, phông chữ và hình ảnh giao diện
-│   ├── Services/            # Xử lý logic tải, cài đặt PAK, font và cấu hình
-│   └── Forms/               # Giao diện người dùng
-├── wuwavh_tool/             # Bộ điều phối dữ liệu và đóng gói PAK (Python)
-│   └── Wahu/                # Pipeline xử lý merge database, audit QA và repak
-├── docs/                    # Tài liệu kỹ thuật, hướng dẫn và hình ảnh minh họa
-└── _QUY_UOC_DICH_NOI_BO/    # Quy chuẩn thuật ngữ, tên riêng và quy tắc cốt truyện
+VHWuWa/
+├── src/
+│   ├── VHWuWa.App/              # Ứng dụng WPF cho người chơi
+│   ├── VHWuWa.Core/             # Model, abstraction và logic dùng chung
+│   ├── VHWuWa.Infrastructure/   # Cài/gỡ PAK, updater, game launch, settings
+│   └── VHWuWa.Updater/          # Updater self-contained + rollback/health-check
+├── tests/                        # Unit/integration tests
+├── scripts/                      # Build, đóng gói và self-update E2E
+├── Assets/                       # Logo/icon và tài nguyên ứng dụng
+├── docs/                         # Hình ảnh/tài liệu public
+└── VHWuWa.sln
 ```
+
+> Pipeline dữ liệu/PAK và MASTER dịch thuật được duy trì ở workspace phát triển riêng; không phải toàn bộ dữ liệu game đều nằm trong repository public.
 
 ### Hướng dẫn Build từ mã nguồn
 
@@ -99,17 +103,17 @@ WuwaVH/
 - Python 3.10+ (dành cho bộ công cụ Wahu đóng gói dữ liệu).
 
 ```powershell
-# 1. Khôi phục dependencies cho app
-dotnet restore VHWuWa/VHWuWa.sln
+# 1. Khôi phục dependencies
+dotnet restore VHWuWa.sln
 
 # 2. Biên dịch bản Release
-dotnet build VHWuWa/VHWuWa.sln -c Release
+dotnet build VHWuWa.sln -c Release
 
 # 3. Chạy kiểm thử tự động
-dotnet test VHWuWa/VHWuWa.sln -c Release
+dotnet test VHWuWa.sln -c Release
 
-# 4. Đóng gói bộ cài đặt phát hành (tuỳ chọn)
-powershell -ExecutionPolicy Bypass -File VHWuWa/scripts/build-dist.ps1 -Version 3.0.9
+# 4. Đóng gói bộ cài đặt phát hành (cần các asset PAK canonical trong workspace phát triển)
+powershell -ExecutionPolicy Bypass -File scripts/build-dist.ps1 -Version 3.0.9
 ```
 
 ---
@@ -128,7 +132,7 @@ VHWuWa là dự án cộng đồng phi thương mại. Bạn có thể hỗ tr�
 
 ## 💬 Kênh hỗ trợ & Liên hệ
 
-- **Thảo luận & Hỗ trợ kỹ thuật:** [Server Discord VHWuWa](https://discord.gg/c9ws4q9U7)
+- **Thảo luận & Hỗ trợ kỹ thuật:** [Server Discord VHWuWa](https://discord.gg/Gy5YQ84Yc2)
 - **Báo lỗi & Đóng góp ý kiến:** [Gửi phản hồi tại GitHub Issues](https://github.com/WahuVN/Viet-Hoa-WuWa/issues)
 - **Bản Việt hóa Android:** Tham khảo dự án cộng đồng độc lập tại [Server Discord DangDev](https://discord.gg/3t5NSyJEz)
 

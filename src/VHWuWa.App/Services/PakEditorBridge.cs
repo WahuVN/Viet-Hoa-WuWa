@@ -17,7 +17,7 @@ public sealed class PakEditorBridge
     {
         if (!File.Exists(ExecutablePath))
             throw new FileNotFoundException(
-                "Bản cài này chưa có bộ sửa PAK. Hãy dùng đúng gói VietHoa-WuWa-v3.0.6 mới.",
+                "Bản cài này chưa có bộ sửa PAK. Hãy tải đúng gói VietHoa-WuWa mới nhất từ GitHub Releases.",
                 ExecutablePath);
 
         var temp = Path.Combine(Path.GetTempPath(), "VHWuWa_Editor_" + Guid.NewGuid().ToString("N") + ".json");

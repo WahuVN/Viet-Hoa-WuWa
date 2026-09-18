@@ -1,7 +1,7 @@
-# build-dist.ps1 — Đóng gói VHWuWa thành BỘ CÀI phát cho người khác
+﻿# build-dist.ps1 — Đóng gói VHWuWa thành BỘ CÀI phát cho người khác
 # Publish self-contained (không cần cài .NET) + gói sẵn nội dung Việt hóa (pak Hán Việt/EN + font + loader).
 #
-#   powershell -ExecutionPolicy Bypass -File scripts\build-dist.ps1 -Version 3.0.6
+#   powershell -ExecutionPolicy Bypass -File scripts\build-dist.ps1 -Version 3.0.9
 #
 param([string]$Version = "")
 
@@ -178,7 +178,7 @@ $docTruoc = @'
 VHWuWa — Bộ cài Việt Hóa Wuthering Waves
 ========================================
 
-BẢN __VERSION__ — CỐT TRUYỆN 3.6 + KỸ NĂNG 3.4 / 3.5 / 3.6
+BẢN __VERSION__ — ĐÃ KIỂM THỬ TRÊN WUTHERING WAVES 3.6
 
 CÁCH DÙNG
   1. Giải nén cả thư mục "VHWuWa_BanCai" ra ổ đĩa (đừng mở trực tiếp trong file .zip).
@@ -196,12 +196,12 @@ LƯU Ý QUAN TRỌNG
   - Hãy TẮT HẲN GAME và launcher trước khi cài hoặc gỡ Việt Hóa.
   - Hai lựa chọn tên là hai bản riêng: Hán Việt hoặc tên nhân vật Tiếng Anh.
   - Đã tích hợp sẵn Font chữ tiếng Việt hiển thị sắc nét, không lỗi ô vuông.
-  - Đầy đủ 86 DB dữ liệu: Cốt truyện 3.6 (1.827 câu), Kỹ năng (3.4/3.5/3.6), UI, Nhiệm vụ.
+  - Gói dữ liệu hiện tại gồm 110 DB: cốt truyện, kỹ năng, UI, nhiệm vụ và các bảng hệ thống liên quan.
   - Khi cần gỡ: Mở lại App VHWuWa -> Cài Việt hóa -> Bấm Gỡ Việt hóa (khôi phục game sạch).
   - Không cần cài đặt thêm .NET (ứng dụng đã đóng gói sẵn môi trường chạy).
 
 HỖ TRỢ & BÁO LỖI
-  ⚠️ Discord Windows: https://discord.gg/tuRCj47sy
+  ⚠️ Discord Windows: https://discord.gg/Gy5YQ84Yc2
   ⚠️ Discord Android: https://discord.gg/3t5NSyJEz
   ⚠️ GitHub:          https://github.com/WahuVN/Viet-Hoa-WuWa
 '@

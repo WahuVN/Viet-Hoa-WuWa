@@ -51,7 +51,7 @@ Bản cập nhật vX.X.X ... [tóm tắt điểm nổi bật nhất trong 1-2 c
 | **`WuWaVH_HanViet_99_P.pak`** | File PAK bản Tên Hán Việt độc lập |
 
 ---
-💬 **Cộng đồng & Hỗ trợ:** [Discord WAHU](https://discord.gg/tuRCj47sy) · [Báo lỗi GitHub](https://github.com/WahuVN/Viet-Hoa-WuWa/issues)
+💬 **Cộng đồng & Hỗ trợ:** [Discord WAHU](https://discord.gg/Gy5YQ84Yc2) · [Báo lỗi GitHub](https://github.com/WahuVN/Viet-Hoa-WuWa/issues)
 ```
 
 ---

@@ -239,8 +239,7 @@ public partial class FontViewModel : ObservableObject
     {
         var urls = new[]
         {
-            $"https://raw.githubusercontent.com/WahuVN/Viet-Hoa-WuWa/main/Fonts/{Uri.EscapeDataString(pakFileName)}",
-            $"https://github.com/WahuVN/Viet-Hoa-WuWa/releases/download/v2.0.0-fonts/{Uri.EscapeDataString(pakFileName)}"
+            $"https://raw.githubusercontent.com/WahuVN/Viet-Hoa-WuWa/main/Fonts/{Uri.EscapeDataString(pakFileName)}"
         };
 
         foreach (var url in urls)
