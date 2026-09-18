@@ -13,6 +13,7 @@ $distRoot = Join-Path $root 'dist'
 $buildRoot = Join-Path $distRoot '_build'
 $out    = Join-Path $buildRoot 'VHWuWa_BanCai'
 $app    = Join-Path $out 'app'
+$updaterPublish = Join-Path $buildRoot 'updater-publish'
 $content= Join-Path $app 'content'
 if (-not $Version) {
   [xml]$props = Get-Content (Join-Path $root 'Directory.Build.props')
@@ -48,12 +49,44 @@ if (-not (Test-Path (Join-Path $app 'VHWuWa.exe'))) {
 }
 Write-Host "   + Da build thanh cong VHWuWa.exe ($([math]::Round((Get-Item (Join-Path $app 'VHWuWa.exe')).Length/1MB, 1)) MB)"
 
-# Không chép runtime .NET lần hai cho updater (~33,5 MB). App dùng trình cập
-# nhật PowerShell có backup/rollback; PowerShell đã có sẵn trên Windows 10/11.
-Write-Host '   + Trinh cap nhat gon dung PowerShell cua Windows (khong lap runtime .NET)'
+# Updater phải là single-file self-contained riêng và được chép ra thư mục tạm
+# trước khi chạy, nhờ vậy nó có thể hoán đổi toàn bộ thư mục app an toàn.
+if (Test-Path $updaterPublish) { Remove-Item $updaterPublish -Recurse -Force }
+dotnet publish (Join-Path $root 'src\VHWuWa.Updater\VHWuWa.Updater.csproj') `
+  -c Release -r win-x64 --self-contained true `
+  -p:PublishSingleFile=true `
+  -p:EnableCompressionInSingleFile=true `
+  -p:IncludeNativeLibrariesForSelfExtract=true `
+  -p:DebugType=none `
+  -p:Version=$Version `
+  -o $updaterPublish
+$updaterExe = Join-Path $updaterPublish 'VHWuWa.Updater.exe'
+if (-not (Test-Path $updaterExe)) {
+  throw 'Loi nghiem trong: dotnet publish khong tao duoc VHWuWa.Updater.exe!'
+}
+Copy-Item $updaterExe (Join-Path $app 'VHWuWa.Updater.exe') -Force
+$appVersion = [Diagnostics.FileVersionInfo]::GetVersionInfo((Join-Path $app 'VHWuWa.exe')).FileVersion
+$updaterVersion = [Diagnostics.FileVersionInfo]::GetVersionInfo((Join-Path $app 'VHWuWa.Updater.exe')).FileVersion
+if (-not $appVersion.StartsWith("$Version.") -or -not $updaterVersion.StartsWith("$Version.")) {
+  throw "Sai version executable: app=$appVersion updater=$updaterVersion expected=$Version"
+}
+Write-Host "   + Updater self-contained: VHWuWa.Updater.exe ($([math]::Round((Get-Item $updaterExe).Length/1MB, 1)) MB)"
 
 Write-Host "== 2/5  Gói nội dung Việt hóa (PAK VI + font + loader) ==" -ForegroundColor Cyan
 New-Item -ItemType Directory -Force -Path $content, (Join-Path $content 'font'), (Join-Path $content 'loader') | Out-Null
+
+# Runtime/server-direct Gacha text không đi qua ConfigDB. Release dùng JS override
+# nằm trong chính PAK V12; loader release KHÔNG scan/patch writable process memory.
+$runtimeRegistry = Join-Path $wahu 'data\runtime_server_text_overrides.json'
+$runtimeValidator = Join-Path $wahu 'wahu_runtime_text.py'
+$runtimePakVerifier = Join-Path $wahu 'wahu_verify_runtime_js_pak.py'
+if (-not (Test-Path -LiteralPath $runtimeRegistry) `
+    -or -not (Test-Path -LiteralPath $runtimeValidator) `
+    -or -not (Test-Path -LiteralPath $runtimePakVerifier)) {
+  throw 'Thieu runtime text registry/validator/PAK verifier; khong duoc dong release.'
+}
+& python $runtimeValidator validate $runtimeRegistry
+if ($LASTEXITCODE -ne 0) { throw 'Runtime server-text registry khong hop le.' }
 
 # Danh mục 72 font (tải on-demand khi người dùng chọn trong App)
 $appFonts = Join-Path $app 'Fonts'
@@ -78,11 +111,46 @@ function CopyIf($src, $dst, $label) {
 # GitHub khi người dùng chọn, hoặc được công cụ chỉnh sửa tự dựng sau khi lưu.
 CopyIf (Join-Path $wahu 'dist\WuWaVH_EN_99_P.pak') $content 'pak Tieng Anh (Co san)'
 
-# Loader + font: lấy từ bộ cài chuẩn của Wahu (_files), fallback sang Wahu\loader / data
+# Loader runtime canonical chỉ lấy từ Wahu\loader. Tuyệt đối không fallback sang
+# WuwaVH_BanCai\_files cũ vì output đó có thể chứa DLL stale từ build trước.
 $files = Join-Path $wahu 'dist\WuwaVH_BanCai\_files'
-$loaderSrc = if (Test-Path $files) { $files } else { Join-Path $wahu 'loader' }
+$loaderSrc = Join-Path $wahu 'loader'
+$loaderDll = Join-Path $loaderSrc 'WuWaVH.dll'
+$loaderSources = @(
+  (Join-Path $wahu 'loader_src\wahu_loader.cpp'),
+  (Join-Path $wahu 'loader_src\wahu_hook.hpp')
+)
+foreach ($sourceFile in $loaderSources) {
+  if (-not (Test-Path -LiteralPath $sourceFile)) { throw "Thieu source loader runtime: $sourceFile" }
+}
+if (-not (Test-Path -LiteralPath $loaderDll)) { throw "Thieu loader runtime canonical: $loaderDll" }
+$loaderTime = (Get-Item -LiteralPath $loaderDll).LastWriteTimeUtc
+$newerSource = $loaderSources | Where-Object { (Get-Item -LiteralPath $_).LastWriteTimeUtc -gt $loaderTime } | Select-Object -First 1
+if ($newerSource) {
+  throw "Loader runtime stale: $loaderDll cu hon source $newerSource. Chay wuwavh_tool\Wahu\loader_src\BUILD.bat truoc."
+}
+$runtimeJson = Get-Content -LiteralPath $runtimeRegistry -Raw -Encoding UTF8 | ConvertFrom-Json
+if ($runtimeJson.delivery.implemented -ne $true -or [string]$runtimeJson.delivery.kind -ne 'runtime_js_patch') {
+  throw 'Runtime/server-direct Gacha delivery phai la implemented runtime_js_patch; khong fallback ve memory scanner.'
+}
+$runtimePak = Join-Path $wahu 'dist\WuWaVH_EN_99_P.pak'
+if (-not (Test-Path -LiteralPath $runtimePak)) {
+  throw "Thieu PAK EN da build de verify runtime JS: $runtimePak"
+}
+& python $runtimePakVerifier $runtimePak $runtimeRegistry
+if ($LASTEXITCODE -ne 0) {
+  throw 'Runtime JS fresh-unpack verification that bai; khong duoc dong release.'
+}
+Write-Host "   + Runtime Gacha delivery: JS override nam trong PAK, fresh-unpack PASS" -ForegroundColor Green
 foreach ($dll in 'version.dll','verorg.dll','WuWaVH.dll') {
-  CopyIf (Join-Path $loaderSrc $dll) (Join-Path $content 'loader') "loader\$dll"
+  $srcDll = Join-Path $loaderSrc $dll
+  if (-not (Test-Path -LiteralPath $srcDll)) { throw "Thieu loader bat buoc: $srcDll" }
+  Copy-Item -LiteralPath $srcDll -Destination (Join-Path $content 'loader') -Force
+  Write-Host "   + loader\$dll"
+}
+$packagedLoader = Join-Path $content 'loader\WuWaVH.dll'
+if ((Get-FileHash -LiteralPath $packagedLoader -Algorithm SHA256).Hash -ne (Get-FileHash -LiteralPath $loaderDll -Algorithm SHA256).Hash) {
+  throw 'Hash WuWaVH.dll trong package khong khop loader canonical.'
 }
 $fontCandidates = @(
   (Join-Path $files 'WahuFont_100_P.pak'),
@@ -158,6 +226,16 @@ Copy-Item (Join-Path $app '*') $updatePayload -Recurse -Force
 if (Test-Path $releaseZip) { Remove-Item $releaseZip -Force }
 Compress-Archive -Path (Join-Path $updatePayload '*') -DestinationPath $releaseZip -CompressionLevel Optimal
 Remove-Item $updatePayload -Recurse -Force
+Add-Type -AssemblyName System.IO.Compression.FileSystem
+$zipCheck = [System.IO.Compression.ZipFile]::OpenRead($releaseZip)
+try {
+  $entryNames = @($zipCheck.Entries | ForEach-Object { $_.FullName.Replace('\','/') })
+  if ($entryNames -notcontains 'VHWuWa.exe' -or $entryNames -notcontains 'VHWuWa.Updater.exe') {
+    throw 'ZIP update thieu VHWuWa.exe hoac VHWuWa.Updater.exe o thu muc goc.'
+  }
+} finally {
+  $zipCheck.Dispose()
+}
 $sha = (Get-FileHash $releaseZip -Algorithm SHA256).Hash.ToLowerInvariant()
 Write-Host "   Bo cai (thu muc): $out  ($sz MB)"
 Write-Host "   File gui (ZIP):   $zip  ($zsz MB)"

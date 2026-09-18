@@ -5,6 +5,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using VHWuWa.Core.Abstractions;
 using VHWuWa.Core.Models;
+using VHWuWa.Core.Services;
 using Wpf.Ui.Appearance;
 
 namespace VHWuWa.App.ViewModels;
@@ -109,6 +110,7 @@ public partial class MainViewModel : ObservableObject
             var r = await _update.CheckAsync();
             if (!r.CheckSucceeded)
             {
+                CurrentUpdateManifest = null;
                 HasUpdate = false;
                 HasDeltaPak = false;
                 UpdateStatus = "Không kiểm tra được";
@@ -127,26 +129,23 @@ public partial class MainViewModel : ObservableObject
                 UpdateStatus = $"Có bản mới v{r.Manifest.Version}";
                 UpdateStatusMessage = r.Message;
 
-                if (!silent)
-                {
-                    var promptMsg = $"Đã tìm thấy bản cập nhật mới v{r.Manifest.Version}!\n\n" +
-                                    $"Ghi chú:\n{UpdateNotes}\n\n" +
-                                    "Bạn có muốn tự động tải và cài đặt bản cập nhật ngay bây giờ không?";
+                // AutoCheckUpdate vẫn phải báo khi thật sự có bản mới; "silent" chỉ
+                // ẩn lỗi mạng và thông báo "đã mới nhất" lúc khởi động.
+                var promptMsg = $"Đã tìm thấy bản cập nhật mới v{r.Manifest.Version}!\n\n"
+                                + $"Ghi chú:\n{UpdateNotes}\n\n"
+                                + "Bạn có muốn tự động tải và cài đặt bản cập nhật ngay bây giờ không?";
+                var ask = System.Windows.MessageBox.Show(
+                    promptMsg,
+                    "VHWuWa — Cập Nhật",
+                    System.Windows.MessageBoxButton.YesNo,
+                    System.Windows.MessageBoxImage.Information);
 
-                    var ask = System.Windows.MessageBox.Show(
-                        promptMsg,
-                        "VHWuWa — Cập Nhật",
-                        System.Windows.MessageBoxButton.YesNo,
-                        System.Windows.MessageBoxImage.Information);
-
-                    if (ask == System.Windows.MessageBoxResult.Yes)
-                    {
-                        _ = ApplyUpdateAsync();
-                    }
-                }
+                if (ask == System.Windows.MessageBoxResult.Yes)
+                    _ = ApplyUpdateAsync();
             }
             else
             {
+                CurrentUpdateManifest = null;
                 HasUpdate = false;
                 HasDeltaPak = false;
                 UpdateStatus = "Đã là bản mới nhất";
@@ -203,7 +202,6 @@ public partial class MainViewModel : ObservableObject
             var contentDir = Path.Combine(appDir, "content");
             Directory.CreateDirectory(contentDir);
 
-            // 1. Tải PAK EN
             if (!string.IsNullOrWhiteSpace(pakEnUrl))
             {
                 UpdateStatusMessage = "Đang tải tệp Việt hóa (Tiếng Anh)...";
@@ -215,12 +213,9 @@ public partial class MainViewModel : ObservableObject
                 });
                 var rEn = await _update.DownloadFileAsync(pakEnUrl, CurrentUpdateManifest.PakEnSha256, destEn, progress);
                 if (!rEn.Success)
-                {
                     throw new Exception("Lỗi tải bản dịch EN: " + rEn.Error);
-                }
             }
 
-            // 2. Tải PAK Hán Việt
             if (!string.IsNullOrWhiteSpace(pakHvUrl))
             {
                 UpdateStatusMessage = "Đang tải tệp Việt hóa (Hán Việt)...";
@@ -232,12 +227,9 @@ public partial class MainViewModel : ObservableObject
                 });
                 var rHv = await _update.DownloadFileAsync(pakHvUrl, CurrentUpdateManifest.PakHanVietSha256, destHv, progress);
                 if (!rHv.Success)
-                {
                     throw new Exception("Lỗi tải bản dịch Hán Việt: " + rHv.Error);
-                }
             }
 
-            // 3. Nếu game đã cài Việt Hóa, cập nhật luôn vào thư mục game
             var gamePath = _settings.Settings.GamePath;
             if (!string.IsNullOrWhiteSpace(gamePath) && _vietHoa != null)
             {
@@ -245,33 +237,32 @@ public partial class MainViewModel : ObservableObject
                 if (status.Installed)
                 {
                     UpdateStatusMessage = "Đang cập nhật tệp Việt hóa vào thư mục game...";
-                    var modDir = Path.Combine(gamePath, "Client", "Content", "Paks", "~WuWaMods");
-                    if (Directory.Exists(modDir))
-                    {
-                        if (status.Variant.Equals("hanviet", StringComparison.OrdinalIgnoreCase))
-                        {
-                            var src = Path.Combine(contentDir, "WuWaVH_HanViet_99_P.pak");
-                            if (File.Exists(src)) File.Copy(src, Path.Combine(modDir, "WuWaVH_HanViet_99_P.pak"), overwrite: true);
-                        }
-                        else
-                        {
-                            var src = Path.Combine(contentDir, "WuWaVH_EN_99_P.pak");
-                            if (File.Exists(src)) File.Copy(src, Path.Combine(modDir, "WuWaVH_EN_99_P.pak"), overwrite: true);
-                        }
-                    }
+                    var variant = status.Variant.Equals("hanviet", StringComparison.OrdinalIgnoreCase)
+                        ? NameVariant.HanViet
+                        : NameVariant.English;
+                    var applyPak = await _vietHoa.UpdateTranslationPakAsync(gamePath, variant);
+                    if (!applyPak.Success)
+                        throw new Exception("Không thể cập nhật PAK đang hoạt động trong game: " + applyPak.Error);
                 }
             }
 
             UpdateStatusMessage = "🎉 Cập nhật nhanh tệp Việt hóa thành công!";
             UpdateProgress = 100;
-            HasUpdate = false;
-            UpdateStatus = $"Đã cập nhật dữ liệu v{CurrentUpdateManifest.Version}";
+            // Chỉ cập nhật PAK không làm thay đổi phiên bản VHWuWa.exe. Nếu release
+            // cũng có app mới thì vẫn phải giữ nút cập nhật đầy đủ hiển thị để người
+            // dùng không bị kẹt ở app cũ sau khi đã cập nhật dữ liệu bản dịch.
+            HasUpdate = VersionComparer.IsNewer(
+                CurrentUpdateManifest.Version,
+                Assembly.GetEntryAssembly()?.GetName().Version?.ToString(3) ?? "0.0.0");
+            UpdateStatus = HasUpdate
+                ? $"Đã cập nhật dữ liệu v{CurrentUpdateManifest.Version} · còn bản app mới"
+                : $"Đã cập nhật dữ liệu v{CurrentUpdateManifest.Version}";
             _settings.Settings.LastUpdateCheck = DateTimeOffset.UtcNow;
             _settings.Save();
 
             System.Windows.MessageBox.Show(
-                $"Đã cập nhật nhanh tệp Việt hóa lên bản v{CurrentUpdateManifest.Version} thành công!\n\n" +
-                "Nội dung bản dịch mới đã được nạp trực tiếp vào ứng dụng và thư mục game của bạn.",
+                $"Đã cập nhật nhanh tệp Việt hóa lên bản v{CurrentUpdateManifest.Version} thành công!\n\n"
+                + "Nội dung bản dịch mới đã được nạp trực tiếp vào ứng dụng và thư mục game của bạn.",
                 "VHWuWa — Cập Nhật Nhanh",
                 System.Windows.MessageBoxButton.OK,
                 System.Windows.MessageBoxImage.Information);
@@ -291,188 +282,164 @@ public partial class MainViewModel : ObservableObject
     [RelayCommand]
     public async Task ApplyUpdateAsync()
     {
-        if (IsUpdating || CurrentUpdateManifest == null) return;
-        if (string.IsNullOrWhiteSpace(CurrentUpdateManifest.DownloadUrl))
+        if (IsUpdating || CurrentUpdateManifest is null) return;
+        var manifest = CurrentUpdateManifest;
+        if (string.IsNullOrWhiteSpace(manifest.DownloadUrl)
+            || string.IsNullOrWhiteSpace(manifest.Version)
+            || string.IsNullOrWhiteSpace(manifest.Sha256))
         {
-            UpdateStatusMessage = "Không tìm thấy đường dẫn tải về trong gói phát hành.";
+            UpdateStatusMessage = "Release thiếu URL, version hoặc SHA-256 nên không thể tự cập nhật an toàn.";
+            return;
+        }
+
+        var appDirectory = AppContext.BaseDirectory.TrimEnd(
+            Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+        var bundledUpdater = Path.Combine(appDirectory, UpdateArchiveInstaller.UpdaterExecutable);
+        if (!File.Exists(bundledUpdater))
+        {
+            UpdateStatusMessage = "Bản hiện tại thiếu VHWuWa.Updater.exe; không thể tự cập nhật.";
+            System.Windows.MessageBox.Show(
+                UpdateStatusMessage,
+                "VHWuWa — Lỗi Cập Nhật",
+                System.Windows.MessageBoxButton.OK,
+                System.Windows.MessageBoxImage.Error);
             return;
         }
 
         IsUpdating = true;
         UpdateProgress = 0;
-        UpdateStatusMessage = "Đang kết nối và tải bản cập nhật...";
+        var tempDirectory = Path.Combine(
+            Path.GetTempPath(), "VHWuWa_Update_" + Guid.NewGuid().ToString("N"));
+        var handoffStarted = false;
+
         try
         {
-            var tempDir = Path.Combine(Path.GetTempPath(), "VHWuWa_Update_" + DateTime.Now.ToString("yyyyMMdd_HHmmss"));
-            var progress = new Progress<double>(p =>
+            UpdateStatusMessage = "Đang kết nối và tải bản cập nhật...";
+            var progress = new Progress<double>(value =>
             {
-                UpdateProgress = p;
-                UpdateStatusMessage = $"Đang tải bản cập nhật: {p:F0}%";
+                UpdateProgress = value;
+                UpdateStatusMessage = $"Đang tải bản cập nhật: {value:F0}%";
             });
+            var download = await _update.DownloadAsync(manifest, tempDirectory, progress);
+            if (!download.Success || string.IsNullOrWhiteSpace(download.Value))
+                throw new InvalidOperationException(download.Error ?? "Không tải được ZIP cập nhật.");
 
-            var dlRes = await _update.DownloadAsync(CurrentUpdateManifest, tempDir, progress);
-            if (!dlRes.Success || string.IsNullOrEmpty(dlRes.Value))
+            UpdateStatusMessage = "Đã xác minh gói; đang chuyển sang trình cập nhật an toàn...";
+            var updaterCopy = Path.Combine(tempDirectory, "VHWuWa.Updater.run.exe");
+            var readyFile = Path.Combine(tempDirectory, "updater-ready.txt");
+            File.Copy(bundledUpdater, updaterCopy, overwrite: true);
+
+            using var currentProcess = Process.GetCurrentProcess();
+            var startInfo = new ProcessStartInfo(updaterCopy)
             {
-                UpdateStatusMessage = "Tải bản cập nhật thất bại: " + dlRes.Error;
-                System.Windows.MessageBox.Show("Tải bản cập nhật thất bại:\n" + dlRes.Error, "VHWuWa", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
-                return;
+                UseShellExecute = false,
+                CreateNoWindow = true,
+                WorkingDirectory = tempDirectory,
+            };
+            startInfo.ArgumentList.Add("--zip");
+            startInfo.ArgumentList.Add(download.Value);
+            startInfo.ArgumentList.Add("--target");
+            startInfo.ArgumentList.Add(appDirectory);
+            startInfo.ArgumentList.Add("--relaunch");
+            startInfo.ArgumentList.Add(UpdateArchiveInstaller.MainExecutable);
+            startInfo.ArgumentList.Add("--pid");
+            startInfo.ArgumentList.Add(Environment.ProcessId.ToString());
+            startInfo.ArgumentList.Add("--process-start-ticks");
+            startInfo.ArgumentList.Add(currentProcess.StartTime.ToUniversalTime().Ticks.ToString());
+            startInfo.ArgumentList.Add("--expected-version");
+            startInfo.ArgumentList.Add(manifest.Version);
+            startInfo.ArgumentList.Add("--sha256");
+            startInfo.ArgumentList.Add(manifest.Sha256);
+            startInfo.ArgumentList.Add("--cleanup-dir");
+            startInfo.ArgumentList.Add(tempDirectory);
+            startInfo.ArgumentList.Add("--ready-file");
+            startInfo.ArgumentList.Add(readyFile);
+
+            using var updaterProcess = Process.Start(startInfo)
+                ?? throw new InvalidOperationException("Không mở được VHWuWa.Updater.exe.");
+            if (!await WaitForUpdaterReadyAsync(updaterProcess, readyFile, TimeSpan.FromSeconds(10)))
+            {
+                TryStopUpdater(updaterProcess);
+                throw new InvalidOperationException(
+                    "Updater không xác nhận sẵn sàng; ứng dụng hiện tại vẫn được giữ nguyên.");
             }
-
-            UpdateStatusMessage = "Đang giải nén và thay thế tệp ứng dụng...";
-            var zipPath = dlRes.Value;
-            var appDir = AppContext.BaseDirectory.TrimEnd('\\', '/');
-            var pid = Environment.ProcessId;
-
-            var scriptPath = Path.Combine(tempDir, "apply_update.ps1");
-            var script = """
-                Add-Type -AssemblyName PresentationFramework, PresentationCore, WindowsBase, System.Windows.Forms
-                param([string]$Zip,[string]$Target,[int]$AppPid)
-                $ErrorActionPreference = 'Stop'
-
-                [xml]$xaml = @"
-                <Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-                        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                        Title="VHWuWa - Cập nhật tự động"
-                        Height="210" Width="460"
-                        WindowStartupLocation="CenterScreen"
-                        WindowStyle="None" AllowsTransparency="True" Background="Transparent"
-                        Topmost="True" ShowInTaskbar="True">
-                    <Border Background="#181825" CornerRadius="16" BorderBrush="#7C3AED" BorderThickness="2" Padding="24">
-                        <Border.Effect>
-                            <DropShadowEffect BlurRadius="25" ShadowDepth="0" Color="#7C3AED" Opacity="0.45"/>
-                        </Border.Effect>
-                        <Grid>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="*"/>
-                                <RowDefinition Height="Auto"/>
-                            </Grid.RowDefinitions>
-                            <StackPanel Grid.Row="0" Orientation="Horizontal" VerticalAlignment="Center">
-                                <TextBlock Text="⚡" FontSize="20" Margin="0,0,10,0"/>
-                                <TextBlock Text="VHWuWa — Đang Tự Động Cập Nhật" Foreground="#F5E0DC" FontSize="16" FontWeight="Bold"/>
-                            </StackPanel>
-                            <TextBlock Name="StatusText" Grid.Row="1" Text="Đang chuẩn bị gói cập nhật..." 
-                                       Foreground="#BAC2DE" FontSize="13" VerticalAlignment="Center" TextWrapping="Wrap"/>
-                            <ProgressBar Name="ProgBar" Grid.Row="2" IsIndeterminate="True" Height="8" 
-                                         Foreground="#CBA6F7" Background="#313244" BorderThickness="0"/>
-                        </Grid>
-                    </Border>
-                </Window>
-                "@
-
-                $reader = [System.Xml.XmlNodeReader]::new($xaml)
-                $window = [System.Windows.Markup.XamlReader]::Load($reader)
-                $statusText = $window.FindName("StatusText")
-
-                function Update-UI([string]$msg) {
-                    if ($statusText) {
-                        $statusText.Text = $msg
-                        [System.Windows.Forms.Application]::DoEvents()
-                    }
-                    Write-Host $msg
-                }
-
-                $window.Show()
-                [System.Windows.Forms.Application]::DoEvents()
-
-                try {
-                    if ($AppPid -gt 0) {
-                        Update-UI '[1/4] Đang đóng tiến trình cũ...'
-                        $p = Get-Process -Id $AppPid -ErrorAction SilentlyContinue
-                        if ($p) {
-                            $p.WaitForExit(5000) | Out-Null
-                            if (-not $p.HasExited) {
-                                Stop-Process -Id $AppPid -Force -ErrorAction SilentlyContinue
-                                Start-Sleep -Milliseconds 500
-                            }
-                        }
-                    }
-
-                    $stage = Join-Path $env:TEMP ('VHWuWa_Extract_' + [guid]::NewGuid().ToString('N'))
-                    $backup = $Target.TrimEnd('\\','/') + '_backup_' + (Get-Date -Format 'yyyyMMdd_HHmmss')
-
-                    Update-UI '[2/4] Đang giải nén gói cập nhật...'
-                    Expand-Archive -LiteralPath $Zip -DestinationPath $stage -Force
-
-                    $exe = Get-ChildItem -LiteralPath $stage -Recurse -Filter 'VHWuWa.exe' -File |
-                           Where-Object { $_.Directory.Name -ieq 'app' } |
-                           Sort-Object { $_.FullName.Length } |
-                           Select-Object -First 1
-                    if (-not $exe) {
-                        $exe = Get-Item -LiteralPath (Join-Path $stage 'VHWuWa.exe') -ErrorAction SilentlyContinue
-                    }
-                    if (-not $exe) {
-                        $exe = Get-ChildItem -LiteralPath $stage -Recurse -Filter 'VHWuWa.exe' -File | Select-Object -First 1
-                    }
-                    if (-not $exe) { throw 'ZIP cập nhật không chứa file VHWuWa.exe hợp lệ!' }
-
-                    $srcDir = $exe.Directory.FullName
-                    Update-UI '[3/4] Đang sao lưu và cập nhật tệp ứng dụng...'
-                    New-Item -ItemType Directory -Path $backup -Force | Out-Null
-                    Get-ChildItem -LiteralPath $Target -Force | Copy-Item -Destination $backup -Recurse -Force
-
-                    # Sao chép tệp mới với vòng lặp thử lại nếu bị khóa
-                    $retryMax = 5
-                    $success = $false
-                    for ($i = 1; $i -le $retryMax; $i++) {
-                        try {
-                            Get-ChildItem -LiteralPath $srcDir -Force | Copy-Item -Destination $Target -Recurse -Force
-                            $success = $true
-                            break
-                        } catch {
-                            Update-UI "   -> Đang thử lại chép file (lần $i/$retryMax)..."
-                            Start-Sleep -Milliseconds 600
-                        }
-                    }
-                    if (-not $success) { throw 'Không thể ghi đè các tệp ứng dụng (tệp đang bị khóa).' }
-
-                    if (-not (Test-Path -LiteralPath (Join-Path $Target 'VHWuWa.exe'))) {
-                        throw 'Thiếu VHWuWa.exe sau khi cập nhật.'
-                    }
-
-                    Update-UI '[4/4] Khởi động lại ứng dụng mới...'
-                    Remove-Item -LiteralPath (Join-Path $Target 'VHWuWa.Updater.exe') -Force -ErrorAction SilentlyContinue
-                    Remove-Item -LiteralPath (Join-Path $Target 'VHWuWa.Updater.next.exe') -Force -ErrorAction SilentlyContinue
-                    
-                    $window.Close()
-                    Start-Process -FilePath (Join-Path $Target 'VHWuWa.exe') -WorkingDirectory $Target
-                    Remove-Item -LiteralPath $backup -Recurse -Force -ErrorAction SilentlyContinue
-                    Remove-Item -LiteralPath $stage -Recurse -Force -ErrorAction SilentlyContinue
-                } catch {
-                    if ($window) { $window.Close() }
-                    Write-Host "LỖI CẬP NHẬT: $($_.Exception.Message)" -ForegroundColor Red
-                    if (Test-Path -LiteralPath $backup) {
-                        Write-Host 'Đang khôi phục lại phiên bản cũ...' -ForegroundColor Yellow
-                        Get-ChildItem -LiteralPath $backup -Force | Copy-Item -Destination $Target -Recurse -Force
-                        if (Test-Path -LiteralPath (Join-Path $Target 'VHWuWa.exe')) {
-                            Start-Process -FilePath (Join-Path $Target 'VHWuWa.exe') -WorkingDirectory $Target
-                        }
-                    }
-                    [System.Windows.Forms.MessageBox]::Show("Tự động cập nhật thất bại:`n$($_.Exception.Message)", "VHWuWa", [System.Windows.Forms.MessageBoxButtons]::OK, [System.Windows.Forms.MessageBoxIcon]::Error)
-                    throw
-                }
-                """;
-            File.WriteAllText(scriptPath, script, new System.Text.UTF8Encoding(true));
-            Process.Start(new ProcessStartInfo
-            {
-                FileName = "powershell.exe",
-                Arguments = $"-NoProfile -ExecutionPolicy Bypass -File \"{scriptPath}\" -Zip \"{zipPath}\" -Target \"{appDir}\" -AppPid {pid}",
-                UseShellExecute = true,
-                WindowStyle = ProcessWindowStyle.Hidden,
-                WorkingDirectory = tempDir
-            });
-
+            handoffStarted = true;
             System.Windows.Application.Current.Shutdown();
         }
         catch (Exception ex)
         {
             _log.Error("Update", "Lỗi tự động cập nhật: " + ex.Message, ex);
             UpdateStatusMessage = "Lỗi tự động cập nhật: " + ex.Message;
-            System.Windows.MessageBox.Show("Lỗi tự động cập nhật:\n" + ex.Message, "VHWuWa", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+            System.Windows.MessageBox.Show(
+                "Lỗi tự động cập nhật:\n" + ex.Message,
+                "VHWuWa",
+                System.Windows.MessageBoxButton.OK,
+                System.Windows.MessageBoxImage.Error);
         }
         finally
         {
+            if (!handoffStarted)
+                TryDeleteUpdateTemp(tempDirectory);
             IsUpdating = false;
+        }
+    }
+
+    private static void TryDeleteUpdateTemp(string directory)
+    {
+        try
+        {
+            if (Directory.Exists(directory)) Directory.Delete(directory, recursive: true);
+        }
+        catch
+        {
+            // Không che lỗi gốc chỉ vì Windows Defender còn giữ file tải trong chốc lát.
+        }
+    }
+
+    private static async Task<bool> WaitForUpdaterReadyAsync(
+        Process updater,
+        string readyFile,
+        TimeSpan timeout)
+    {
+        var deadline = DateTime.UtcNow + timeout;
+        while (DateTime.UtcNow < deadline)
+        {
+            if (File.Exists(readyFile))
+            {
+                try
+                {
+                    if (!string.Equals(
+                            await File.ReadAllTextAsync(readyFile),
+                            "ready",
+                            StringComparison.Ordinal))
+                        return false;
+                    await Task.Delay(200);
+                    return !updater.HasExited;
+                }
+                catch (IOException)
+                {
+                    // Updater có thể vừa tạo file; thử lại.
+                }
+            }
+            if (updater.HasExited) return false;
+            await Task.Delay(100);
+        }
+        return false;
+    }
+
+    private static void TryStopUpdater(Process updater)
+    {
+        try
+        {
+            if (!updater.HasExited)
+            {
+                updater.Kill(entireProcessTree: true);
+                updater.WaitForExit(5_000);
+            }
+        }
+        catch
+        {
+            // Ứng dụng chính chưa shutdown, nên bản đang dùng vẫn an toàn.
         }
     }
 }

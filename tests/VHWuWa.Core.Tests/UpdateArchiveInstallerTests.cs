@@ -35,34 +35,45 @@ public sealed class UpdateArchiveInstallerTests : IDisposable
         var zip = CreateZip(new Dictionary<string, string>
         {
             ["VHWuWa.exe"] = "new-app",
-            ["VHWuWa.Updater.next.exe"] = "new-updater",
+            ["VHWuWa.Updater.exe"] = "new-updater",
         });
         var target = Path.Combine(_root, "app-only");
 
         UpdateArchiveInstaller.ExtractApplication(zip, target);
 
         Assert.Equal("new-app", File.ReadAllText(Path.Combine(target, "VHWuWa.exe")));
-        Assert.Equal("new-updater", File.ReadAllText(Path.Combine(target, "VHWuWa.Updater.next.exe")));
+        Assert.Equal("new-updater", File.ReadAllText(Path.Combine(target, "VHWuWa.Updater.exe")));
     }
 
     [Fact]
-    public void AppOnlyPackage_DoesNotOverwriteRunningLegacyUpdater()
+    public void ExtractApplication_RejectsAmbiguousApplicationRoots()
     {
         var zip = CreateZip(new Dictionary<string, string>
         {
             ["VHWuWa.exe"] = "new-app",
-            ["VHWuWa.Updater.next.exe"] = "new-updater",
+            ["nested/app/VHWuWa.exe"] = "other-app",
         });
-        var target = Path.Combine(_root, "legacy-app");
-        Directory.CreateDirectory(target);
-        File.WriteAllText(Path.Combine(target, "VHWuWa.Updater.exe"), "legacy-updater");
 
-        // Tương đương cách updater 2.0.0 giải nén trực tiếp vào appDir.
-        ZipFile.ExtractToDirectory(zip, target, overwriteFiles: true);
+        Assert.Throws<InvalidDataException>(() =>
+            UpdateArchiveInstaller.ExtractApplication(zip, Path.Combine(_root, "ambiguous")));
+    }
 
-        Assert.Equal("new-app", File.ReadAllText(Path.Combine(target, "VHWuWa.exe")));
-        Assert.Equal("legacy-updater", File.ReadAllText(Path.Combine(target, "VHWuWa.Updater.exe")));
-        Assert.Equal("new-updater", File.ReadAllText(Path.Combine(target, "VHWuWa.Updater.next.exe")));
+    [Theory]
+    [InlineData("../escape.txt")]
+    [InlineData("app/../../escape.txt")]
+    [InlineData("app/file.txt:evil")]
+    [InlineData("app/CON.txt")]
+    [InlineData("app/name./file.txt")]
+    public void ExtractApplication_RejectsUnsafeWindowsPaths(string unsafePath)
+    {
+        var zip = CreateZip(new Dictionary<string, string>
+        {
+            ["app/VHWuWa.exe"] = "new-app",
+            [unsafePath] = "unsafe",
+        });
+
+        Assert.Throws<InvalidDataException>(() =>
+            UpdateArchiveInstaller.ExtractApplication(zip, Path.Combine(_root, "unsafe")));
     }
 
     [Fact]

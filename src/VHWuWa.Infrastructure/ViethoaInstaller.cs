@@ -472,56 +472,70 @@ public sealed class ViethoaInstaller : IViethoaInstaller
             if (operationLock is null)
                 return Result<int>.Fail("Đang có một tiến trình VHWuWa khác cài/gỡ. Hãy chờ hoàn tất.");
 
-            var targets = CollectConflictFiles(gamePath);
-            if (targets.Count == 0)
-                return Result<int>.Fail("Không tìm thấy file mod xung đột để xóa.");
-
-            var gameRoot = Path.GetFullPath(gamePath);
-            var deleted = 0;
-            var failures = new List<string>();
-            foreach (var target in targets)
-            {
-                var relative = Path.GetRelativePath(gameRoot, target);
-                if (relative.StartsWith("..", StringComparison.Ordinal))
-                {
-                    failures.Add(relative + " (nằm ngoài thư mục game)");
-                    continue;
-                }
-
-                try
-                {
-                    if (!File.Exists(target)) continue;
-                    var attributes = File.GetAttributes(target);
-                    if ((attributes & FileAttributes.ReadOnly) != 0)
-                        File.SetAttributes(target, attributes & ~FileAttributes.ReadOnly);
-                    File.Delete(target);
-                    if (File.Exists(target))
-                        failures.Add(relative + " (Windows không cho xóa)");
-                    else
-                        deleted++;
-                }
-                catch (Exception ex)
-                {
-                    failures.Add(relative + " (" + ex.Message + ")");
-                }
-            }
-
-            RemoveEmptyModDirectories(gamePath);
-            if (failures.Count > 0)
-            {
-                _log.Warn("Conflict", $"Đã xóa {deleted} file; còn {failures.Count} file không xóa được.");
-                return Result<int>.Fail($"Đã xóa {deleted} file nhưng còn {failures.Count} file không xóa được:\n- "
-                    + string.Join("\n- ", failures.Take(8)));
-            }
-
-            _log.Info("Conflict", $"Đã xóa vĩnh viễn {deleted} file mod xung đột theo xác nhận của người dùng.");
-            return Result<int>.Ok(deleted);
+            return DeleteConflictsUnderLock(gamePath, failWhenEmpty: true, reason: "theo xác nhận của người dùng");
         }
         catch (Exception ex)
         {
             _log.Error("Conflict", "Xóa mod xung đột thất bại: " + ex.Message, ex);
             return Result<int>.Fail("Xóa mod xung đột thất bại: " + ex.Message, ex);
         }
+    }
+
+    /// <summary>
+    /// Xóa đúng tập file đã được bộ dò conflict nhận diện. Caller phải giữ operation lock.
+    /// Không đụng các pakchunk gốc của game vì CollectConflictFiles đã loại chúng.
+    /// </summary>
+    private Result<int> DeleteConflictsUnderLock(
+        string gamePath,
+        bool failWhenEmpty,
+        string reason)
+    {
+        var targets = CollectConflictFiles(gamePath);
+        if (targets.Count == 0)
+            return failWhenEmpty
+                ? Result<int>.Fail("Không tìm thấy file mod xung đột để xóa.")
+                : Result<int>.Ok(0);
+
+        var gameRoot = Path.GetFullPath(gamePath);
+        var deleted = 0;
+        var failures = new List<string>();
+        foreach (var target in targets)
+        {
+            var relative = Path.GetRelativePath(gameRoot, target);
+            if (relative.StartsWith("..", StringComparison.Ordinal))
+            {
+                failures.Add(relative + " (nằm ngoài thư mục game)");
+                continue;
+            }
+
+            try
+            {
+                if (!File.Exists(target)) continue;
+                var attributes = File.GetAttributes(target);
+                if ((attributes & FileAttributes.ReadOnly) != 0)
+                    File.SetAttributes(target, attributes & ~FileAttributes.ReadOnly);
+                File.Delete(target);
+                if (File.Exists(target))
+                    failures.Add(relative + " (Windows không cho xóa)");
+                else
+                    deleted++;
+            }
+            catch (Exception ex)
+            {
+                failures.Add(relative + " (" + ex.Message + ")");
+            }
+        }
+
+        RemoveEmptyModDirectories(gamePath);
+        if (failures.Count > 0)
+        {
+            _log.Warn("Conflict", $"Đã xóa {deleted} file; còn {failures.Count} file không xóa được.");
+            return Result<int>.Fail($"Đã xóa {deleted} file nhưng còn {failures.Count} file không xóa được:\n- "
+                + string.Join("\n- ", failures.Take(8)));
+        }
+
+        _log.Info("Conflict", $"Đã xóa vĩnh viễn {deleted} file mod xung đột {reason}.");
+        return Result<int>.Ok(deleted);
     }
 
     private IReadOnlyList<string> CollectConflictFiles(string gamePath)
@@ -653,6 +667,135 @@ public sealed class ViethoaInstaller : IViethoaInstaller
         else File.WriteAllBytes(dstSig, Array.Empty<byte>());   // placeholder rỗng
     }
 
+    public async Task<Result> UpdateTranslationPakAsync(string gamePath, NameVariant variant,
+        CancellationToken ct = default)
+    {
+        try
+        {
+            var status = GetStatus(gamePath);
+            if (!status.Installed)
+                return Result.Fail("Chưa phát hiện bản Việt hóa do VHWuWa cài trong thư mục game này.");
+            if (IsGameRunning())
+                return Result.Fail("Game hoặc launcher Wuthering Waves đang chạy. Hãy đóng hẳn game/launcher rồi mới cập nhật.");
+
+            using var operationLock = TryAcquireOperationLock(gamePath);
+            if (operationLock is null)
+                return Result.Fail("Đang có một tiến trình VHWuWa khác cài/gỡ/cập nhật. Hãy chờ tiến trình đó hoàn tất.");
+
+            var srcPak = variant == NameVariant.English ? EnPak : HanVietPak;
+            if (!File.Exists(srcPak))
+                return Result.Fail($"Không tìm thấy pak biến thể đã chọn: {Path.GetFileName(srcPak)}");
+
+            var mods = ModsOf(gamePath);
+            var markerPath = Path.Combine(mods, MarkerName);
+            var marker = ViethoaInstallMarker.Load(markerPath);
+            if (marker is null)
+                return Result.Fail("Thiếu marker quản lý bản Việt hóa; không cập nhật nhanh để tránh ghi đè file không xác định.");
+
+            var pakDst = Path.Combine(mods, PakName);
+
+            // 3.0.9: quick-update có quyền tự chữa bản cài. Nếu mod khác đã
+            // ghi đè PAK/loader hoặc chèn bundle xung đột, dọn đúng tập file
+            // detector nhận diện rồi ghi lại PAK canonical của release.
+            var conflicts = FindConflicts(gamePath);
+            if (conflicts.Count > 0)
+            {
+                var cleanup = DeleteConflictsUnderLock(
+                    gamePath,
+                    failWhenEmpty: false,
+                    reason: "trước cập nhật nhanh Việt hóa");
+                if (!cleanup.Success)
+                    return Result.Fail("Không thể tự dọn mod xung đột trước cập nhật nhanh: " + cleanup.Error);
+                _log.Info("Viethoa", $"Cập nhật nhanh đã tự dọn {cleanup.Value} file mod xung đột.");
+            }
+
+            string? repairedFontSource = null;
+            string? repairedFontName = null;
+            await Task.Run(() =>
+            {
+                ct.ThrowIfCancellationRequested();
+                Directory.CreateDirectory(mods);
+                var paks = PaksOf(gamePath);
+                var win64 = Win64Of(gamePath);
+                var seedSig = FindSeedSig(paks);
+
+                var temp = pakDst + ".update-" + Guid.NewGuid().ToString("N");
+                try
+                {
+                    File.Copy(srcPak, temp, true);
+                    if (!string.Equals(ViethoaInstallMarker.Sha256(srcPak), ViethoaInstallMarker.Sha256(temp),
+                            StringComparison.OrdinalIgnoreCase))
+                        throw new InvalidDataException("SHA-256 của PAK tạm không khớp nguồn.");
+                    File.Move(temp, pakDst, true);
+                }
+                finally
+                {
+                    try { if (File.Exists(temp)) File.Delete(temp); } catch { }
+                }
+
+                if (!string.Equals(ViethoaInstallMarker.Sha256(srcPak), ViethoaInstallMarker.Sha256(pakDst),
+                        StringComparison.OrdinalIgnoreCase))
+                    throw new InvalidDataException("Hậu kiểm SHA-256 PAK đang hoạt động thất bại.");
+
+                // Self-heal chữ ký PAK nếu mod cũ đã xóa/ghi đè.
+                var pakSig = Path.ChangeExtension(pakDst, ".sig");
+                WriteSig(seedSig, pakSig);
+
+                // Self-heal font đang được marker quản lý. Nếu package hiện tại chỉ
+                // còn một font canonical khác tên, dùng font đó và cập nhật marker.
+                if (!string.IsNullOrWhiteSpace(marker.Font))
+                {
+                    var requestedFont = Path.Combine(_contentDir, "font", Path.GetFileName(marker.Font));
+                    var fontSource = File.Exists(requestedFont) ? requestedFont : FindFontPak();
+                    if (fontSource is null)
+                        throw new FileNotFoundException("Thiếu font đã cài để tự phục hồi sau khi dọn mod.", marker.Font);
+
+                    repairedFontSource = fontSource;
+                    repairedFontName = Path.GetFileName(fontSource);
+                    var fontDst = Path.Combine(mods, repairedFontName);
+                    File.Copy(fontSource, fontDst, true);
+                    WriteSig(seedSig, Path.ChangeExtension(fontDst, ".sig"));
+                    marker.Font = repairedFontName;
+                    marker.Track("mods", fontDst);
+                    marker.Track("mods", Path.ChangeExtension(fontDst, ".sig"));
+                }
+
+                // Self-heal loader: quick update không được để thiếu loader sau khi
+                // đã dọn proxy/version.dll của mod khác.
+                foreach (var dll in new[] { "version.dll", "verorg.dll", "WuWaVH.dll" })
+                {
+                    var source = Path.Combine(LoaderDir, dll);
+                    if (!File.Exists(source))
+                        throw new FileNotFoundException("Thiếu loader canonical để tự phục hồi.", source);
+                    var destination = Path.Combine(win64, dll);
+                    File.Copy(source, destination, true);
+                    marker.Track("win64", destination);
+                }
+
+                marker.PackageVersion = CurrentPackageVersion();
+                marker.Variant = variant == NameVariant.English ? "en" : "hanviet";
+                marker.Track("mods", pakDst);
+                marker.Track("mods", pakSig);
+                marker.Save(markerPath);
+            }, ct);
+
+            var verifyErrors = VerifyInstallation(
+                gamePath, srcPak, variant, repairedFontSource, repairedFontName);
+            if (verifyErrors.Count > 0)
+                return Result.Fail("Cập nhật nhanh đã ghi file nhưng hậu kiểm self-heal thất bại:\n- "
+                    + string.Join("\n- ", verifyErrors));
+
+            _log.Info("Viethoa", $"Đã cập nhật nhanh {PakName} ({variant}), tự chữa loader/font/.sig và đồng bộ marker SHA.");
+            return Result.Ok();
+        }
+        catch (OperationCanceledException) { return Result.Fail("Đã hủy cập nhật PAK."); }
+        catch (Exception ex)
+        {
+            _log.Error("Viethoa", "Cập nhật PAK thất bại: " + ex.Message, ex);
+            return Result.Fail("Cập nhật PAK thất bại: " + ex.Message, ex);
+        }
+    }
+
     public async Task<Result> InstallAsync(string gamePath, NameVariant variant, bool withFont,
         IProgress<InstallProgress>? progress = null, CancellationToken ct = default)
     {
@@ -679,8 +822,18 @@ public sealed class ViethoaInstaller : IViethoaInstaller
 
             var conflicts = FindConflicts(gamePath);
             if (conflicts.Count > 0)
-                return Result.Fail("Phát hiện mod có thể xung đột. Hãy gỡ/tắt mod đó trước:\n- "
-                    + string.Join("\n- ", conflicts.Take(8)));
+            {
+                // Mục tiêu 3.0.9: cài Việt hóa phải tự làm sạch các mod cũ/mod
+                // khác mà detector xác định xung đột, rồi để bản release hiện tại
+                // thắng. File game gốc pakchunk* không thuộc tập conflict này.
+                var cleanup = DeleteConflictsUnderLock(
+                    gamePath,
+                    failWhenEmpty: false,
+                    reason: "tự động trước khi cài Việt hóa");
+                if (!cleanup.Success)
+                    return Result.Fail("Không thể tự dọn mod xung đột trước khi cài:\n" + cleanup.Error);
+                _log.Info("Viethoa", $"Cài đặt đã tự dọn {cleanup.Value} file mod xung đột.");
+            }
 
             var srcPak = variant == NameVariant.English ? EnPak : HanVietPak;
             if (!File.Exists(srcPak))

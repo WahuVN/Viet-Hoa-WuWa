@@ -75,3 +75,26 @@ git add README.md VHWuWa\README.md
 git commit -m "docs: Update README for vX.X.X"
 git push origin main
 ```
++
+---
+
+## 🔄 5. QUY TẮC BẮT BUỘC CHO TỰ CẬP NHẬT CLIENT
+
+Các quy tắc này áp dụng cho mọi thay đổi updater từ bản `N` lên `N+1`; không được kết luận “sạch” chỉ bằng tìm chuỗi hoặc static check.
+
+1. **Một nguồn phát hành duy nhất:** Client chỉ được tự cài asset có tên chính xác `VietHoa-WuWa-vX.X.X.zip` của tag `vX.X.X`. Không chọn ZIP “gần giống”, app-only ZIP hoặc asset của version khác.
+2. **SHA-256 là bắt buộc:** Chỉ cho phép tải/cài khi GitHub Release API trả về digest `sha256:<64 hex>`. Không được fallback sang URL redirect có SHA rỗng và không được coi “ZIP mở được” là xác minh tính toàn vẹn.
+3. **Payload bắt buộc:** ZIP cập nhật phải có `VHWuWa.exe` và `VHWuWa.Updater.exe` ở gốc payload (hoặc cùng thư mục `app/` chuẩn). Hai EXE phải cùng đúng version của release và version mới phải lớn hơn version đang chạy.
+4. **Không dùng updater PowerShell inline:** Không dùng `Expand-Archive`, `Copy-Item`, `robocopy` hoặc `VHWuWa.Updater.next.exe` để tự sửa trực tiếp thư mục app. Luồng chuẩn là chạy `VHWuWa.Updater.exe` self-contained từ thư mục tạm.
+5. **Không đóng app quá sớm:** Client chỉ shutdown sau khi updater đã chạy, xác minh SHA/layout và ghi ready-handshake. Nếu updater không ready hoặc thoát sớm, giữ nguyên client đang chạy.
+6. **Cài theo transaction:** Tạo candidate ở cùng ổ đĩa bằng bản hiện tại + overlay payload mới; sau khi validate mới đổi tên nguyên thư mục `target -> backup`, `candidate -> target`. Không merge trực tiếp vào target.
+7. **Chỉ commit sau health-check:** Bản mới phải mở thành công, hiển thị cửa sổ chính và ghi health file chứa đúng version. Updater phải giữ backup cho đến lúc đó. App mới crash, báo sai version hoặc timeout thì đóng app mới, rollback nguyên thư mục và mở lại bản cũ.
+8. **Rollback phải chính xác:** Sau rollback không được còn file chỉ có ở bản mới; cấu hình/file cục bộ của người dùng phải còn nguyên. Không xóa backup nếu khôi phục chưa thành công.
+9. **Dọn file tạm:** ZIP, updater chạy tạm, candidate và backup phải được dọn sau khi updater kết thúc; dọn lỗi không được làm mất bản đang hoạt động.
+10. **Test bắt buộc trước khi báo hoàn tất:**
+    - `dotnet test VHWuWa\VHWuWa.sln -c Release` phải 100% pass.
+    - Chạy `powershell -ExecutionPolicy Bypass -File VHWuWa\scripts\test-client-self-update.ps1 -CurrentVersion N -NextVersion N+1`.
+    - E2E phải xác nhận đủ: ready trước shutdown, cập nhật thành công, đúng version cả app/updater, giữ config người dùng, app mới lỗi thì rollback sạch, SHA sai thì không chạm bản cũ.
+    - Timeout do stdout/WPF không được gọi là PASS; phải lấy exit code thật và kiểm tra cây file sau chạy.
+11. **Build phải tự kiểm payload:** `build-dist.ps1` phải publish kèm updater self-contained, kiểm version của hai EXE, kiểm đúng hai EXE trong ZIP và in SHA-256 cuối cùng.
+12. **Không tự phát hành:** Build/test xong chỉ báo đường dẫn, size, version và SHA-256. Chỉ commit, tag, push hoặc tạo GitHub Release khi người dùng yêu cầu rõ ràng.

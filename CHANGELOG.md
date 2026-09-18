@@ -2,6 +2,26 @@
 
 Tất cả các thay đổi đáng chú ý của dự án VHWuWa được ghi lại tại đây theo chuẩn [SemVer](https://semver.org/lang/vi/).
 
+## [3.0.9] - 2026-09-18
+
+### Ứng dụng
+- Làm mới logo trong cửa sổ và icon ứng dụng, dùng nền trong suốt để hiển thị gọn trên Desktop.
+- Shortcut Desktop tự tạo có tên **WuWa**; lần mở đầu của bản mới tự thay shortcut `VHWuWa` cũ.
+- Tinh gọn trang chủ/cài Việt hóa, giữ các thao tác chính và bỏ thông tin lặp.
+- Củng cố quy trình tự cập nhật: kiểm tra đúng asset + SHA-256, dùng updater self-contained, cài theo transaction, health-check và rollback nguyên bản cũ nếu bản mới không khởi động đúng.
+- Khi cài/cập nhật Việt hóa, tự phát hiện và xóa các mod cũ/mod ngoài thuộc tập xung đột rồi để PAK/loader của bản hiện tại thắng; không đụng các `pakchunk*` gốc của game.
+- Cập nhật nhanh PAK có cơ chế **self-heal**: tự dựng lại PAK, `.sig`, font, `version.dll`, `verorg.dll`, `WuWaVH.dll`, đồng bộ marker SHA-256 và hậu kiểm sau khi ghi.
+- PAK Hán Việt tải theo đúng release tag của phiên bản app, bắt buộc SHA-256 hợp lệ và PAK V12 hợp lệ.
+
+### Dữ liệu Việt hóa
+- So với PAK EN GitHub v3.0.8, dữ liệu hiện tại vẫn giữ 110 DB nhưng tăng từ **351.866** lên **351.939** ô nội dung; có **112 text mới**, **39 text bỏ theo nguồn** và hàng nghìn text/thuật ngữ được cập nhật.
+- Bổ sung nội dung mới cho nhiệm vụ/nhạc nền như chuỗi `ItemInfo_80110539..80110546` liên quan **Yên Vân U Viễn Tâm Kiếm Minh**, Ngự Kiếm Phi Hành, Vân Bạch Cơ Kỵ và Thiên Khôi Kiếp Sát.
+- Làm sạch hàng trăm fallback/annotation lộ ra giao diện, gồm raw English, `(Tý)`, `(Nguyện)`, `(Academy)`, `(Long)`, `(Tình yêu)` và các annotation nội bộ sai ngữ cảnh.
+- Sửa regression QA trước phát hành: phục hồi **270** text `RoleResonanceGrouth` bị dev source `test/test` ghi đè, bỏ `test/` lộ trong hướng dẫn, khôi phục **35** text cốt truyện/hảo cảm bị rơi về English, và sửa lựa chọn Rogue giữ đủ placeholder `{0}` + `{1}`.
+- Xác minh **43 câu P6 trước → sau thực sự nằm trong PAK R6**, tập trung vào câu dịch sượng/calque, xưng hô, register và ngữ cảnh; ví dụ “Quả thật rất mang phong cách của thi nhân.” → “Đúng là rất ra dáng một nhà thơ.”, “Đã có điều Bất thường...” → “Nếu đã thấy có gì bất thường...”, cùng nhiều câu Maqi/Jiyan/Encore/Carlotta/Phoebe. Danh sách đầy đủ: `TRANSLATION_CHANGES_v3.0.9.md`.
+- MASTER nâng lên **V6.2.1 LOCKED**; đồng bộ `Shell Credit`, `Quyền Giáp`, `Du Long Tích` và current-source alias. R6 áp đúng **79** exact term corrections có source/topology guard.
+- Thêm **Exit Watchdog** cho nút Mở game: sau khi `UnrealWindow` ổn định, nếu người chơi đóng cửa sổ nhưng `Client-Win64-Shipping` còn treo nền quá 5 giây thì watchdog dọn đúng process tree đã launch và wrapper liên quan; fail-open khi không đủ bằng chứng, không inject/patch game.
+
 ## [3.0.6] - 2026-08-25
 
 ### Dữ liệu Việt hóa

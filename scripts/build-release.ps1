@@ -54,9 +54,7 @@ if (Test-Path $updatePayload) { Remove-Item $updatePayload -Recurse -Force }
 New-Item -ItemType Directory -Force $updatePayload | Out-Null
 Copy-Item (Join-Path $dist '*') $updatePayload -Recurse -Force
 $payloadUpdater = Join-Path $updatePayload 'VHWuWa.Updater.exe'
-if (Test-Path $payloadUpdater) {
-  Move-Item $payloadUpdater (Join-Path $updatePayload 'VHWuWa.Updater.next.exe') -Force
-}
+if (-not (Test-Path $payloadUpdater)) { throw 'Update payload thiếu VHWuWa.Updater.exe.' }
 Compress-Archive -Path (Join-Path $updatePayload '*') -DestinationPath $zip -Force
 Remove-Item $updatePayload -Recurse -Force
 $sha = (Get-FileHash $zip -Algorithm SHA256).Hash.ToLower()

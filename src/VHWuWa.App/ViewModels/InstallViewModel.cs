@@ -13,6 +13,8 @@ public partial class InstallViewModel : ObservableObject
     private readonly ISettingsService _settings;
     private readonly IGameDetectionService _detect;
     private readonly IViethoaInstaller _viet;
+    private readonly IUpdateService _update;
+    private string _lastHanVietDownloadError = "";
     private CancellationTokenSource? _cts;
 
     // Gói nhẹ mặc định dùng bản Việt hóa giữ tên quốc tế. Hán Việt tải khi cần.
@@ -34,10 +36,13 @@ public partial class InstallViewModel : ObservableObject
     [ObservableProperty] private bool _hasQuarantine;
     [ObservableProperty] private string _lastQuarantinePath = "";
 
-    public InstallViewModel(ISettingsService settings, IGameDetectionService detect, IViethoaInstaller viet)
+    public InstallViewModel(ISettingsService settings, IGameDetectionService detect, IViethoaInstaller viet,
+        IUpdateService update)
     {
-        _settings = settings; _detect = detect; _viet = viet;
+        _settings = settings; _detect = detect; _viet = viet; _update = update;
     }
+
+    public event EventHandler? InstallationStateChanged;
 
     public void OnActivated() => Refresh();
 
@@ -83,6 +88,11 @@ public partial class InstallViewModel : ObservableObject
                 : "○ Chưa cài Việt hóa.";
         }
         else StatusText = "";
+
+        // HomePage dùng HomeViewModel riêng cho badge/trạng thái tổng quan. Báo cho
+        // nó refresh ngay sau mọi lần trạng thái cài đặt được quét lại, tránh panel
+        // báo "Đã cài" nhưng badge phía trên vẫn giữ "Chưa cài".
+        InstallationStateChanged?.Invoke(this, EventArgs.Empty);
     }
 
     partial void OnVariantHanVietChanged(bool value)
@@ -176,54 +186,62 @@ public partial class InstallViewModel : ObservableObject
     [ObservableProperty] private bool _showHanVietDownload = true;
     [ObservableProperty] private string _hanVietDownloadBtnText = "⬇️ Tải gói Hán Việt";
 
-    private static readonly System.Net.Http.HttpClient _http = new() { Timeout = TimeSpan.FromMinutes(5) };
-
     private string HanVietPakPath => Path.Combine(AppContext.BaseDirectory, "content", "WuWaVH_HanViet_99_P.pak");
 
     private async Task<bool> DownloadHanVietInternalAsync(IProgress<InstallProgress>? prog = null, CancellationToken ct = default)
     {
+        _lastHanVietDownloadError = "";
         var dst = HanVietPakPath;
-        var tempFile = dst + ".tmp";
-        var dir = Path.GetDirectoryName(dst);
-        if (!string.IsNullOrEmpty(dir)) Directory.CreateDirectory(dir);
+        var version = typeof(InstallViewModel).Assembly.GetName().Version?.ToString(3) ?? "";
+        if (string.IsNullOrWhiteSpace(version))
+        {
+            _lastHanVietDownloadError = "Không xác định được phiên bản ứng dụng.";
+            return false;
+        }
 
-        // Luôn lấy asset của release mới nhất để bản app cũ không bị khóa vào một tag cố định.
-        var url = "https://github.com/WahuVN/Viet-Hoa-WuWa/releases/latest/download/WuWaVH_HanViet_99_P.pak";
         try
         {
-            using var response = await _http.GetAsync(url, System.Net.Http.HttpCompletionOption.ResponseHeadersRead, ct);
-            if (!response.IsSuccessStatusCode) return false;
-
-            var totalBytes = response.Content.Headers.ContentLength ?? 61846666L;
-
-            using (var stream = await response.Content.ReadAsStreamAsync(ct))
-            using (var fileStream = new FileStream(tempFile, FileMode.Create, FileAccess.Write, FileShare.None, 81920, true))
+            // Khóa PAK Hán Việt vào đúng release tag của phiên bản app đang chạy.
+            // Không dùng releases/latest vì app cũ có thể kéo nhầm dữ liệu của phiên bản tương lai.
+            var release = await _update.GetReleaseManifestAsync(version, ct);
+            if (!release.Success || release.Value is null)
             {
-                var buffer = new byte[81920];
-                long totalRead = 0;
-                int read;
-                while ((read = await stream.ReadAsync(buffer, 0, buffer.Length, ct)) > 0)
-                {
-                    await fileStream.WriteAsync(buffer, 0, read, ct);
-                    totalRead += read;
-                    var pct = Math.Min(100, (int)((totalRead * 100) / totalBytes));
-                    prog?.Report(new InstallProgress(pct, $"Tải gói Hán Việt ({totalRead / 1048576.0:F1}/{totalBytes / 1048576.0:F1} MB)", 1, 2));
-                }
-            }
-
-            if (!PakV12Converter.TryVerifyV12(tempFile, out _))
-            {
-                File.Delete(tempFile);
+                _lastHanVietDownloadError = release.Error ?? $"Không đọc được release v{version}.";
                 return false;
             }
 
-            if (File.Exists(dst)) File.Delete(dst);
-            File.Move(tempFile, dst);
+            var manifest = release.Value;
+            if (string.IsNullOrWhiteSpace(manifest.PakHanVietUrl)
+                || manifest.PakHanVietSha256.Length != 64
+                || !manifest.PakHanVietSha256.All(Uri.IsHexDigit))
+            {
+                _lastHanVietDownloadError = $"Release v{version} thiếu PAK Hán Việt hoặc SHA-256 hợp lệ.";
+                return false;
+            }
+
+            var progress = new Progress<double>(p =>
+                prog?.Report(new InstallProgress((int)Math.Round(p), $"Tải gói Hán Việt v{version}", 1, 2)));
+            var download = await _update.DownloadFileAsync(
+                manifest.PakHanVietUrl, manifest.PakHanVietSha256, dst, progress, ct);
+            if (!download.Success || !File.Exists(dst))
+            {
+                _lastHanVietDownloadError = download.Error ?? "Không tải được PAK Hán Việt.";
+                return false;
+            }
+
+            if (!PakV12Converter.TryVerifyV12(dst, out _))
+            {
+                File.Delete(dst);
+                _lastHanVietDownloadError = "PAK Hán Việt tải về không phải PAK V12 hợp lệ.";
+                return false;
+            }
+
             return true;
         }
-        catch
+        catch (Exception ex)
         {
-            try { if (File.Exists(tempFile)) File.Delete(tempFile); } catch { }
+            _lastHanVietDownloadError = ex.Message;
+            try { if (File.Exists(dst) && !PakV12Converter.TryVerifyV12(dst, out _)) File.Delete(dst); } catch { }
             return false;
         }
     }
@@ -250,7 +268,9 @@ public partial class InstallViewModel : ObservableObject
         try
         {
             var ok = await DownloadHanVietInternalAsync(progress, _cts.Token);
-            Summary = ok ? "✅ Đã tải xong gói Hán Việt! Bạn có thể bấm 'Cài Việt hóa' ngay." : "❌ Lỗi: Không thể tải từ GitHub. Vui lòng thử lại.";
+            Summary = ok
+                ? "✅ Đã tải xong gói Hán Việt đúng phiên bản! Bạn có thể bấm 'Cài Việt hóa' ngay."
+                : "❌ Không thể tải gói Hán Việt đúng phiên bản: " + _lastHanVietDownloadError;
         }
         finally
         {
@@ -280,7 +300,7 @@ public partial class InstallViewModel : ObservableObject
                 var ok = await DownloadHanVietInternalAsync(progress, _cts.Token);
                 if (!ok || !File.Exists(HanVietPakPath))
                 {
-                    Summary = "❌ Không thể tải gói Hán Việt từ GitHub. Hãy kiểm tra kết nối mạng hoặc thử lại.";
+                    Summary = "❌ Không thể tải gói Hán Việt đúng phiên bản: " + _lastHanVietDownloadError;
                     return;
                 }
             }

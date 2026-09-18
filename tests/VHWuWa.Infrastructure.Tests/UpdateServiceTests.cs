@@ -56,6 +56,47 @@ public sealed class UpdateServiceTests
     }
 
     [Fact]
+    public async Task CheckAsync_309_DetectsExact310PlayerRelease()
+    {
+        const string playerUrl = "https://github.test/VietHoa-WuWa-v3.0.10.zip";
+        const string playerSha = "abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789";
+        var release = """
+        {"tag_name":"v3.0.10","body":"Bản 3.0.10","assets":[
+          {"name":"VietHoa-WuWa-v3.0.10.zip","browser_download_url":"https://github.test/VietHoa-WuWa-v3.0.10.zip","digest":"sha256:abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789"}
+        ]}
+        """;
+        var service = CreateService("3.0.9", _ => Json(release));
+
+        var result = await service.CheckAsync();
+
+        Assert.True(result.CheckSucceeded);
+        Assert.True(result.UpdateAvailable);
+        Assert.NotNull(result.Manifest);
+        Assert.Equal("3.0.9", result.CurrentVersion);
+        Assert.Equal("3.0.10", result.Manifest!.Version);
+        Assert.Equal(playerUrl, result.Manifest.DownloadUrl);
+        Assert.Equal(playerSha, result.Manifest.Sha256);
+    }
+
+    [Fact]
+    public async Task CheckAsync_RejectsSimilarButWrongPlayerAssetName()
+    {
+        var release = """
+        {"tag_name":"v3.0.10","body":"notes","assets":[
+          {"name":"VietHoa-WuWa-v3.0.9.zip","browser_download_url":"https://github.test/old.zip","digest":"sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"},
+          {"name":"VHWuWa-v3.0.10-win-x64.zip","browser_download_url":"https://github.test/app-only.zip","digest":"sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"}
+        ]}
+        """;
+        var service = CreateService("3.0.9", _ => Json(release));
+
+        var result = await service.CheckAsync();
+
+        Assert.False(result.CheckSucceeded);
+        Assert.False(result.UpdateAvailable);
+        Assert.Contains("VietHoa-WuWa-v3.0.10.zip", result.Message);
+    }
+
+    [Fact]
     public async Task CheckAsync_SameVersionReportsNoUpdate()
     {
         var release = """
@@ -130,7 +171,7 @@ public sealed class UpdateServiceTests
     }
 
     [Fact]
-    public async Task DownloadAsync_ValidatesZipIntegrity_WhenSha256IsEmpty()
+    public async Task DownloadAsync_RejectsUpdate_WhenSha256IsEmpty()
     {
         // Tạo một tệp ZIP hợp lệ trong bộ nhớ
         byte[] validZipBytes;
@@ -160,8 +201,9 @@ public sealed class UpdateServiceTests
                 Sha256 = "", // Không có SHA256 (fallback mode)
             }, temp);
 
-            Assert.True(res.Success);
-            Assert.True(File.Exists(res.Value));
+            Assert.False(res.Success);
+            Assert.Contains("SHA-256", res.Error, StringComparison.OrdinalIgnoreCase);
+            Assert.Empty(Directory.Exists(temp) ? Directory.GetFiles(temp) : Array.Empty<string>());
         }
         finally
         {
@@ -170,7 +212,7 @@ public sealed class UpdateServiceTests
     }
 
     [Fact]
-    public async Task DownloadAsync_RejectsCorruptZip_WhenSha256IsEmpty()
+    public async Task DownloadAsync_RejectsBeforeDownloading_WhenSha256IsEmpty()
     {
         var corruptBytes = Encoding.UTF8.GetBytes("not a valid zip file content");
         var service = CreateService("2.0.0", _ => new HttpResponseMessage(HttpStatusCode.OK)
@@ -189,12 +231,60 @@ public sealed class UpdateServiceTests
             }, temp);
 
             Assert.False(res.Success);
-            Assert.Contains("bị hỏng", res.Error);
+            Assert.Contains("SHA-256", res.Error, StringComparison.OrdinalIgnoreCase);
         }
         finally
         {
             if (Directory.Exists(temp)) Directory.Delete(temp, recursive: true);
         }
+    }
+
+    [Fact]
+    public async Task GetReleaseManifestAsync_UsesExactTagAndReadsHanVietDigest()
+    {
+        const string hvUrl = "https://github.test/WuWaVH_HanViet_99_P.pak";
+        const string hvSha = "abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789";
+        string? requested = null;
+        var release = $$"""
+        {"tag_name":"v3.0.9","body":"notes","assets":[
+          {"name":"WuWaVH_HanViet_99_P.pak","browser_download_url":"{{hvUrl}}","digest":"sha256:{{hvSha}}"}
+        ]}
+        """;
+        var service = CreateService("3.0.9", request =>
+        {
+            requested = request.RequestUri?.AbsoluteUri;
+            return Json(release);
+        });
+
+        var result = await service.GetReleaseManifestAsync("3.0.9");
+
+        Assert.True(result.Success, result.Error);
+        Assert.NotNull(result.Value);
+        Assert.Equal("3.0.9", result.Value!.Version);
+        Assert.Equal(hvUrl, result.Value.PakHanVietUrl);
+        Assert.Equal(hvSha, result.Value.PakHanVietSha256);
+        Assert.Contains("/releases/tags/v3.0.9", requested, StringComparison.Ordinal);
+        Assert.DoesNotContain("/latest", requested, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task GetReleaseManifestAsync_RejectsMismatchedReturnedTag()
+    {
+        string? requested = null;
+        var release = """
+        {"tag_name":"v3.0.10","body":"notes","assets":[]}
+        """;
+        var service = CreateService("3.0.9", request =>
+        {
+            requested = request.RequestUri?.AbsoluteUri;
+            return Json(release);
+        });
+
+        var result = await service.GetReleaseManifestAsync("3.0.9");
+
+        Assert.False(result.Success);
+        Assert.Contains("sai", result.Error, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("/releases/tags/v3.0.9", requested, StringComparison.Ordinal);
     }
 
     private static UpdateService CreateService(string currentVersion,

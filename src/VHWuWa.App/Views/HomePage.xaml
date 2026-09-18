@@ -3,206 +3,189 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml">
     <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-        <StackPanel Margin="24,20,24,22">
-            <StackPanel Margin="0,0,0,15">
-                <TextBlock Text="Trang chủ" FontSize="22" FontWeight="Bold" />
-                <TextBlock Text="Mở game, tự động nhận diện thư mục và cài đặt Việt hóa nhanh."
-                           FontSize="12" Opacity="0.7" Margin="0,3,0,0" />
-            </StackPanel>
+        <StackPanel Margin="28,22,28,24">
+            <Grid Margin="0,0,0,16">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <StackPanel>
+                    <TextBlock Text="Việt hóa Wuthering Waves" FontSize="23" FontWeight="Bold" />
+                </StackPanel>
+                <Border Grid.Column="1" Background="#12253a" BorderBrush="#1d4e72" BorderThickness="1"
+                        CornerRadius="12" Padding="12,6" VerticalAlignment="Center">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="{Binding TranslationStatus}" FontSize="12" FontWeight="SemiBold" />
+                        <TextBlock Text=" · " FontSize="12" Opacity="0.55" />
+                        <TextBlock Text="{Binding TranslationVersion}" FontSize="12" FontWeight="SemiBold" />
+                    </StackPanel>
+                </Border>
+            </Grid>
 
-            <!-- Banner thông báo khi có bản cập nhật mới -->
-            <ui:Card Padding="14" Margin="0,0,0,12"
+            <ui:Card Padding="14" Margin="0,0,0,14"
                      Visibility="{Binding Main.HasUpdate, Converter={StaticResource BoolToVis}}">
                 <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
                     <StackPanel VerticalAlignment="Center">
-                        <TextBlock Text="{Binding Main.LatestVersion, StringFormat='Có bản cập nhật v{0}'}"
-                                   FontWeight="SemiBold" FontSize="13" />
-                        <TextBlock Text="{Binding Main.UpdateNotes}" FontSize="11" Opacity="0.68"
-                                   TextWrapping="Wrap" TextTrimming="CharacterEllipsis" MaxHeight="32"
-                                   Margin="0,2,0,0" />
-                        <ProgressBar Value="{Binding Main.UpdateProgress}" Maximum="100" Height="4"
-                                     Margin="0,7,0,0"
-                                     Visibility="{Binding Main.IsUpdating, Converter={StaticResource BoolToVis}}" />
+                        <TextBlock Text="{Binding Main.LatestVersion, StringFormat='Có bản cập nhật v{0}'}" FontWeight="SemiBold" FontSize="13" />
+                        <TextBlock Text="{Binding Main.UpdateNotes}" FontSize="11" Opacity="0.68" TextWrapping="Wrap" TextTrimming="CharacterEllipsis" MaxHeight="32" Margin="0,2,0,0" />
+                        <ProgressBar Value="{Binding Main.UpdateProgress}" Maximum="100" Height="4" Margin="0,7,0,0" Visibility="{Binding Main.IsUpdating, Converter={StaticResource BoolToVis}}" />
                     </StackPanel>
-                    <ui:Button Grid.Column="1" Content="Cập nhật" Appearance="Primary"
-                               Command="{Binding Main.ApplyUpdateCommand}" Margin="14,0,0,0"
-                               Padding="14,7" VerticalAlignment="Center" />
+                    <ui:Button Grid.Column="1" Content="Cập nhật" Appearance="Primary" Command="{Binding Main.ApplyUpdateCommand}" Margin="14,0,0,0" Padding="14,7" VerticalAlignment="Center" />
                 </Grid>
             </ui:Card>
 
-            <!-- CARD NỔI BẬT: TỰ ĐỘNG PHÁT HIỆN GAME & NÚT CÀI VIỆT HÓA 1-CLICK -->
-            <Border Margin="0,0,0,14" Background="#0b233a" BorderBrush="#0284c7" BorderThickness="1"
-                    CornerRadius="8" Padding="16,14"
-                    Visibility="{Binding CanOneClickInstall, Converter={StaticResource BoolToVis}}">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-                    <StackPanel VerticalAlignment="Center" Margin="0,0,16,0">
-                        <StackPanel Orientation="Horizontal" Margin="0,0,0,3">
-                            <TextBlock Text="⚡" FontSize="16" Margin="0,0,6,0" VerticalAlignment="Center" />
-                            <TextBlock Text="ĐÃ TÌM THẤY GAME — SẴN SÀNG CÀI VIỆT HÓA" FontWeight="Bold" FontSize="14" Foreground="#38bdf8" />
-                        </StackPanel>
-                        <TextBlock Text="Đã phát hiện thư mục game hợp lệ. Bấm nút bên cạnh để tự động thiết lập toàn bộ bản dịch tiếng Việt, font chữ và loader chỉ với 1 click!"
-                                   FontSize="12" Foreground="#e0f2fe" TextWrapping="Wrap" Opacity="0.9" />
-                    </StackPanel>
-                    <WrapPanel Grid.Column="1" VerticalAlignment="Center">
-                        <ui:Button Content="📥 Cài Việt Hóa (Tự Động)" Appearance="Primary"
-                                   Command="{Binding OneClickInstallCommand}"
-                                   Padding="18,10" Margin="0,0,8,0" FontSize="13" FontWeight="Bold" />
-                        <Button Content="📥 Cài Hán Việt"
-                                Command="{Binding OneClickInstallHvCommand}"
-                                Padding="14,10" FontSize="12" />
-                    </WrapPanel>
-                </Grid>
-            </Border>
-
-            <!-- Khu vực chính: Mở Game & Trạng thái -->
-            <ui:Card Padding="18" Margin="0,0,0,12">
-                <StackPanel>
+            <!-- Nhóm thao tác thường dùng trong một card gọn. -->
+            <ui:Card Padding="16" Margin="0,0,0,12">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="0.95*" MinWidth="330" />
+                    <ColumnDefinition Width="25" />
+                    <ColumnDefinition Width="1.05*" MinWidth="350" />
+                </Grid.ColumnDefinitions>
+                <Grid Grid.Column="0">
                     <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" MinWidth="230" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-                        <StackPanel VerticalAlignment="Center" Margin="0,0,18,0">
-                            <TextBlock Text="Wuthering Waves" FontSize="18" FontWeight="SemiBold" />
-                            <TextBlock Text="Mở trực tiếp game bằng thiết lập hiện tại."
-                                       FontSize="12" Opacity="0.65" Margin="0,3,0,0" />
-                        </StackPanel>
-                        <WrapPanel Grid.Column="1" VerticalAlignment="Center">
-                            <!-- Nút Cài đặt nhanh nếu chưa cài -->
-                            <ui:Button Content="📥 Cài Việt Hóa" Appearance="Primary"
-                                       Command="{Binding OneClickInstallCommand}" MinWidth="130"
-                                       Padding="16,10" Margin="0,0,8,0" FontSize="13" FontWeight="Bold"
-                                       Visibility="{Binding CanOneClickInstall, Converter={StaticResource BoolToVis}}" />
-                            <!-- Nút Mở game -->
-                            <ui:Button Content="{Binding LaunchButtonText}"
-                                       Appearance="Primary"
-                                       Command="{Binding LaunchGameCommand}" MinWidth="135"
-                                       Padding="18,10" Margin="0,0,8,0" FontSize="13"
-                                       FontWeight="SemiBold" ToolTip="Mở Client-Win64-Shipping.exe" />
-                            <!-- Nút Tắt game -->
-                            <ui:Button Content="Tắt game" Appearance="Danger"
-                                       Command="{Binding KillGameProcessesCommand}" MinWidth="96"
-                                       Padding="14,10" FontSize="13"
-                                       ToolTip="Đóng tiến trình game đang chạy" />
-                        </WrapPanel>
-                    </Grid>
-
-                    <Separator Margin="0,15,0,11" Opacity="0.45" />
-
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="18" />
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="18" />
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                        <StackPanel Grid.Column="0" Orientation="Horizontal">
-                            <TextBlock Text="Việt hóa" FontSize="11" Opacity="0.55" Margin="0,0,6,0" />
-                            <TextBlock Text="{Binding TranslationStatus}" FontSize="11" FontWeight="SemiBold" />
-                        </StackPanel>
-                        <StackPanel Grid.Column="2" Orientation="Horizontal">
-                            <TextBlock Text="Phiên bản" FontSize="11" Opacity="0.55" Margin="0,0,6,0" />
-                            <TextBlock Text="{Binding TranslationVersion}" FontSize="11" FontWeight="SemiBold" />
-                        </StackPanel>
-                        <StackPanel Grid.Column="4" Orientation="Horizontal">
-                            <TextBlock Text="Game" FontSize="11" Opacity="0.55" Margin="0,0,6,0" />
-                            <TextBlock Text="{Binding DetectedVersion}" FontSize="11" FontWeight="SemiBold" />
-                        </StackPanel>
-                    </Grid>
-
-                    <Expander Margin="0,10,0,0">
-                        <Expander.Header>
-                            <TextBlock Text="Tùy chọn khởi chạy" FontSize="12" />
-                        </Expander.Header>
-                        <StackPanel Margin="20,8,0,2">
-                            <CheckBox Content="Môi trường C# thử nghiệm"
-                                      IsChecked="{Binding ForceCSharpEnvironment, Mode=TwoWay}"
-                                      FontSize="12" Margin="0,0,0,8"
-                                      ToolTip="Lần đầu có thể tải thêm dữ liệu. Nếu game không ổn định, hãy tắt tùy chọn này." />
-                            <Button Content="Chép tham số Steam"
-                                    Command="{Binding CopyCSharpArgumentCommand}"
-                                    HorizontalAlignment="Left" Padding="10,5" FontSize="11" />
-                        </StackPanel>
-                    </Expander>
-                </StackPanel>
-            </ui:Card>
-
-            <!-- Thiết lập hiện tại và thư mục game -->
-            <ui:Card Padding="18" Margin="0,0,0,12">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="2*" MinWidth="210" />
-                        <ColumnDefinition Width="22" />
-                        <ColumnDefinition Width="3*" MinWidth="300" />
-                    </Grid.ColumnDefinitions>
-
-                    <StackPanel Grid.Column="0">
-                        <TextBlock Text="Thiết lập hiện tại" FontWeight="SemiBold" FontSize="14"
-                                   Margin="0,0,0,10" />
-                        <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <TextBlock Text="Mở game" FontSize="17" FontWeight="SemiBold" />
+                        <Grid Grid.Row="1" Margin="0,10,0,0">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="88" />
+                                <ColumnDefinition Width="132" />
+                                <ColumnDefinition Width="10" />
+                                <ColumnDefinition Width="104" />
                                 <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
-                            <Grid.RowDefinitions>
-                                <RowDefinition />
-                                <RowDefinition />
-                                <RowDefinition />
-                            </Grid.RowDefinitions>
-                            <TextBlock Grid.Row="0" Text="Kiểu tên" FontSize="11" Opacity="0.58" Margin="0,3" />
-                            <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding CurrentVariant}"
-                                       FontSize="12" TextTrimming="CharacterEllipsis" Margin="6,3" />
-                            <TextBlock Grid.Row="1" Text="Font chữ" FontSize="11" Opacity="0.58" Margin="0,3" />
-                            <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding CurrentFont}"
-                                       FontSize="12" TextTrimming="CharacterEllipsis" Margin="6,3" />
-                            <TextBlock Grid.Row="2" Text="Tên game" FontSize="11" Opacity="0.58" Margin="0,3" />
-                            <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding GameName}"
-                                       FontSize="12" TextTrimming="CharacterEllipsis" Margin="6,3" />
+                            <ui:Button Grid.Column="0" Content="{Binding LaunchButtonText}" Appearance="Primary" Command="{Binding LaunchGameCommand}" Height="40" Padding="14,8" FontSize="13" FontWeight="SemiBold" ToolTip="Mở Client-Win64-Shipping.exe" />
+                            <ui:Button Grid.Column="2" Content="Tắt game" Appearance="Danger" Command="{Binding KillGameProcessesCommand}" Height="40" Padding="12,8" FontSize="12" ToolTip="Đóng tiến trình game đang chạy" />
                         </Grid>
-                    </StackPanel>
-
-                    <Border Grid.Column="1" BorderBrush="{DynamicResource ControlElevationBorderBrush}"
-                            BorderThickness="1,0,0,0" Margin="10,0" />
-
-                    <StackPanel Grid.Column="2">
-                        <Grid Margin="0,0,0,9">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="Auto" />
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Text="Thư mục game" FontWeight="SemiBold" FontSize="14" />
-                            <TextBlock Grid.Column="1" Text="{Binding PathStatus}" FontSize="11"
-                                       Opacity="0.68" VerticalAlignment="Center" />
-                        </Grid>
-                        <ui:TextBox Text="{Binding GamePath}" IsReadOnly="True"
-                                    PlaceholderText="Chưa chọn thư mục game" FontSize="11"
-                                    Margin="0,0,0,9" />
-                        <WrapPanel>
-                            <Button Content="Tự tìm" Command="{Binding AutoDetectCommand}"
-                                    Padding="10,6" Margin="0,0,7,6" />
-                            <Button Content="Chọn thư mục" Command="{Binding ChooseFolderCommand}"
-                                    Padding="10,6" Margin="0,0,7,6" />
-                            <Button Content="Mở thư mục" Command="{Binding OpenFolderCommand}"
-                                    Padding="10,6" Margin="0,0,7,6" />
-                            <Button Content="Kiểm tra" Command="{Binding CheckFilesCommand}"
-                                    Padding="10,6" Margin="0,0,0,6" />
+                        <ToggleButton Grid.Row="2" IsChecked="{Binding ForceCSharpEnvironment, Mode=TwoWay}"
+                                      Margin="0,10,0,0" Height="38" HorizontalAlignment="Stretch"
+                                      ToolTip="Chỉ bật khi cần chạy môi trường C# thử nghiệm; mặc định nên tắt.">
+                            <ToggleButton.Template>
+                                <ControlTemplate TargetType="ToggleButton">
+                                    <Border x:Name="Surface" Background="#303030" BorderBrush="#454545" BorderThickness="1" CornerRadius="7" Padding="11,0" Cursor="Hand">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="50" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Text="Chế độ C# thử nghiệm" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                            <TextBlock x:Name="State" Grid.Column="1" Text="Tắt" FontSize="11" Opacity="0.7" VerticalAlignment="Center" Margin="0,0,9,0" />
+                                            <Border x:Name="Track" Grid.Column="2" Width="42" Height="22" CornerRadius="11" Background="#5a5a5a" VerticalAlignment="Center" HorizontalAlignment="Right" Padding="3">
+                                                <Ellipse x:Name="Thumb" Width="16" Height="16" Fill="#f3f4f6" HorizontalAlignment="Left" />
+                                            </Border>
+                                        </Grid>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsChecked" Value="True">
+                                            <Setter TargetName="Surface" Property="Background" Value="#123b54" />
+                                            <Setter TargetName="Surface" Property="BorderBrush" Value="#38bdf8" />
+                                            <Setter TargetName="State" Property="Text" Value="Bật" />
+                                            <Setter TargetName="State" Property="Foreground" Value="#7dd3fc" />
+                                            <Setter TargetName="State" Property="Opacity" Value="1" />
+                                            <Setter TargetName="Track" Property="Background" Value="#0ea5e9" />
+                                            <Setter TargetName="Thumb" Property="HorizontalAlignment" Value="Right" />
+                                        </Trigger>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="Surface" Property="BorderBrush" Value="#60a5fa" />
+                                        </Trigger>
+                                        <Trigger Property="IsEnabled" Value="False">
+                                            <Setter TargetName="Surface" Property="Opacity" Value="0.5" />
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </ToggleButton.Template>
+                        </ToggleButton>
+                        <Separator Grid.Row="3" Margin="0,11,0,9" Opacity="0.4" />
+                        <WrapPanel Grid.Row="4">
+                            <TextBlock Text="Game:" FontSize="11" Opacity="0.58" Margin="0,0,6,0" />
+                            <TextBlock Text="{Binding DetectedVersion}" FontSize="11" FontWeight="SemiBold" Margin="0,0,18,0" />
+                            <TextBlock Text="Tên:" FontSize="11" Opacity="0.58" Margin="0,0,6,0" />
+                            <TextBlock Text="{Binding CurrentVariant}" FontSize="11" FontWeight="SemiBold" />
                         </WrapPanel>
-                    </StackPanel>
+                    </Grid>
                 </Grid>
+                <Border Grid.Column="1" BorderBrush="{DynamicResource ControlElevationBorderBrush}" BorderThickness="1,0,0,0" Margin="12,0" />
+                <Grid Grid.Column="2">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <Grid Margin="0,0,0,8">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                            <TextBlock Text="Thư mục game" FontWeight="SemiBold" FontSize="17" />
+                            <TextBlock Grid.Column="1" Text="{Binding PathStatus}" FontSize="11" Opacity="0.72" VerticalAlignment="Center" />
+                        </Grid>
+                        <ui:TextBox Grid.Row="1" Text="{Binding GamePath}" IsReadOnly="True" PlaceholderText="Chưa chọn thư mục game" FontSize="12" Margin="0,0,0,8" />
+                        <WrapPanel Grid.Row="2">
+                            <ui:Button Content="Tự tìm" Appearance="Primary" Command="{Binding AutoDetectCommand}" Padding="12,7" Margin="0,0,6,0" FontWeight="SemiBold" />
+                            <Button Content="Chọn" Command="{Binding ChooseFolderCommand}" Padding="12,7" Margin="0,0,6,0" />
+                            <Button Content="Mở" Command="{Binding OpenFolderCommand}" Padding="12,7" Margin="0,0,6,0" />
+                            <Button Content="Kiểm tra" Command="{Binding CheckFilesCommand}" Padding="12,7" />
+                        </WrapPanel>
+                    </Grid>
+                </Grid>
+            </Grid>
             </ui:Card>
 
-            <ui:InfoBar IsOpen="True" Severity="Informational" Title="Trạng thái"
-                        Message="{Binding Message}" />
+            <!-- Không còn lặp các nút cài: mọi lựa chọn nằm trong một card hai cột. -->
+            <StackPanel x:Name="InstallPanel">
+                <ui:Card Padding="16" Margin="0,0,0,12">
+                    <Grid>
+                        <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+                        <Grid Margin="0,0,0,12">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <TextBlock Text="Cài Việt hóa" FontSize="18" FontWeight="Bold" />
+                                <TextBlock Text="{Binding StatusText}" Margin="0,4,0,0" TextWrapping="Wrap" FontWeight="SemiBold" FontSize="12" Foreground="#4ade80" />
+                            </StackPanel>
+                        </Grid>
+                        <Grid Grid.Row="1">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" MinWidth="330" />
+                                <ColumnDefinition Width="16" />
+                                <ColumnDefinition Width="1.15*" MinWidth="360" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Bản dịch &amp; font" FontWeight="SemiBold" FontSize="14" Margin="0,0,0,7" />
+                                <RadioButton GroupName="variant" IsChecked="{Binding VariantEnglish, Mode=TwoWay}" Content="🔤  Tên tiếng Anh" Margin="0,3" FontSize="13" />
+                                <RadioButton GroupName="variant" IsChecked="{Binding VariantHanViet, Mode=TwoWay}" Content="🇻🇳  Tên Hán Việt" Margin="0,4,0,3" FontSize="13" />
+                                <Button Content="{Binding HanVietDownloadBtnText}" Command="{Binding DownloadHanVietCommand}" Visibility="{Binding ShowHanVietDownload, Converter={StaticResource BoolToVis}}" HorizontalAlignment="Left" Margin="28,1,0,6" Padding="10,5" FontSize="11" />
+                                <CheckBox IsChecked="{Binding ApplyFont, Mode=TwoWay}" IsEnabled="{Binding FontAvailable}" Content="Cài font tiếng Việt" FontSize="12" />
+                            </StackPanel>
+                            <Border Grid.Column="1" BorderBrush="{DynamicResource ControlElevationBorderBrush}" BorderThickness="1,0,0,0" Margin="9,0" />
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="Thao tác" FontWeight="SemiBold" FontSize="14" Margin="0,0,0,7" />
+                                <ui:InfoBar IsOpen="True" Severity="Warning" Margin="0,0,0,7" Title="Có mod xung đột" Message="{Binding ConflictText}" Visibility="{Binding HasConflicts, Converter={StaticResource BoolToVis}}" />
+                                <WrapPanel Margin="0,0,0,6">
+                                    <ui:Button Content="⬇ Cài Việt hóa" Appearance="Primary" Command="{Binding InstallCommand}" Margin="0,0,7,0" Padding="14,9" FontSize="13" FontWeight="SemiBold" />
+                                    <Button Content="🗑 Gỡ Việt hóa" Command="{Binding UninstallCommand}" Margin="0,0,7,0" Padding="12,8" FontSize="12" />
+                                    <Button Content="Quét lại" Command="{Binding CheckConflictsCommand}" Padding="11,8" FontSize="12" />
+                                </WrapPanel>
+                                <WrapPanel>
+                                    <ui:Button Content="Cách ly" Appearance="Danger" Command="{Binding QuarantineConflictsCommand}" Visibility="{Binding HasConflicts, Converter={StaticResource BoolToVis}}" Margin="0,0,8,8" Padding="12,8" FontSize="12" />
+                                    <ui:Button Content="Xóa xung đột" Appearance="Danger" Command="{Binding DeleteConflictsCommand}" Visibility="{Binding HasConflicts, Converter={StaticResource BoolToVis}}" Margin="0,0,8,8" Padding="12,8" FontSize="12" />
+                                    <Button Content="📂 Vùng cách ly" Command="{Binding OpenQuarantineCommand}" Visibility="{Binding HasQuarantine, Converter={StaticResource BoolToVis}}" Margin="0,0,8,8" Padding="12,8" FontSize="12" />
+                                    <Button Content="✖ Hủy" Command="{Binding CancelCommand}" Visibility="{Binding Busy, Converter={StaticResource BoolToVis}}" Margin="0,0,8,8" Padding="12,8" FontSize="12" />
+                                </WrapPanel>
+                                <TextBlock Text="Tắt game trước khi cài." TextWrapping="Wrap" Opacity="0.65" FontSize="11" />
+                                <ProgressBar Value="{Binding Progress}" Maximum="100" Height="6" Margin="0,8,0,0" Visibility="{Binding Busy, Converter={StaticResource BoolToVis}}" />
+                                <TextBlock Text="{Binding ProgressText}" Opacity="0.8" Margin="0,4,0,0" TextWrapping="Wrap" FontSize="11" Visibility="{Binding Busy, Converter={StaticResource BoolToVis}}" />
+                            </StackPanel>
+                        </Grid>
+                    </Grid>
+                </ui:Card>
+            </StackPanel>
+
+            <ui:InfoBar IsOpen="True" Severity="Informational" Message="{Binding Message}" />
         </StackPanel>
     </ScrollViewer>
 </UserControl>

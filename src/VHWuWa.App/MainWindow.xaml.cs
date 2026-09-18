@@ -24,7 +24,6 @@ public partial class MainWindow : FluentWindow
         object? page = tag switch
         {
             "home" => _sp.GetRequiredService<HomePage>(),
-            "install" => _sp.GetRequiredService<InstallPage>(),
             "characters" => _sp.GetRequiredService<CharacterNamesPage>(),
             "terms" => _sp.GetRequiredService<TermsEditorPage>(),
             "uid" => _sp.GetRequiredService<UidEditorPage>(),

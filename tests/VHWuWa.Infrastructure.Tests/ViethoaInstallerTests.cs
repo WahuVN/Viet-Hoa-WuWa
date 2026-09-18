@@ -98,6 +98,57 @@ public sealed class ViethoaInstallerTests : IDisposable
     }
 
     [Fact]
+    public async Task QuickPakUpdate_ReplacesCanonicalActivePak_PreservesFontLoaderAndRefreshesMarker()
+    {
+        Assert.True((await _viet.InstallAsync(_game, NameVariant.HanViet, withFont: true)).Success);
+        var activePak = Path.Combine(Mods, "WuWaVH_99_P.pak");
+        var fontPak = Path.Combine(Mods, "WahuFont_100_P.pak");
+        var loader = Path.Combine(_win64, "WuWaVH.dll");
+        File.WriteAllText(Path.Combine(_content, "WuWaVH_EN_99_P.pak"), "ENGLISH_V2");
+
+        var result = await _viet.UpdateTranslationPakAsync(_game, NameVariant.English);
+
+        Assert.True(result.Success, result.Error);
+        Assert.Equal("ENGLISH_V2", File.ReadAllText(activePak));
+        Assert.False(File.Exists(Path.Combine(Mods, "WuWaVH_EN_99_P.pak")));
+        Assert.False(File.Exists(Path.Combine(Mods, "WuWaVH_HanViet_99_P.pak")));
+        Assert.Equal("FONT", File.ReadAllText(fontPak));
+        Assert.Equal("SDKDLL", File.ReadAllText(loader));
+        Assert.Equal("en", _viet.GetStatus(_game).Variant);
+        Assert.Empty(_viet.FindConflicts(_game));
+    }
+
+    [Fact]
+    public async Task QuickPakUpdate_AutoRemovesExternalOverwriteAndSelfHealsManagedFiles()
+    {
+        Assert.True((await _viet.InstallAsync(_game, NameVariant.HanViet, withFont: true)).Success);
+        var activePak = Path.Combine(Mods, "WuWaVH_99_P.pak");
+        var activeSig = Path.Combine(Mods, "WuWaVH_99_P.sig");
+        var activeFont = Path.Combine(Mods, "WahuFont_100_P.pak");
+        var versionDll = Path.Combine(_win64, "version.dll");
+        var loaderDll = Path.Combine(_win64, "WuWaVH.dll");
+
+        // Giả lập mod cũ/mod khác chèn đè nhiều thành phần.
+        File.WriteAllText(activePak, "FOREIGN_OVERWRITE");
+        File.WriteAllText(activeFont, "FOREIGN_FONT");
+        File.WriteAllText(versionDll, "FOREIGN_PROXY");
+        File.WriteAllText(loaderDll, "FOREIGN_LOADER");
+        File.Delete(activeSig);
+        File.WriteAllText(Path.Combine(_content, "WuWaVH_EN_99_P.pak"), "ENGLISH_V2");
+
+        var result = await _viet.UpdateTranslationPakAsync(_game, NameVariant.English);
+
+        Assert.True(result.Success, result.Error);
+        Assert.Equal("ENGLISH_V2", File.ReadAllText(activePak));
+        Assert.Equal("SEEDSIG", File.ReadAllText(activeSig));
+        Assert.Equal("FONT", File.ReadAllText(activeFont));
+        Assert.Equal("LOADER_VERSION", File.ReadAllText(versionDll));
+        Assert.Equal("SDKDLL", File.ReadAllText(loaderDll));
+        Assert.Equal("en", _viet.GetStatus(_game).Variant);
+        Assert.Empty(_viet.FindConflicts(_game));
+    }
+
+    [Fact]
     public async Task LegacyMarkerWithoutVersion_UsesCurrentApplicationVersion()
     {
         Assert.True((await _viet.InstallAsync(_game, NameVariant.HanViet, withFont: false)).Success);
@@ -128,7 +179,7 @@ public sealed class ViethoaInstallerTests : IDisposable
     }
 
     [Fact]
-    public async Task ExistingProxyLoader_BlocksInstallWithoutOverwrite()
+    public async Task ExistingProxyLoader_IsAutoRemovedAndCanonicalLoaderWins()
     {
         var proxy = Path.Combine(_win64, "version.dll");
         File.WriteAllText(proxy, "OTHER_MOD_LOADER");
@@ -137,13 +188,14 @@ public sealed class ViethoaInstallerTests : IDisposable
         Assert.Contains(conflicts, x => x.Contains("version.dll", StringComparison.OrdinalIgnoreCase));
         var result = await _viet.InstallAsync(_game, NameVariant.English, withFont: true);
 
-        Assert.False(result.Success);
-        Assert.Equal("OTHER_MOD_LOADER", File.ReadAllText(proxy));
-        Assert.False(Directory.Exists(Mods));
+        Assert.True(result.Success, result.Error);
+        Assert.Equal("LOADER_VERSION", File.ReadAllText(proxy));
+        Assert.True(File.Exists(Path.Combine(Mods, "WuWaVH_99_P.pak")));
+        Assert.Empty(_viet.FindConflicts(_game));
     }
 
     [Fact]
-    public async Task ExistingPakInOtherModFolder_BlocksInstallWithoutDeletingIt()
+    public async Task ExistingPakInOtherModFolder_IsAutoDeletedBeforeInstall()
     {
         var otherDir = Path.Combine(_paks, "~mods");
         Directory.CreateDirectory(otherDir);
@@ -152,9 +204,10 @@ public sealed class ViethoaInstallerTests : IDisposable
 
         var result = await _viet.InstallAsync(_game, NameVariant.HanViet, withFont: true);
 
-        Assert.False(result.Success);
-        Assert.Equal("OTHER_MOD", File.ReadAllText(otherPak));
-        Assert.False(Directory.Exists(Mods));
+        Assert.True(result.Success, result.Error);
+        Assert.False(File.Exists(otherPak));
+        Assert.True(File.Exists(Path.Combine(Mods, "WuWaVH_99_P.pak")));
+        Assert.Empty(_viet.FindConflicts(_game));
     }
 
     [Fact]
@@ -169,8 +222,51 @@ public sealed class ViethoaInstallerTests : IDisposable
         Assert.Contains(conflicts, x => x.Contains("CoolCharacter_P.pak", StringComparison.OrdinalIgnoreCase));
         Assert.DoesNotContain(conflicts, x => x.Contains("pakchunk0", StringComparison.OrdinalIgnoreCase));
         var install = await _viet.InstallAsync(_game, NameVariant.HanViet, withFont: true);
-        Assert.False(install.Success);
-        Assert.Equal("MOD", File.ReadAllText(custom));
+        Assert.True(install.Success, install.Error);
+        Assert.False(File.Exists(custom));
+        Assert.Equal("OFFICIAL", File.ReadAllText(Path.Combine(_paks, "pakchunk0-WindowsNoEditor_P.pak")));
+        Assert.Empty(_viet.FindConflicts(_game));
+    }
+
+    [Fact]
+    public async Task Install_AutoPurgesAllDetectedForeignModFamilies_ButPreservesOfficialPakchunks()
+    {
+        var officialPak = Path.Combine(_paks, "pakchunk0-WindowsNoEditor_P.pak");
+        var officialUtoc = Path.Combine(_paks, "pakchunk0-WindowsNoEditor_P.utoc");
+        File.WriteAllText(officialPak, "OFFICIAL_PAK");
+        File.WriteAllText(officialUtoc, "OFFICIAL_UTOC");
+
+        foreach (var ext in new[] { ".pak", ".sig", ".utoc", ".ucas" })
+            File.WriteAllText(Path.Combine(_paks, "ForeignBundle_P" + ext), "FOREIGN_" + ext);
+
+        var nested = Path.Combine(_paks, "~ForeignMods", "Nested");
+        Directory.CreateDirectory(nested);
+        File.WriteAllText(Path.Combine(nested, "NestedMod_P.pak"), "NESTED_PAK");
+        File.WriteAllText(Path.Combine(nested, "NestedMod_P.ucas"), "NESTED_UCAS");
+
+        File.WriteAllText(Path.Combine(_win64, "winhttp.dll"), "FOREIGN_PROXY");
+        foreach (var dirName in new[] { "Mods", "ue4ss", "RE-UE4SS", "wuwaVietHoa" })
+        {
+            var dir = Path.Combine(_win64, dirName, "Nested");
+            Directory.CreateDirectory(dir);
+            File.WriteAllText(Path.Combine(dir, "foreign.bin"), "FOREIGN_TREE");
+        }
+
+        var conflicts = _viet.FindConflicts(_game);
+        Assert.NotEmpty(conflicts);
+
+        var result = await _viet.InstallAsync(_game, NameVariant.English, withFont: true);
+
+        Assert.True(result.Success, result.Error);
+        foreach (var ext in new[] { ".pak", ".sig", ".utoc", ".ucas" })
+            Assert.False(File.Exists(Path.Combine(_paks, "ForeignBundle_P" + ext)));
+        Assert.False(File.Exists(Path.Combine(nested, "NestedMod_P.pak")));
+        Assert.False(File.Exists(Path.Combine(nested, "NestedMod_P.ucas")));
+        Assert.False(File.Exists(Path.Combine(_win64, "winhttp.dll")));
+        Assert.Equal("OFFICIAL_PAK", File.ReadAllText(officialPak));
+        Assert.Equal("OFFICIAL_UTOC", File.ReadAllText(officialUtoc));
+        Assert.True(File.Exists(Path.Combine(Mods, "WuWaVH_99_P.pak")));
+        Assert.Empty(_viet.FindConflicts(_game));
     }
 
     [Fact]

@@ -69,6 +69,9 @@ public interface IViethoaInstaller
     Result<ModQuarantineReport> QuarantineConflicts(string gamePath);
     /// <summary>Xóa vĩnh viễn các file mod xung đột sau khi người dùng xác nhận trên giao diện.</summary>
     Result<int> DeleteConflicts(string gamePath);
+    /// <summary>Cập nhật riêng PAK bản dịch đang hoạt động, giữ nguyên font/loader và đồng bộ marker SHA.</summary>
+    Task<Result> UpdateTranslationPakAsync(string gamePath, NameVariant variant,
+        CancellationToken ct = default);
     /// <summary>Cài bản Việt hóa theo biến thể tên nhân vật.</summary>
     Task<Result> InstallAsync(string gamePath, NameVariant variant, bool withFont,
         IProgress<InstallProgress>? progress = null, CancellationToken ct = default);
@@ -142,6 +145,8 @@ public interface IGraphicsService
 public interface IUpdateService
 {
     Task<UpdateCheckResult> CheckAsync(CancellationToken ct = default);
+    /// <summary>Lấy manifest của đúng một release tag, dùng cho asset phụ thuộc phiên bản như PAK Hán Việt.</summary>
+    Task<Result<UpdateManifest>> GetReleaseManifestAsync(string version, CancellationToken ct = default);
     Task<Result<string>> DownloadAsync(UpdateManifest manifest, string destDir,
         IProgress<double>? progress = null, CancellationToken ct = default);
     Task<Result<string>> DownloadFileAsync(string fileUrl, string expectedSha256, string destinationPath,

@@ -1,4 +1,4 @@
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Diagnostics;
 using VHWuWa.Core.Abstractions;
 using VHWuWa.Core.Models;
@@ -14,13 +14,19 @@ public sealed class GameLaunchService : IGameLaunchService
     public string GetExecutablePath(string gamePath) => Path.Combine(
         gamePath ?? string.Empty, "Client", "Binaries", "Win64", "Client-Win64-Shipping.exe");
 
+    public string GetOfficialLauncherPath(string gamePath) => Path.Combine(
+        gamePath ?? string.Empty, "Wuthering Waves.exe");
+
     public Result Launch(string gamePath, bool forceCSharpEnvironment)
     {
         try
         {
-            var exe = GetExecutablePath(gamePath);
-            if (!File.Exists(exe))
+            var clientExe = GetExecutablePath(gamePath);
+            if (!File.Exists(clientExe))
                 return Result.Fail("Không tìm thấy Client\\Binaries\\Win64\\Client-Win64-Shipping.exe. Hãy chọn lại đúng thư mục game.");
+
+            var officialLauncher = GetOfficialLauncherPath(gamePath);
+            var launchExe = File.Exists(officialLauncher) ? officialLauncher : clientExe;
 
             var running = Process.GetProcessesByName("Client-Win64-Shipping");
             try
@@ -33,14 +39,36 @@ public sealed class GameLaunchService : IGameLaunchService
                 foreach (var process in running) process.Dispose();
             }
 
-            var startInfo = CreateStartInfo(exe, forceCSharpEnvironment);
+            ProcessStartInfo startInfo;
+            var helperExe = Environment.ProcessPath;
+            var canUseSelfWatchdog = !string.IsNullOrWhiteSpace(helperExe)
+                                     && File.Exists(helperExe)
+                                     && string.Equals(Path.GetFileNameWithoutExtension(helperExe), "VHWuWa",
+                                         StringComparison.OrdinalIgnoreCase);
+
+            if (canUseSelfWatchdog)
+            {
+                // The watchdog launches the official wrapper when present, then
+                // follows the newly spawned Client-Win64-Shipping child PID.
+                startInfo = CreateWatchdogStartInfo(helperExe!, launchExe, forceCSharpEnvironment);
+            }
+            else
+            {
+                // Development/test fallback when hosted by dotnet/testhost.
+                startInfo = CreateStartInfo(clientExe, forceCSharpEnvironment);
+            }
+
             using var startedProcess = Process.Start(startInfo);
             if (startedProcess is null)
                 return Result.Fail("Windows không thể khởi chạy game.");
 
-            _log.Info("LaunchGame", forceCSharpEnvironment
-                ? "Đã mở game trực tiếp với môi trường C# thử nghiệm."
-                : "Đã mở game trực tiếp ở chế độ thường.");
+            _log.Info("LaunchGame", canUseSelfWatchdog
+                ? (forceCSharpEnvironment
+                    ? "Đã mở launcher chuẩn qua Exit Watchdog với môi trường C# thử nghiệm."
+                    : "Đã mở launcher chuẩn qua Exit Watchdog 5 giây.")
+                : (forceCSharpEnvironment
+                    ? "Đã mở game trực tiếp với môi trường C# thử nghiệm."
+                    : "Đã mở game trực tiếp ở chế độ thường."));
             return Result.Ok();
         }
         catch (Win32Exception ex) when (ex.NativeErrorCode == 1223)
@@ -53,6 +81,26 @@ public sealed class GameLaunchService : IGameLaunchService
             _log.Error("LaunchGame", "Không thể mở game: " + ex.Message, ex);
             return Result.Fail("Không thể mở game: " + ex.Message, ex);
         }
+    }
+
+    public static ProcessStartInfo CreateWatchdogStartInfo(
+        string helperExecutablePath,
+        string gameExecutablePath,
+        bool forceCSharpEnvironment)
+    {
+        var info = new ProcessStartInfo
+        {
+            FileName = helperExecutablePath,
+            WorkingDirectory = Path.GetDirectoryName(helperExecutablePath) ?? string.Empty,
+            UseShellExecute = true,
+            Verb = "runas"
+        };
+        info.ArgumentList.Add("--game-exit-watchdog");
+        info.ArgumentList.Add("--game-exe");
+        info.ArgumentList.Add(gameExecutablePath);
+        info.ArgumentList.Add("--force-csharp");
+        info.ArgumentList.Add(forceCSharpEnvironment ? "true" : "false");
+        return info;
     }
 
     public static ProcessStartInfo CreateStartInfo(string executablePath, bool forceCSharpEnvironment)
