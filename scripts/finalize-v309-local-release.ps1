@@ -3,12 +3,13 @@ $root='D:\Tim hieu\WuwaVH\VHWuWa'
 $dist=Join-Path $root 'dist'
 $upload=Join-Path $dist '_UPLOAD_V3.0.9_READY'
 $version='3.0.9'
+$releaseDocs=Join-Path $root "docs\releases\v$version"
 
 if(Test-Path $upload){Remove-Item $upload -Recurse -Force}
 New-Item -ItemType Directory -Force $upload | Out-Null
 
-Copy-Item (Join-Path $root "RELEASE_NOTES_v$version.md") (Join-Path $dist 'RELEASE_BODY.md') -Force
-Copy-Item (Join-Path $root "TRANSLATION_CHANGES_v$version.md") (Join-Path $dist "TRANSLATION_CHANGES_v$version.md") -Force
+Copy-Item (Join-Path $releaseDocs 'RELEASE_NOTES.md') (Join-Path $dist 'RELEASE_BODY.md') -Force
+Copy-Item (Join-Path $releaseDocs 'TRANSLATION_CHANGES.md') (Join-Path $dist "TRANSLATION_CHANGES_v$version.md") -Force
 
 $assets=@(
   "VietHoa-WuWa-v$version.zip",
@@ -23,8 +24,12 @@ foreach($name in $assets){
   if(-not (Test-Path -LiteralPath $src)){throw "Missing release asset: $src"}
   Copy-Item -LiteralPath $src -Destination (Join-Path $upload $name) -Force
 }
-foreach($name in @("GITHUB_ANNOUNCEMENT_v$version.md","DISCORD_ANNOUNCEMENT_v$version.md")){
-  $src=Join-Path $root $name
+$announcementMap=[ordered]@{
+  "GITHUB_ANNOUNCEMENT_v$version.md"='GITHUB_ANNOUNCEMENT.md'
+  "DISCORD_ANNOUNCEMENT_v$version.md"='DISCORD_ANNOUNCEMENT.md'
+}
+foreach($name in $announcementMap.Keys){
+  $src=Join-Path $releaseDocs $announcementMap[$name]
   if(-not (Test-Path -LiteralPath $src)){throw "Missing release note: $src"}
   Copy-Item -LiteralPath $src -Destination (Join-Path $upload $name) -Force
 }

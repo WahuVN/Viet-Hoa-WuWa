@@ -262,7 +262,7 @@ Copy hai PAK tu wuwavh_tool\Wahu\dist vao release.
 Khong can update.json/checksums.txt: app doc phien ban va SHA-256 tu GitHub Release API.
 "@
 [System.IO.File]::WriteAllText((Join-Path $distRoot '00_CAN_UPLOAD_GITHUB.txt'), $uploadGuide, [System.Text.UTF8Encoding]::new($true))
-$releaseNotes = Join-Path $root "RELEASE_NOTES_v$Version.md"
+$releaseNotes = Join-Path $root "docs\releases\v$Version\RELEASE_NOTES.md"
 $releaseBody = Join-Path $distRoot 'RELEASE_BODY.md'
 if (Test-Path -LiteralPath $releaseNotes) {
   Copy-Item -LiteralPath $releaseNotes -Destination $releaseBody -Force
@@ -270,5 +270,5 @@ if (Test-Path -LiteralPath $releaseNotes) {
 }
 elseif (Test-Path -LiteralPath $releaseBody) {
   Remove-Item -LiteralPath $releaseBody -Force
-  Write-Host "   ! Chưa có RELEASE_NOTES_v$Version.md; không giữ release body cũ" -ForegroundColor Yellow
+  Write-Host "   ! Chưa có docs/releases/v$Version/RELEASE_NOTES.md; không giữ release body cũ" -ForegroundColor Yellow
 }
