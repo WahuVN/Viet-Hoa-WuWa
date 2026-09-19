@@ -33,7 +33,7 @@ Ngoài ra mình đã dọn:
 - “Ôm sao?” → **“Ôm á?”**
 - Một số cảnh cũng sửa **ngươi → cậu**, cùng các chỗ `tôi/cậu`, `ta/cháu`, `bọn tôi` theo đúng người nói và ngữ cảnh.
 
-Danh sách 43 câu có trước/sau và lý do sửa nằm trong `TRANSLATION_CHANGES_v3.0.9.md`.
+Danh sách 43 câu có trước/sau và lý do sửa nằm trong `TRANSLATION_CHANGES.md`.
 
 ## App / updater
 

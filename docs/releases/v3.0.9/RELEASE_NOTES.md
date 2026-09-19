@@ -26,7 +26,7 @@ Riêng phần mình rà lại từng câu theo ngữ cảnh, có **43 câu trư�
 - áp đúng **79 term correction** có guard theo source/topology;
 - khôi phục **7 text Hổ Khẩu** bị override cũ làm co cả câu thành tên địa danh. Trong đó có 4 text nhiệm vụ từ 3.0.8 từng chỉ còn “Mỏ Hổ Khẩu”/“Mỏ Mỏ Hổ Khẩu”.
 
-Danh sách chi tiết hơn nằm trong [`TRANSLATION_CHANGES_v3.0.9.md`](TRANSLATION_CHANGES_v3.0.9.md).
+Danh sách chi tiết hơn nằm trong [`TRANSLATION_CHANGES.md`](TRANSLATION_CHANGES.md).
 
 ## Một vài câu đã sửa
 
