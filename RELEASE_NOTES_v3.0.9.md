@@ -1,6 +1,6 @@
 # VHWuWa v3.0.9
 
-3.0.9 lên chậm hơn mình dự tính. Mỗi lần chuẩn bị đóng bản lại phát hiện thêm vài câu dịch chưa ổn hoặc một case cài/cập nhật cần sửa, nên mình giữ lại làm tiếp thay vì up cho kịp ngày.
+Xin lỗi mọi người vì **3.0.9 ra chậm hơn dự kiến**. Mình giữ bản này lại thêm một thời gian để sửa cho kỹ hơn, nên so với **3.0.8** thì cả phần Việt Hóa lẫn app đều thay đổi khá nhiều.
 
 Bản này đã kiểm thử với **Wuthering Waves 3.6 trên PC/Windows**. Khi game lên bản mới vẫn cần kiểm lại trước khi coi là tương thích.
 
@@ -32,8 +32,8 @@ Danh sách chi tiết hơn nằm trong [`TRANSLATION_CHANGES_v3.0.9.md`](TRANSLA
 
 | Trước | Sau |
 | :--- | :--- |
-| “Quả thật rất mang phong cách của thi nhân.” | “Đúng là rất ra dáng một nhà thơ.” |
-| “Đã có điều Bất thường, vậy thì đi xem thử đi.” | “Nếu đã thấy có gì bất thường thì cứ đi xem thử.” |
+| “Đi theo góc nhìn của nhân vật chính, mình như thể chính mình cũng đã trải qua hết cuộc phiêu lưu sử thi này đến cuộc phiêu lưu sử thi khác...” | “Càng đọc theo góc nhìn của nhân vật chính, tôi càng có cảm giác như chính mình cũng đang phiêu lưu...” |
+| “Mình nhìn chằm chằm anh ta... Anh ta khựng lại, ánh mắt né tránh đầy vi diệu.” | “Bạn nhìn chằm chằm vào anh ta... anh ta khựng lại một nhịp rồi khẽ lảng ánh mắt đi.” |
 | “Đều không phải.” | “Không. Hôm nay tôi chẳng hẹn gặp ai, cũng không chờ ai đến cả.” |
 | “Tại sao nó lại khao khát trở thành Loài người đến vậy?” | “Tại sao nó lại muốn trở thành con người đến vậy?” |
 | “Chú Lôi lại tự nói gì thế...” | “Chú Lôi đang nói gì vậy?” |

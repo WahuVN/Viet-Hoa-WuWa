@@ -24,8 +24,8 @@ Ngoài ra mình đã dọn:
 
 ## Một vài câu mình đã sửa
 
-- “Quả thật rất mang phong cách của thi nhân.” → **“Đúng là rất ra dáng một nhà thơ.”**
-- “Đã có điều Bất thường, vậy thì đi xem thử đi.” → **“Nếu đã thấy có gì bất thường thì cứ đi xem thử.”**
+- “Đi theo góc nhìn của nhân vật chính, mình như thể chính mình cũng đã trải qua hết cuộc phiêu lưu sử thi này đến cuộc phiêu lưu sử thi khác...” → **“Càng đọc theo góc nhìn của nhân vật chính, tôi càng có cảm giác như chính mình cũng đang phiêu lưu...”**
+- “Mình nhìn chằm chằm anh ta... Anh ta khựng lại, ánh mắt né tránh đầy vi diệu.” → **“Bạn nhìn chằm chằm vào anh ta... anh ta khựng lại một nhịp rồi khẽ lảng ánh mắt đi.”**
 - “Đều không phải.” → **“Không. Hôm nay tôi chẳng hẹn gặp ai, cũng không chờ ai đến cả.”**
 - “Tại sao nó lại khao khát trở thành Loài người đến vậy?” → **“Tại sao nó lại muốn trở thành con người đến vậy?”**
 - “Chú Lôi lại tự nói gì thế...” → **“Chú Lôi đang nói gì vậy?”**
@@ -45,6 +45,6 @@ Danh sách 43 câu có trước/sau và lý do sửa nằm trong `TRANSLATION_CH
 - Exit Watchdog xử lý process game do app mở còn treo sau khi cửa sổ game đã đóng;
 - sửa nguồn tải font và thay link Discord cũ bằng invite cố định.
 
-Người chơi cài mới chỉ cần `VietHoa-WuWa-v3.0.9.zip`. Nếu đang ở bản cũ, mở app và cập nhật sau khi release 3.0.9 được đưa lên GitHub.
+Người chơi cài mới chỉ cần `VietHoa-WuWa-v3.0.9.zip`. Nếu đang ở bản cũ, mở app để cập nhật lên 3.0.9. Release đã được phát hành tại https://github.com/WahuVN/Viet-Hoa-WuWa/releases/tag/v3.0.9.
 
 Bản này đã kiểm thử với **Wuthering Waves 3.6 trên PC/Windows**. Khi game lên bản mới vẫn cần kiểm lại trước khi coi là tương thích.
