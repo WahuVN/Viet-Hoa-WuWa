@@ -47,6 +47,25 @@ public sealed class ViethoaInstallerTests : IDisposable
 
     private string Mods => Path.Combine(_paks, "~WuWaMods");
 
+    private void SeedLegacyVhwuwaInstall(bool withFont = true)
+    {
+        Directory.CreateDirectory(Mods);
+        File.WriteAllText(Path.Combine(Mods, "WuWaVH_99_P.pak"), "LEGACY_TRANSLATION");
+        File.WriteAllText(Path.Combine(Mods, "WuWaVH_99_P.sig"), "LEGACY_SIG");
+        if (withFont)
+        {
+            File.WriteAllText(Path.Combine(Mods, "WahuFont_100_P.pak"), "LEGACY_FONT");
+            File.WriteAllText(Path.Combine(Mods, "WahuFont_100_P.sig"), "LEGACY_FONT_SIG");
+        }
+
+        File.WriteAllText(Path.Combine(_win64, "version.dll"), "LEGACY_VERSION_LOADER");
+        File.WriteAllText(Path.Combine(_win64, "verorg.dll"), "LEGACY_VERORG");
+        File.WriteAllText(Path.Combine(_win64, "WuWaVH.dll"), "LEGACY_WUWA_DLL");
+
+        var marker = Path.Combine(Mods, "vhwuwa_install.json");
+        if (File.Exists(marker)) File.Delete(marker);
+    }
+
     [Fact]
     public void InspectContent_Ready()
     {
@@ -56,6 +75,96 @@ public sealed class ViethoaInstallerTests : IDisposable
         Assert.True(c.HasLoader);
         Assert.NotNull(c.FontPak);
         Assert.True(c.Ready);
+    }
+
+    [Fact]
+    public void LegacyBundleWithoutMarker_IsNotReportedAsConflict()
+    {
+        SeedLegacyVhwuwaInstall();
+
+        var status = _viet.GetStatus(_game);
+        Assert.True(status.Installed);
+        Assert.True(string.IsNullOrWhiteSpace(status.Version));
+
+        var conflicts = _viet.FindConflicts(_game);
+        Assert.Empty(conflicts);
+
+        var delete = _viet.DeleteConflicts(_game);
+        Assert.False(delete.Success);
+        Assert.Contains("Không tìm thấy", delete.Error!, StringComparison.OrdinalIgnoreCase);
+
+        Assert.True(File.Exists(Path.Combine(Mods, "WuWaVH_99_P.pak")));
+        Assert.True(File.Exists(Path.Combine(Mods, "WahuFont_100_P.pak")));
+        Assert.True(File.Exists(Path.Combine(_win64, "version.dll")));
+        Assert.True(File.Exists(Path.Combine(_win64, "verorg.dll")));
+        Assert.True(File.Exists(Path.Combine(_win64, "WuWaVH.dll")));
+    }
+
+    [Fact]
+    public void DeleteConflicts_WithLegacyBundle_DeletesOnlyForeignMod()
+    {
+        SeedLegacyVhwuwaInstall();
+        var foreignPak = Path.Combine(Mods, "OtherMod_100_P.pak");
+        var foreignSig = Path.Combine(Mods, "OtherMod_100_P.sig");
+        File.WriteAllText(foreignPak, "FOREIGN_MOD");
+        File.WriteAllText(foreignSig, "FOREIGN_SIG");
+
+        var conflicts = _viet.FindConflicts(_game);
+        Assert.Single(conflicts);
+        Assert.Contains("OtherMod_100_P.pak", conflicts[0], StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain(conflicts, x => x.Contains("WuWaVH_99_P.pak", StringComparison.OrdinalIgnoreCase));
+        Assert.DoesNotContain(conflicts, x => x.Contains("WahuFont_100_P.pak", StringComparison.OrdinalIgnoreCase));
+        Assert.DoesNotContain(conflicts, x => x.Contains("version.dll", StringComparison.OrdinalIgnoreCase));
+
+        var delete = _viet.DeleteConflicts(_game);
+        Assert.True(delete.Success, delete.Error);
+        Assert.Equal(2, delete.Value);
+        Assert.False(File.Exists(foreignPak));
+        Assert.False(File.Exists(foreignSig));
+
+        Assert.True(File.Exists(Path.Combine(Mods, "WuWaVH_99_P.pak")));
+        Assert.True(File.Exists(Path.Combine(Mods, "WahuFont_100_P.pak")));
+        Assert.True(File.Exists(Path.Combine(_win64, "version.dll")));
+        Assert.True(File.Exists(Path.Combine(_win64, "verorg.dll")));
+        Assert.True(File.Exists(Path.Combine(_win64, "WuWaVH.dll")));
+        Assert.Empty(_viet.FindConflicts(_game));
+    }
+
+    [Fact]
+    public async Task Install_UpgradesLegacyBundleWithoutMarker_AndCreatesManagedMarker()
+    {
+        SeedLegacyVhwuwaInstall();
+
+        var result = await _viet.InstallAsync(_game, NameVariant.English, withFont: true);
+
+        Assert.True(result.Success, result.Error);
+        Assert.Equal("ENGLISH", File.ReadAllText(Path.Combine(Mods, "WuWaVH_99_P.pak")));
+        Assert.Equal("FONT", File.ReadAllText(Path.Combine(Mods, "WahuFont_100_P.pak")));
+        Assert.Equal("LOADER_VERSION", File.ReadAllText(Path.Combine(_win64, "version.dll")));
+        Assert.Equal("VERORG", File.ReadAllText(Path.Combine(_win64, "verorg.dll")));
+        Assert.Equal("SDKDLL", File.ReadAllText(Path.Combine(_win64, "WuWaVH.dll")));
+        Assert.False(File.Exists(Path.Combine(_win64, "version_goc.dll")));
+        Assert.True(File.Exists(Path.Combine(Mods, "vhwuwa_install.json")));
+        Assert.Equal("en", _viet.GetStatus(_game).Variant);
+        Assert.Empty(_viet.FindConflicts(_game));
+    }
+
+    [Fact]
+    public async Task QuickUpdate_UpgradesLegacyBundleWithoutMarker_AndCreatesManagedMarker()
+    {
+        SeedLegacyVhwuwaInstall();
+
+        var result = await _viet.UpdateTranslationPakAsync(_game, NameVariant.English);
+
+        Assert.True(result.Success, result.Error);
+        Assert.Equal("ENGLISH", File.ReadAllText(Path.Combine(Mods, "WuWaVH_99_P.pak")));
+        Assert.Equal("FONT", File.ReadAllText(Path.Combine(Mods, "WahuFont_100_P.pak")));
+        Assert.Equal("LOADER_VERSION", File.ReadAllText(Path.Combine(_win64, "version.dll")));
+        Assert.Equal("VERORG", File.ReadAllText(Path.Combine(_win64, "verorg.dll")));
+        Assert.Equal("SDKDLL", File.ReadAllText(Path.Combine(_win64, "WuWaVH.dll")));
+        Assert.True(File.Exists(Path.Combine(Mods, "vhwuwa_install.json")));
+        Assert.Equal("en", _viet.GetStatus(_game).Variant);
+        Assert.Empty(_viet.FindConflicts(_game));
     }
 
     [Fact]
@@ -417,6 +526,52 @@ public sealed class ViethoaInstallerTests : IDisposable
 
         var uninstall = await _viet.UninstallAsync(_game);
         Assert.True(uninstall.Success, uninstall.Error);
+    }
+
+    [Fact]
+    public async Task Install_ReinstallOverwritesReadOnlyManagedFiles()
+    {
+        var first = await _viet.InstallAsync(_game, NameVariant.English, withFont: true);
+        Assert.True(first.Success, first.Error);
+
+        var pak = Path.Combine(Mods, "WuWaVH_99_P.pak");
+        var font = Path.Combine(Mods, "WahuFont_100_P.pak");
+        var loader = Path.Combine(_win64, "version.dll");
+
+        File.SetAttributes(pak, File.GetAttributes(pak) | FileAttributes.ReadOnly);
+        File.SetAttributes(font, File.GetAttributes(font) | FileAttributes.ReadOnly);
+        File.SetAttributes(loader, File.GetAttributes(loader) | FileAttributes.ReadOnly);
+
+        File.WriteAllText(Path.Combine(_content, "WuWaVH_EN_99_P.pak"), "ENGLISH_NEW");
+        File.WriteAllText(Path.Combine(_content, "font", "WahuFont_100_P.pak"), "FONT_NEW");
+        File.WriteAllText(Path.Combine(_content, "loader", "version.dll"), "LOADER_VERSION_NEW");
+
+        var reinstall = await _viet.InstallAsync(_game, NameVariant.English, withFont: true);
+
+        Assert.True(reinstall.Success, reinstall.Error);
+        Assert.Equal("ENGLISH_NEW", File.ReadAllText(pak));
+        Assert.Equal("FONT_NEW", File.ReadAllText(font));
+        Assert.Equal("LOADER_VERSION_NEW", File.ReadAllText(loader));
+        Assert.False(File.GetAttributes(pak).HasFlag(FileAttributes.ReadOnly));
+        Assert.False(File.GetAttributes(font).HasFlag(FileAttributes.ReadOnly));
+        Assert.False(File.GetAttributes(loader).HasFlag(FileAttributes.ReadOnly));
+    }
+
+    [Fact]
+    public async Task Install_WhenManagedPakIsLocked_ReportsOverwriteFailure()
+    {
+        var first = await _viet.InstallAsync(_game, NameVariant.English, withFont: false);
+        Assert.True(first.Success, first.Error);
+
+        var pak = Path.Combine(Mods, "WuWaVH_99_P.pak");
+        File.WriteAllText(Path.Combine(_content, "WuWaVH_EN_99_P.pak"), "ENGLISH_NEW");
+
+        using var lockStream = new FileStream(pak, FileMode.Open, FileAccess.Read, FileShare.Read);
+        var reinstall = await _viet.InstallAsync(_game, NameVariant.English, withFont: false);
+
+        Assert.False(reinstall.Success);
+        Assert.Contains("Không thể ghi đè file", reinstall.Error!, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("đang bị game", reinstall.Error!, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
