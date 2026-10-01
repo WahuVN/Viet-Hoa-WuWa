@@ -60,7 +60,7 @@ public partial class InstallViewModel : ObservableObject
         ConflictText = HasConflicts
             ? $"⚠ Phát hiện {conflicts.Count} mục có thể xung đột:\n• " + string.Join("\n• ", conflicts.Take(8))
               + (conflicts.Count > 8 ? $"\n• … và {conflicts.Count - 8} mục khác" : "")
-              + "\nBạn có thể cách ly để giữ bản sao hoặc chọn Xóa mod xung đột để xóa vĩnh viễn."
+              + "\nChỉ mod ngoài được liệt kê; file VHWuWa cũ được giữ lại và tự nâng cấp. Bạn có thể Cách ly hoặc chọn Xóa mod ngoài."
             : "✔ Không phát hiện mod khác có thể xung đột.";
         FontAvailable = content.FontPak is not null;
         HasHanViet = File.Exists(HanVietPakPath);
@@ -160,9 +160,10 @@ public partial class InstallViewModel : ObservableObject
         }
 
         var answer = System.Windows.MessageBox.Show(
-            "XÓA VĨNH VIỄN toàn bộ file mod xung đột mà ứng dụng vừa liệt kê?\n\n"
-            + "Thao tác này không tạo bản sao và không thể hoàn tác. Nếu muốn giữ bản sao, hãy dùng Cách ly mod xung đột.",
-            "Xóa mod xung đột", System.Windows.MessageBoxButton.YesNo,
+            "XÓA VĨNH VIỄN các file mod ngoài mà ứng dụng vừa liệt kê?\n\n"
+            + "File của VHWuWa cũ (PAK/font/loader WAHU) được bảo vệ và không nằm trong danh sách xóa. "
+            + "Thao tác này không tạo bản sao và không thể hoàn tác. Nếu muốn giữ bản sao mod ngoài, hãy dùng Cách ly.",
+            "Xóa mod ngoài", System.Windows.MessageBoxButton.YesNo,
             System.Windows.MessageBoxImage.Warning,
             System.Windows.MessageBoxResult.No);
         if (answer != System.Windows.MessageBoxResult.Yes) return;
@@ -306,9 +307,20 @@ public partial class InstallViewModel : ObservableObject
             }
 
             var r = await _viet.InstallAsync(game, variant, ApplyFont && FontAvailable, progress, _cts.Token);
-            Summary = r.Success
-                ? "✅ Cài xong! Vào game đặt Text Language = English. Có thể dùng DirectX 11 hoặc 12."
-                : (r.Error?.StartsWith("❌") == true ? r.Error : "❌ " + r.Error);
+            if (r.Success)
+            {
+                Summary = "✅ Cài xong! Vào game đặt Text Language = English. Có thể dùng DirectX 11 hoặc 12.";
+            }
+            else
+            {
+                var error = r.Error?.StartsWith("❌") == true ? r.Error! : "❌ " + r.Error;
+                Summary = error;
+                System.Windows.MessageBox.Show(
+                    error,
+                    "VHWuWa — Không thể cài đặt",
+                    System.Windows.MessageBoxButton.OK,
+                    System.Windows.MessageBoxImage.Error);
+            }
         }
         finally { Busy = false; _cts?.Dispose(); _cts = null; Refresh(); }
     }
