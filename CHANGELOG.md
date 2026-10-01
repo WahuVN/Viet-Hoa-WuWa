@@ -2,21 +2,44 @@
 
 Tất cả các thay đổi đáng chú ý của dự án VHWuWa được ghi lại tại đây theo chuẩn [SemVer](https://semver.org/lang/vi/).
 
+## [3.0.12] - 2026-10-01
+
+### Sửa lỗi cài đặt
+- Cài/cập nhật ghi đè trực tiếp các file VHWuWa hiện có thay vì xóa trước rồi bỏ qua lỗi.
+- Tự bỏ thuộc tính Read-only trên file do VHWuWa quản lý trước khi ghi đè.
+- Kiểm tra quyền ghi ở thư mục ~WuWaMods và Win64 trước khi cài.
+- Khi thiếu quyền, báo rõ cần chạy VHWuWa bằng Administrator.
+- Khi file đang bị game/launcher giữ, báo rõ cần đóng chương trình đang sử dụng file.
+- Trang Cài đặt hiển thị hộp thoại lỗi thay vì chỉ ghi vào dòng trạng thái.
+
+### Kiểm thử
+- 2/2 test mới cho ghi đè Read-only và file lock: đạt.
+- 110/110 test toàn bộ: đạt.
+
+## [3.0.11] - 2026-10-01
+
+### Sửa lỗi
+- Không còn nhận nhầm bộ VHWuWa cũ thiếu marker là mod ngoài.
+- Nút dọn xung đột chỉ xử lý mod ngoài; bảo vệ PAK/font/loader của bản VHWuWa cũ.
+- Hỗ trợ nâng cấp/cập nhật nhanh từ bộ cài legacy và tự tạo marker quản lý mới.
+- Tránh backup nhầm loader VHWuWa cũ thành `version_goc.dll`.
+- Đổi nhãn giao diện thành **Xóa mod ngoài** và làm rõ cảnh báo trước khi xóa.
+
+### Kiểm thử
+- 108/108 test toàn bộ: đạt.
+- 24/24 test riêng ViethoaInstaller: đạt.
+
 ## [3.0.10] - 2026-10-01
 
-### Wuthering Waves 3.7
-- Cập nhật toàn bộ payload Việt hóa sang **Wuthering Waves 3.7**.
-- Đồng bộ PAK **Tên Anh** và dựng lại PAK **Hán Việt** từ ConfigDB 3.7.
-- Giữ nguyên placeholder, tag, số liệu và topology cần thiết của dữ liệu game.
-- App và updater cùng version **3.0.10**, giữ self-update, SHA-256, health-check và rollback.
-- Bộ người chơi: `VietHoa-WuWa-v3.0.10.zip`.
-- Bộ WAHU Community: `App-Dich-WuWa-v3.0.10.zip`.
+### Ứng dụng
+- Nâng phiên bản PC lên 3.0.10 và cập nhật nhãn tương thích cho Wuthering Waves 3.7.
+- Giữ nguyên luồng cài đặt, self-update, health-check và rollback của bản 3.0.9.
 
-### Mobile
-- Companion Android công khai: **VHWuWa Mobile 0.2.0-alpha.8**.
-- Hỗ trợ game **3.7.0**, content **3.7.0-R1**, Android 10+ và Shizuku.
-- Mobile dùng custom mount, không ghi đè PAK gốc của game.
-- Release Mobile: https://github.com/WahuVN/VHWuWa-Mobile/releases/tag/v0.2.0-alpha.8
+### Dữ liệu Việt hóa
+- Đưa PAK Tên Anh 3.7 vào pipeline PC và xác minh PAK V12 hợp lệ.
+- Dựng lại PAK Hán Việt từ nguồn 3.7 đầy đủ; áp 5.813 speaker, 22 role, 3.543 thay thế tên trong thoại và 15.345 master locks.
+- Hai biến thể đều giữ 110 ConfigDB và được fresh-unpack kiểm tra trước khi đóng bộ cài.
+
 ## [3.0.9] - 2026-09-19
 
 ### Ứng dụng
