@@ -2,6 +2,21 @@
 
 Tất cả các thay đổi đáng chú ý của dự án VHWuWa được ghi lại tại đây theo chuẩn [SemVer](https://semver.org/lang/vi/).
 
+## [3.0.10] - 2026-10-01
+
+### Wuthering Waves 3.7
+- Cập nhật toàn bộ payload Việt hóa sang **Wuthering Waves 3.7**.
+- Đồng bộ PAK **Tên Anh** và dựng lại PAK **Hán Việt** từ ConfigDB 3.7.
+- Giữ nguyên placeholder, tag, số liệu và topology cần thiết của dữ liệu game.
+- App và updater cùng version **3.0.10**, giữ self-update, SHA-256, health-check và rollback.
+- Bộ người chơi: `VietHoa-WuWa-v3.0.10.zip`.
+- Bộ WAHU Community: `App-Dich-WuWa-v3.0.10.zip`.
+
+### Mobile
+- Companion Android công khai: **VHWuWa Mobile 0.2.0-alpha.8**.
+- Hỗ trợ game **3.7.0**, content **3.7.0-R1**, Android 10+ và Shizuku.
+- Mobile dùng custom mount, không ghi đè PAK gốc của game.
+- Release Mobile: https://github.com/WahuVN/VHWuWa-Mobile/releases/tag/v0.2.0-alpha.8
 ## [3.0.9] - 2026-09-19
 
 ### Ứng dụng
