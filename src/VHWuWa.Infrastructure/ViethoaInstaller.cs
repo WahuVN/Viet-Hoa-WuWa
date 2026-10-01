@@ -147,10 +147,34 @@ public sealed class ViethoaInstaller : IViethoaInstaller
                 st.Variant = marker.Variant;
                 st.FontPak = marker.Font;
             }
-            else if (st.Installed) st.Version = CurrentPackageVersion();
+            else if (st.Installed) st.Version = ""; // Legacy chưa có marker: không giả là phiên bản hiện tại.
         }
         catch (Exception ex) { _log.Warn("Viethoa", "Đọc trạng thái lỗi: " + ex.Message); }
         return st;
+    }
+
+    private static bool IsLegacyVhwuwaBundle(string gamePath, ViethoaInstallMarker? marker)
+    {
+        // Các bản VHWuWa cũ có thể chưa có marker v2. Chỉ coi là legacy khi
+        // thấy đủ bộ file đặc trưng của chính VHWuWa, tránh bỏ qua mod ngoài
+        // chỉ vì trùng một tên file đơn lẻ.
+        if (marker is not null) return false;
+        var mods = ModsOf(gamePath);
+        var win64 = Win64Of(gamePath);
+        return File.Exists(Path.Combine(mods, PakName))
+            && File.Exists(Path.Combine(win64, "version.dll"))
+            && File.Exists(Path.Combine(win64, "verorg.dll"))
+            && File.Exists(Path.Combine(win64, "WuWaVH.dll"));
+    }
+
+    private static bool IsLegacyVhwuwaModFile(string filePath, bool legacyBundle)
+    {
+        if (!legacyBundle) return false;
+        var name = Path.GetFileName(filePath);
+        return name.Equals(PakName, StringComparison.OrdinalIgnoreCase)
+            || name.Equals(Path.ChangeExtension(PakName, ".sig"), StringComparison.OrdinalIgnoreCase)
+            || name.Equals("WahuFont_100_P.pak", StringComparison.OrdinalIgnoreCase)
+            || name.Equals("WahuFont_100_P.sig", StringComparison.OrdinalIgnoreCase);
     }
 
     private HashSet<string> OwnedModFiles(string mods)
@@ -310,6 +334,7 @@ public sealed class ViethoaInstaller : IViethoaInstaller
             var mods = ModsOf(gamePath);
             var markerExists = File.Exists(Path.Combine(mods, MarkerName));
             var marker = ViethoaInstallMarker.Load(Path.Combine(mods, MarkerName));
+            var legacyBundle = IsLegacyVhwuwaBundle(gamePath, marker);
             var owned = OwnedModFiles(mods);
 
             if (Directory.Exists(paks))
@@ -337,6 +362,7 @@ public sealed class ViethoaInstaller : IViethoaInstaller
                         {
                             if (!ModExtensions.Contains(Path.GetExtension(file))) continue;
                             var name = Path.GetFileName(file);
+                            if (IsLegacyVhwuwaModFile(file, legacyBundle)) continue;
                             if (markerExists && owned.Contains(name))
                             {
                                 if (!MatchesLegacyManagedFile(marker, "mods", file))
@@ -361,6 +387,7 @@ public sealed class ViethoaInstaller : IViethoaInstaller
             {
                 var installed = Path.Combine(win64, name);
                 if (!File.Exists(installed)) continue;
+                if (legacyBundle && name.Equals("version.dll", StringComparison.OrdinalIgnoreCase)) continue;
                 var ownSource = Path.Combine(LoaderDir, name);
                 if (markerExists && File.Exists(ownSource)
                     && MatchesLegacyManagedFile(marker, "win64", installed)) continue;
@@ -553,6 +580,7 @@ public sealed class ViethoaInstaller : IViethoaInstaller
         var win64 = Win64Of(gamePath);
         var markerExists = File.Exists(Path.Combine(mods, MarkerName));
         var marker = ViethoaInstallMarker.Load(Path.Combine(mods, MarkerName));
+        var legacyBundle = IsLegacyVhwuwaBundle(gamePath, marker);
         var owned = OwnedModFiles(mods);
 
         if (Directory.Exists(paks))
@@ -574,6 +602,7 @@ public sealed class ViethoaInstaller : IViethoaInstaller
                     if (!ModExtensions.Contains(Path.GetExtension(file))) continue;
                     var isTopLevel = Path.GetDirectoryName(file)!.Equals(dir, StringComparison.OrdinalIgnoreCase);
                     var name = Path.GetFileName(file);
+                    if (isOwnDirectory && isTopLevel && IsLegacyVhwuwaModFile(file, legacyBundle)) continue;
                     if (isOwnDirectory && isTopLevel && markerExists && owned.Contains(name)
                         && MatchesLegacyManagedFile(marker, "mods", file)) continue;
                     AddFile(file);
@@ -585,6 +614,7 @@ public sealed class ViethoaInstaller : IViethoaInstaller
         {
             var installed = Path.Combine(win64, name);
             if (!File.Exists(installed)) continue;
+            if (legacyBundle && name.Equals("version.dll", StringComparison.OrdinalIgnoreCase)) continue;
             if (markerExists && File.Exists(Path.Combine(LoaderDir, name))
                 && MatchesLegacyManagedFile(marker, "win64", installed)) continue;
             AddFile(installed);
@@ -661,10 +691,122 @@ public sealed class ViethoaInstaller : IViethoaInstaller
         catch { return null; }
     }
 
+    private static Exception ManagedWriteException(string action, string path, Exception inner)
+    {
+        if (inner is UnauthorizedAccessException)
+        {
+            return new UnauthorizedAccessException(
+                $"Windows từ chối quyền khi {action} '{path}'.\n" +
+                "👉 Hãy đóng VHWuWa, nhấp chuột phải VHWuWa.exe và chọn 'Run as administrator' (Chạy với tư cách quản trị viên), rồi thử lại. " +
+                "Nếu game nằm trong Program Files, hãy bảo đảm tài khoản Windows có quyền ghi vào thư mục game.",
+                inner);
+        }
+
+        return new IOException(
+            $"Không thể {action} '{path}'. File có thể đang bị game, launcher hoặc chương trình khác sử dụng.\n" +
+            "👉 Hãy đóng hoàn toàn Wuthering Waves/launcher rồi thử lại. Nếu vẫn lỗi, hãy chạy VHWuWa bằng quyền Administrator.",
+            inner);
+    }
+
+    private static void EnsureDirectoryWritable(string directory, string label)
+    {
+        string? probe = null;
+        try
+        {
+            Directory.CreateDirectory(directory);
+            probe = Path.Combine(directory, ".vhwuwa-write-test-" + Guid.NewGuid().ToString("N") + ".tmp");
+            using (var stream = new FileStream(probe, FileMode.CreateNew, FileAccess.Write, FileShare.None))
+                stream.WriteByte(0);
+            File.Delete(probe);
+            probe = null;
+        }
+        catch (Exception ex) when (ex is UnauthorizedAccessException or IOException)
+        {
+            throw ManagedWriteException($"ghi vào {label}", directory, ex);
+        }
+        finally
+        {
+            if (probe is not null)
+            {
+                try { if (File.Exists(probe)) File.Delete(probe); } catch { }
+            }
+        }
+    }
+
+    private static void PrepareManagedDestination(string path)
+    {
+        if (!File.Exists(path)) return;
+        try
+        {
+            var attributes = File.GetAttributes(path);
+            if ((attributes & FileAttributes.ReadOnly) != 0)
+                File.SetAttributes(path, attributes & ~FileAttributes.ReadOnly);
+        }
+        catch (Exception ex) when (ex is UnauthorizedAccessException or IOException)
+        {
+            throw ManagedWriteException("chuẩn bị ghi đè file", path, ex);
+        }
+    }
+
+    private static void CopyManagedFileOverwrite(string source, string destination)
+    {
+        try
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
+            PrepareManagedDestination(destination);
+            File.Copy(source, destination, overwrite: true);
+        }
+        catch (Exception ex) when (ex is UnauthorizedAccessException or IOException)
+        {
+            throw ManagedWriteException("ghi đè file", destination, ex);
+        }
+    }
+
+    private static void MoveManagedFileOverwrite(string source, string destination)
+    {
+        try
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
+            PrepareManagedDestination(destination);
+            File.Move(source, destination, overwrite: true);
+        }
+        catch (Exception ex) when (ex is UnauthorizedAccessException or IOException)
+        {
+            throw ManagedWriteException("ghi đè file", destination, ex);
+        }
+    }
+
+    private static void DeleteManagedFile(string path)
+    {
+        if (!File.Exists(path)) return;
+        try
+        {
+            PrepareManagedDestination(path);
+            File.Delete(path);
+        }
+        catch (Exception ex) when (ex is UnauthorizedAccessException or IOException)
+        {
+            throw ManagedWriteException("xóa file cũ", path, ex);
+        }
+    }
+
     private static void WriteSig(string? seed, string dstSig)
     {
-        if (seed is not null && File.Exists(seed)) File.Copy(seed, dstSig, true);
-        else File.WriteAllBytes(dstSig, Array.Empty<byte>());   // placeholder rỗng
+        if (seed is not null && File.Exists(seed))
+        {
+            CopyManagedFileOverwrite(seed, dstSig);
+            return;
+        }
+
+        try
+        {
+            PrepareManagedDestination(dstSig);
+            File.WriteAllBytes(dstSig, Array.Empty<byte>());   // placeholder rỗng
+        }
+        catch (Exception ex) when (ex is UnauthorizedAccessException or IOException)
+        {
+            throw ManagedWriteException("ghi đè chữ ký file", dstSig, ex);
+        }
     }
 
     public async Task<Result> UpdateTranslationPakAsync(string gamePath, NameVariant variant,
@@ -689,12 +831,20 @@ public sealed class ViethoaInstaller : IViethoaInstaller
             var mods = ModsOf(gamePath);
             var markerPath = Path.Combine(mods, MarkerName);
             var marker = ViethoaInstallMarker.Load(markerPath);
-            if (marker is null)
-                return Result.Fail("Thiếu marker quản lý bản Việt hóa; không cập nhật nhanh để tránh ghi đè file không xác định.");
+            var legacyBundle = IsLegacyVhwuwaBundle(gamePath, marker);
+            if (marker is null && !legacyBundle)
+                return Result.Fail("Thiếu thông tin quản lý bản Việt hóa; không cập nhật nhanh để tránh ghi đè file không xác định.");
+
+            marker ??= new ViethoaInstallMarker
+            {
+                PackageVersion = "",
+                Variant = variant == NameVariant.English ? "en" : "hanviet",
+                Font = File.Exists(Path.Combine(mods, "WahuFont_100_P.pak")) ? "WahuFont_100_P.pak" : null
+            };
 
             var pakDst = Path.Combine(mods, PakName);
 
-            // 3.0.9: quick-update có quyền tự chữa bản cài. Nếu mod khác đã
+            // Cập nhật nhanh có quyền tự chữa bản cài. Nếu mod khác đã
             // ghi đè PAK/loader hoặc chèn bundle xung đột, dọn đúng tập file
             // detector nhận diện rồi ghi lại PAK canonical của release.
             var conflicts = FindConflicts(gamePath);
@@ -714,9 +864,10 @@ public sealed class ViethoaInstaller : IViethoaInstaller
             await Task.Run(() =>
             {
                 ct.ThrowIfCancellationRequested();
-                Directory.CreateDirectory(mods);
                 var paks = PaksOf(gamePath);
                 var win64 = Win64Of(gamePath);
+                EnsureDirectoryWritable(mods, "thư mục mod của VHWuWa");
+                EnsureDirectoryWritable(win64, "thư mục Win64 của game");
                 var seedSig = FindSeedSig(paks);
 
                 var temp = pakDst + ".update-" + Guid.NewGuid().ToString("N");
@@ -726,7 +877,7 @@ public sealed class ViethoaInstaller : IViethoaInstaller
                     if (!string.Equals(ViethoaInstallMarker.Sha256(srcPak), ViethoaInstallMarker.Sha256(temp),
                             StringComparison.OrdinalIgnoreCase))
                         throw new InvalidDataException("SHA-256 của PAK tạm không khớp nguồn.");
-                    File.Move(temp, pakDst, true);
+                    MoveManagedFileOverwrite(temp, pakDst);
                 }
                 finally
                 {
@@ -753,7 +904,7 @@ public sealed class ViethoaInstaller : IViethoaInstaller
                     repairedFontSource = fontSource;
                     repairedFontName = Path.GetFileName(fontSource);
                     var fontDst = Path.Combine(mods, repairedFontName);
-                    File.Copy(fontSource, fontDst, true);
+                    CopyManagedFileOverwrite(fontSource, fontDst);
                     WriteSig(seedSig, Path.ChangeExtension(fontDst, ".sig"));
                     marker.Font = repairedFontName;
                     marker.Track("mods", fontDst);
@@ -768,7 +919,7 @@ public sealed class ViethoaInstaller : IViethoaInstaller
                     if (!File.Exists(source))
                         throw new FileNotFoundException("Thiếu loader canonical để tự phục hồi.", source);
                     var destination = Path.Combine(win64, dll);
-                    File.Copy(source, destination, true);
+                    CopyManagedFileOverwrite(source, destination);
                     marker.Track("win64", destination);
                 }
 
@@ -776,6 +927,7 @@ public sealed class ViethoaInstaller : IViethoaInstaller
                 marker.Variant = variant == NameVariant.English ? "en" : "hanviet";
                 marker.Track("mods", pakDst);
                 marker.Track("mods", pakSig);
+                PrepareManagedDestination(markerPath);
                 marker.Save(markerPath);
             }, ct);
 
@@ -789,6 +941,16 @@ public sealed class ViethoaInstaller : IViethoaInstaller
             return Result.Ok();
         }
         catch (OperationCanceledException) { return Result.Fail("Đã hủy cập nhật PAK."); }
+        catch (UnauthorizedAccessException ex)
+        {
+            _log.Error("Viethoa", "Cập nhật PAK bị Windows từ chối quyền: " + ex.Message, ex);
+            return Result.Fail(ex.Message, ex);
+        }
+        catch (IOException ex)
+        {
+            _log.Error("Viethoa", "Cập nhật PAK không thể ghi đè file: " + ex.Message, ex);
+            return Result.Fail(ex.Message, ex);
+        }
         catch (Exception ex)
         {
             _log.Error("Viethoa", "Cập nhật PAK thất bại: " + ex.Message, ex);
@@ -823,9 +985,9 @@ public sealed class ViethoaInstaller : IViethoaInstaller
             var conflicts = FindConflicts(gamePath);
             if (conflicts.Count > 0)
             {
-                // Mục tiêu 3.0.9: cài Việt hóa phải tự làm sạch các mod cũ/mod
-                // khác mà detector xác định xung đột, rồi để bản release hiện tại
-                // thắng. File game gốc pakchunk* không thuộc tập conflict này.
+                // Khi cài Việt hóa, chỉ tự làm sạch mod ngoài đã được detector xác định xung đột,
+                // rồi để bản phát hành hiện tại ghi lại các file VHWuWa được quản lý.
+                // File game gốc pakchunk* không thuộc tập conflict này.
                 var cleanup = DeleteConflictsUnderLock(
                     gamePath,
                     failWhenEmpty: false,
@@ -840,46 +1002,73 @@ public sealed class ViethoaInstaller : IViethoaInstaller
                 return Result.Fail($"Không tìm thấy pak biến thể đã chọn: {Path.GetFileName(srcPak)}");
 
             var mods = ModsOf(gamePath);
+            var existingMarker = ViethoaInstallMarker.Load(Path.Combine(mods, MarkerName));
+            var legacyBundle = IsLegacyVhwuwaBundle(gamePath, existingMarker);
             string? fontName = (withFont && content.FontPak is not null)
                 ? Path.GetFileName(content.FontPak) : null;
 
             await Task.Run(() =>
             {
-                Directory.CreateDirectory(mods);
-                // Chỉ dọn file do chính WAHU tạo; không xóa nhầm mod của người dùng.
+                ct.ThrowIfCancellationRequested();
+                EnsureDirectoryWritable(mods, "thư mục mod của VHWuWa");
+                EnsureDirectoryWritable(win64, "thư mục Win64 của game");
+
+                // Giữ các file đích hiện tại để ghi đè trực tiếp. Chỉ xóa file managed
+                // cũ không còn thuộc cấu hình mới (ví dụ font cũ khi đổi/bỏ font).
                 var owned = OwnedModFiles(mods);
+                var keepOwned = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+                {
+                    PakName,
+                    Path.ChangeExtension(PakName, ".sig"),
+                    MarkerName
+                };
+                if (fontName is not null)
+                {
+                    keepOwned.Add(fontName);
+                    keepOwned.Add(Path.ChangeExtension(fontName, ".sig"));
+                }
+
                 foreach (var old in Directory.EnumerateFiles(mods, "*", SearchOption.TopDirectoryOnly))
                 {
-                    if (owned.Contains(Path.GetFileName(old)))
-                        try { File.Delete(old); } catch { }
+                    var name = Path.GetFileName(old);
+                    if (owned.Contains(name) && !keepOwned.Contains(name))
+                        DeleteManagedFile(old);
                 }
 
                 var seedSig = FindSeedSig(paks);
 
-                // 1) Pak bản dịch + .sig
+                // 1) PAK bản dịch + .sig: luôn ghi đè bản VHWuWa cũ.
                 var pakDst = Path.Combine(mods, PakName);
-                File.Copy(srcPak, pakDst, true);
+                CopyManagedFileOverwrite(srcPak, pakDst);
                 WriteSig(seedSig, Path.ChangeExtension(pakDst, ".sig"));
                 progress?.Report(new InstallProgress(40, PakName, 1, fontName is null ? 2 : 3));
 
-                // 2) Font pak + .sig
+                // 2) Font pak + .sig: luôn ghi đè bản VHWuWa cũ.
                 if (fontName is not null)
                 {
                     var fontDst = Path.Combine(mods, fontName);
-                    File.Copy(content.FontPak!, fontDst, true);
+                    CopyManagedFileOverwrite(content.FontPak!, fontDst);
                     WriteSig(seedSig, Path.ChangeExtension(fontDst, ".sig"));
                     progress?.Report(new InstallProgress(70, fontName, 2, 3));
                 }
 
-                // 3) Loader vào Win64 (backup version.dll gốc 1 lần)
+                // 3) Loader vào Win64 (backup version.dll gốc 1 lần).
                 var verOrig = Path.Combine(win64, "version.dll");
                 var verBak = Path.Combine(win64, "version_goc.dll");
-                if (File.Exists(verOrig) && !File.Exists(verBak))
-                    File.Copy(verOrig, verBak, false);
+                if (File.Exists(verOrig) && !File.Exists(verBak) && !legacyBundle)
+                {
+                    try { File.Copy(verOrig, verBak, false); }
+                    catch (Exception ex) when (ex is UnauthorizedAccessException or IOException)
+                    {
+                        throw ManagedWriteException("tạo bản sao loader gốc", verBak, ex);
+                    }
+                }
+
                 foreach (var dll in new[] { "version.dll", "verorg.dll", "WuWaVH.dll" })
                 {
-                    var s = Path.Combine(LoaderDir, dll);
-                    File.Copy(s, Path.Combine(win64, dll), true);
+                    var source = Path.Combine(LoaderDir, dll);
+                    var destination = Path.Combine(win64, dll);
+                    CopyManagedFileOverwrite(source, destination);
                 }
                 progress?.Report(new InstallProgress(100, "loader", fontName is null ? 2 : 3, fontName is null ? 2 : 3));
 
@@ -900,7 +1089,10 @@ public sealed class ViethoaInstaller : IViethoaInstaller
                 }
                 foreach (var dll in new[] { "version.dll", "verorg.dll", "WuWaVH.dll" })
                     marker.Track("win64", Path.Combine(win64, dll));
-                marker.Save(Path.Combine(mods, MarkerName));
+
+                var markerPath = Path.Combine(mods, MarkerName);
+                PrepareManagedDestination(markerPath);
+                marker.Save(markerPath);
             }, ct);
 
             var verifyErrors = VerifyInstallation(
@@ -919,6 +1111,16 @@ public sealed class ViethoaInstaller : IViethoaInstaller
             return Result.Ok();
         }
         catch (OperationCanceledException) { return Result.Fail("Đã hủy cài đặt."); }
+        catch (UnauthorizedAccessException ex)
+        {
+            _log.Error("Viethoa", "Cài đặt bị Windows từ chối quyền: " + ex.Message, ex);
+            return Result.Fail(ex.Message, ex);
+        }
+        catch (IOException ex)
+        {
+            _log.Error("Viethoa", "Cài đặt không thể ghi đè file: " + ex.Message, ex);
+            return Result.Fail(ex.Message, ex);
+        }
         catch (Exception ex)
         {
             _log.Error("Viethoa", "Cài đặt thất bại: " + ex.Message, ex);
