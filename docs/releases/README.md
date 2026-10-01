@@ -1,20 +1,30 @@
-# Release documents
+# Tài liệu phát hành
 
-Mỗi bản phát hành có một thư mục riêng để tránh để release note/announcement rải ở root repo.
+Mỗi bản phát hành có một thư mục riêng để lưu ghi chú và tài liệu liên quan.
 
 ## Bản hiện tại
 
+### v3.0.12
+
+- [Ghi chú phát hành](v3.0.12/RELEASE_NOTES.md)
+
+### v3.0.11
+
+- [Ghi chú phát hành](v3.0.11/RELEASE_NOTES.md)
+
+### v3.0.10
+
+- [Ghi chú phát hành](v3.0.10/RELEASE_NOTES.md)
+
 ### v3.0.9
 
-- [Release notes](v3.0.9/RELEASE_NOTES.md)
-- [Translation changes](v3.0.9/TRANSLATION_CHANGES.md)
-- [GitHub announcement](v3.0.9/GITHUB_ANNOUNCEMENT.md)
-- [Discord announcement](v3.0.9/DISCORD_ANNOUNCEMENT.md)
+- [Ghi chú phát hành](v3.0.9/RELEASE_NOTES.md)
+- [Thay đổi bản dịch](v3.0.9/TRANSLATION_CHANGES.md)
+- [Thông báo GitHub](v3.0.9/GITHUB_ANNOUNCEMENT.md)
+- [Thông báo Discord](v3.0.9/DISCORD_ANNOUNCEMENT.md)
 
-Asset build/upload không lưu trong thư mục docs. Bản 3.0.9 hiện nằm tại:
-
-`dist/_UPLOAD_V3.0.9_READY/`
+Tệp build/upload nằm trong thư mục `dist/` và không lưu trực tiếp trong thư mục tài liệu.
 
 ## Lịch sử
 
-Các release note cũ được giữ trong [history](history/) để root repo không bị lẫn với tài liệu hiện hành.
+Các tài liệu phát hành cũ được giữ trong [history](history/) để thư mục chính luôn gọn.
