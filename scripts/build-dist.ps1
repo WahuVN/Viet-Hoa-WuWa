@@ -1,7 +1,7 @@
 ﻿# build-dist.ps1 — Đóng gói VHWuWa thành BỘ CÀI phát cho người khác
 # Publish self-contained (không cần cài .NET) + gói sẵn nội dung Việt hóa (pak Hán Việt/EN + font + loader).
 #
-#   powershell -ExecutionPolicy Bypass -File scripts\build-dist.ps1 -Version 3.0.9
+#   powershell -ExecutionPolicy Bypass -File scripts\build-dist.ps1 -Version 3.0.12
 #
 param([string]$Version = "")
 
@@ -178,7 +178,7 @@ $docTruoc = @'
 VHWuWa — Bộ cài Việt Hóa Wuthering Waves
 ========================================
 
-BẢN __VERSION__ — ĐÃ KIỂM THỬ TRÊN WUTHERING WAVES 3.6
+BẢN __VERSION__ — ĐÃ KIỂM THỬ TRÊN WUTHERING WAVES 3.7
 
 CÁCH DÙNG
   1. Giải nén cả thư mục "VHWuWa_BanCai" ra ổ đĩa (đừng mở trực tiếp trong file .zip).
