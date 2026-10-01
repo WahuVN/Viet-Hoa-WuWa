@@ -4,7 +4,7 @@
 
 # VHWuWa — Bộ Cài & Quản Lý Việt Hóa Wuthering Waves
 
-Bộ công cụ mã nguồn mở hỗ trợ cài đặt, tùy biến phông chữ và quản lý bản dịch tiếng Việt cho **Wuthering Waves (PC / Windows)**.
+Bộ công cụ Việt hóa dành cho **Wuthering Waves trên PC/Windows**, hỗ trợ cài đặt, cập nhật, tùy biến phông chữ và quản lý bản dịch tiếng Việt.
 
 [![Phiên bản](https://img.shields.io/badge/phiên_bản-3.0.10-blue?style=flat-square)](https://github.com/WahuVN/Viet-Hoa-WuWa/releases/latest)
 [![Tương thích Game](https://img.shields.io/badge/Wuthering_Waves-3.7+-informational?style=flat-square)](https://github.com/WahuVN/Viet-Hoa-WuWa/releases/latest)
@@ -31,7 +31,7 @@ Bộ công cụ mã nguồn mở hỗ trợ cài đặt, tùy biến phông ch�
 VHWuWa được thiết kế nhằm hỗ trợ người chơi trải nghiệm trọn vẹn cốt truyện và hệ thống Wuthering Waves bằng tiếng Việt với thao tác trực quan, an toàn:
 
 - **Tự động nhận diện & Cài đặt 1-Click:** Tự động tìm thư mục game ngay khi mở app và thiết lập trọn gói bản dịch, font chữ chỉ với 1 click.
-- **Tự động Cập nhật Thông minh (1-Click Update):** Tự động phát hiện phiên bản mới và cập nhật tại chỗ mượt mà mà không cần tải lại thủ công.
+- **Tự động cập nhật:** Tự phát hiện bản mới và cập nhật trực tiếp từ ứng dụng, không cần tải lại thủ công.
 - **Ẩn hoặc đổi biệt hiệu UID:** Tùy biến hoặc ẩn hoàn toàn UID ở góc màn hình, thẻ Profile Esc, khung Chat/Co-op và chế độ Chụp ảnh giúp bảo vệ riêng tư khi stream, quay clip.
 - **Làm mới 100% Danh Hiệu Nhân Vật:** Tinh chỉnh danh hiệu ngắn gọn, chuẩn tiếng Việt (2 - 4 từ), không bị tràn viền giao diện.
 - **Tùy chọn phong cách hiển thị tên nhân vật:**
@@ -48,8 +48,8 @@ VHWuWa được thiết kế nhằm hỗ trợ người chơi trải nghiệm tr
 | Gói tải về | Đối tượng | Mô tả |
 | :--- | :--- | :--- |
 | 🎮 [**VietHoa-WuWa-v3.0.10.zip**](https://github.com/WahuVN/Viet-Hoa-WuWa/releases/latest) | **Người chơi** | Ứng dụng cài đặt Việt hóa trên Windows (Khuyên dùng) |
-| 🛠️ [**App-Dich-WuWa-v3.0.10.zip**](https://github.com/WahuVN/Viet-Hoa-WuWa/releases/latest) | **Dịch giả / Modder** | Bộ công cụ WAHU Community hỗ trợ duyệt ngữ cảnh, QA và đóng gói PAK |
-| 📱 [**VHWuWa Mobile 0.2.0-alpha.8**](https://github.com/WahuVN/VHWuWa-Mobile/releases) | **Android** | Android 10+, cài patch qua Shizuku; game 3.7.0, content 3.7.0-R1 |
+| 🛠️ [**App-Dich-WuWa-v3.0.10.zip**](https://github.com/WahuVN/Viet-Hoa-WuWa/releases/latest) | **Dịch giả / Người đóng góp** | Bộ công cụ WAHU Community hỗ trợ xem ngữ cảnh, kiểm tra chất lượng bản dịch và đóng gói dữ liệu |
+| 📱 [**VHWuWa Mobile 0.2.0-alpha.8**](https://github.com/WahuVN/VHWuWa-Mobile/releases) | **Android** | Android 10+, cài Việt hóa qua Shizuku; hỗ trợ game 3.7.0, nội dung Việt hóa 3.7.0-R1 |
 
 > [!IMPORTANT]
 > Người chơi chỉ cần tải gói **`VietHoa-WuWa-v3.0.10.zip`**. Ứng dụng sẽ tự động tải các gói tài nguyên cần thiết khi cài đặt.
@@ -96,7 +96,7 @@ WuwaVH/
 
 Xem sơ đồ chi tiết và quy tắc đặt file tại [`docs/PROJECT_LAYOUT.md`](docs/PROJECT_LAYOUT.md).
 
-### Hướng dẫn Build từ mã nguồn
+### Hướng dẫn biên dịch từ mã nguồn
 
 **Yêu cầu môi trường:**
 - [.NET 8.0 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
@@ -104,16 +104,16 @@ Xem sơ đồ chi tiết và quy tắc đặt file tại [`docs/PROJECT_LAYOUT.m
 - Python 3.10+ (dành cho bộ công cụ Wahu đóng gói dữ liệu).
 
 ```powershell
-# 1. Khôi phục dependencies cho app
+# 1. Khôi phục các thư viện cần thiết cho ứng dụng
 dotnet restore VHWuWa/VHWuWa.sln
 
-# 2. Biên dịch bản Release
+# 2. Biên dịch bản phát hành
 dotnet build VHWuWa/VHWuWa.sln -c Release
 
 # 3. Chạy kiểm thử tự động
 dotnet test VHWuWa/VHWuWa.sln -c Release
 
-# 4. Đóng gói bộ cài đặt phát hành (tuỳ chọn)
+# 4. Đóng gói bộ cài phát hành (tùy chọn)
 powershell -ExecutionPolicy Bypass -File VHWuWa/scripts/build-dist.ps1 -Version 3.0.10
 ```
 
@@ -122,7 +122,7 @@ powershell -ExecutionPolicy Bypass -File VHWuWa/scripts/build-dist.ps1 -Version 
 ## ⚠️ Lưu ý & Tuyên bố miễn trừ
 
 - **Dự án cộng đồng phi thương mại:** VHWuWa là dự án do cộng đồng người chơi phát triển nhằm hỗ trợ người dùng Việt Nam, không trực thuộc, không được tài trợ hay ủy quyền bởi Kuro Games.
-- **An toàn tệp tin:** Công cụ chỉ can thiệp vào tầng hiển thị ngôn ngữ (`Localization / ConfigDB`), không can thiệp vào bộ nhớ động hay logic xử lý của game. Tuy nhiên, người dùng cần tự cân nhắc và chịu trách nhiệm khi sử dụng các bản mod của bên thứ ba.
+- **An toàn tệp tin:** Công cụ chỉ thay đổi các tệp phục vụ hiển thị ngôn ngữ, không can thiệp vào bộ nhớ đang chạy hay cơ chế chiến đấu của game. Tuy nhiên, đây vẫn là công cụ bên thứ ba nên người dùng cần tự cân nhắc trước khi sử dụng.
 - **Thao tác an toàn:** Luôn tắt hoàn toàn game và launcher trước khi cài đặt hoặc gỡ bỏ bản dịch.
 
 ---
