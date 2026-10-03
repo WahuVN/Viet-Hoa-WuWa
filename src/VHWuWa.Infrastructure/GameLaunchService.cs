@@ -14,8 +14,32 @@ public sealed class GameLaunchService : IGameLaunchService
     public string GetExecutablePath(string gamePath) => Path.Combine(
         gamePath ?? string.Empty, "Client", "Binaries", "Win64", "Client-Win64-Shipping.exe");
 
-    public string GetOfficialLauncherPath(string gamePath) => Path.Combine(
-        gamePath ?? string.Empty, "Wuthering Waves.exe");
+    public string GetOfficialLauncherPath(string gamePath)
+    {
+        var root = (gamePath ?? string.Empty).TrimEnd(
+            Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+        if (string.IsNullOrWhiteSpace(root))
+            return string.Empty;
+
+        // Since WuWa 3.7 the in-game `Wuthering Waves.exe` wrapper can reject
+        // direct launches with "Use launcher to start game!". The real Kuro
+        // launcher normally lives one directory above `Wuthering Waves Game`.
+        var parent = Directory.GetParent(root)?.FullName;
+        if (!string.IsNullOrWhiteSpace(parent))
+        {
+            var kuroLauncher = Path.Combine(parent, "launcher.exe");
+            if (File.Exists(kuroLauncher))
+                return kuroLauncher;
+        }
+
+        // Some custom layouts may keep launcher.exe beside Client.
+        var localLauncher = Path.Combine(root, "launcher.exe");
+        if (File.Exists(localLauncher))
+            return localLauncher;
+
+        // Legacy fallback for older layouts only.
+        return Path.Combine(root, "Wuthering Waves.exe");
+    }
 
     public Result Launch(string gamePath, bool forceCSharpEnvironment)
     {
@@ -27,6 +51,13 @@ public sealed class GameLaunchService : IGameLaunchService
 
             var officialLauncher = GetOfficialLauncherPath(gamePath);
             var launchExe = File.Exists(officialLauncher) ? officialLauncher : clientExe;
+            var launchIsClient = string.Equals(
+                Path.GetFileNameWithoutExtension(launchExe),
+                "Client-Win64-Shipping",
+                StringComparison.OrdinalIgnoreCase);
+            // -ForceEnableCSharpEnvironment is a client argument, not a Kuro launcher argument.
+            // Never pass it to launcher.exe / Wuthering Waves.exe wrappers.
+            var effectiveForceCSharp = forceCSharpEnvironment && launchIsClient;
 
             var running = Process.GetProcessesByName("Client-Win64-Shipping");
             try
@@ -50,7 +81,7 @@ public sealed class GameLaunchService : IGameLaunchService
             {
                 // The watchdog launches the official wrapper when present, then
                 // follows the newly spawned Client-Win64-Shipping child PID.
-                startInfo = CreateWatchdogStartInfo(helperExe!, launchExe, forceCSharpEnvironment);
+                startInfo = CreateWatchdogStartInfo(helperExe!, launchExe, effectiveForceCSharp);
             }
             else
             {
@@ -63,9 +94,9 @@ public sealed class GameLaunchService : IGameLaunchService
                 return Result.Fail("Windows không thể khởi chạy game.");
 
             _log.Info("LaunchGame", canUseSelfWatchdog
-                ? (forceCSharpEnvironment
-                    ? "Đã mở launcher chuẩn qua Exit Watchdog với môi trường C# thử nghiệm."
-                    : "Đã mở launcher chuẩn qua Exit Watchdog 5 giây.")
+                ? (launchIsClient && effectiveForceCSharp
+                    ? "Đã mở client fallback qua Exit Watchdog với môi trường C# thử nghiệm."
+                    : $"Đã mở launcher chuẩn qua Exit Watchdog: {Path.GetFileName(launchExe)}.")
                 : (forceCSharpEnvironment
                     ? "Đã mở game trực tiếp với môi trường C# thử nghiệm."
                     : "Đã mở game trực tiếp ở chế độ thường."));

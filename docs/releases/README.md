@@ -1,8 +1,16 @@
-# Tài liệu phát hành
+﻿# Tài liệu phát hành
 
 Mỗi bản phát hành có một thư mục riêng để lưu ghi chú và tài liệu liên quan.
 
 ## Bản hiện tại
+
+### v3.0.16
+
+- [Ghi chú phát hành](v3.0.16/RELEASE_NOTES.md)
+
+### v3.0.13
+
+- [Ghi chú phát hành](v3.0.13/RELEASE_NOTES.md)
 
 ### v3.0.12
 

@@ -17,12 +17,13 @@ Tài liệu này quy định các kiểm tra logic bắt buộc khi chỉnh sử
 
 ---
 
-## 📦 2. CHUẨN 4 TỆP PHÁT HÀNH GITHUB (vX.X.X)
-Mọi bản release trên `WahuVN/Viet-Hoa-WuWa` bắt buộc phải có đúng 4 tệp đính kèm:
+## 📦 2. ASSET PHÁT HÀNH GITHUB
+Mỗi release Player `vX.X.X` bắt buộc có các asset dành cho người chơi:
 1. `VietHoa-WuWa-vX.X.X.zip` — Bộ cài & quản lý Việt Hóa cho người chơi.
-2. `App-Dich-WuWa-vX.X.X.zip` — WAHU Community cho dịch giả (kèm DB SQLite).
-3. `WuWaVH_EN_99_P.pak` — File PAK Tiếng Anh độc lập.
-4. `WuWaVH_HanViet_99_P.pak` — File PAK Hán Việt độc lập.
+2. `WuWaVH_EN_99_P.pak` — File PAK Tên Anh độc lập.
+3. `WuWaVH_HanViet_99_P.pak` — File PAK Hán Việt độc lập.
+
+`App-Dich-WuWa-vA.B.C.zip` là **artifact độc lập** của WAHU Community. Chỉ upload khi App-Dịch `A.B.C` đã được rebuild + QA riêng. Không đổi tên, copy hoặc gắn version Player cho một ZIP App-Dịch cũ. Một release Player mới có thể giữ nguyên App-Dịch bản trước.
 
 ---
 
@@ -46,7 +47,7 @@ Bản cập nhật vX.X.X ... [tóm tắt điểm nổi bật nhất trong 1-2 c
 | Tệp đính kèm | Mục đích sử dụng |
 | :--- | :--- |
 | **`VietHoa-WuWa-vX.X.X.zip`** | **Người chơi:** Cài đặt, đổi font, ẩn UID và quản lý Việt hóa trọn gói |
-| **`App-Dich-WuWa-vX.X.X.zip`** | **Dịch giả / Đóng góp:** Bộ công cụ WAHU Community kèm Database SQLite |
+| **`App-Dich-WuWa-vA.B.C.zip`** | **Dịch giả / Đóng góp:** Bộ công cụ WAHU Community; version độc lập với Player và chỉ tăng khi gói này được rebuild + QA |
 | **`WuWaVH_EN_99_P.pak`** | File PAK bản Tên Tiếng Anh độc lập |
 | **`WuWaVH_HanViet_99_P.pak`** | File PAK bản Tên Hán Việt độc lập |
 
@@ -62,13 +63,14 @@ Bản cập nhật vX.X.X ... [tóm tắt điểm nổi bật nhất trong 1-2 c
 dotnet test VHWuWa\VHWuWa.sln -c Release
 
 # 2. Build bộ cài người chơi (đã tích hợp tự chạy test ở Bước 0)
-powershell -ExecutionPolicy Bypass -File VHWuWa\scripts\build-dist.ps1 -Version X.X.X
+powershell -ExecutionPolicy Bypass -File VHWuWa\scripts\build-dist.ps1 -Version X.X.X -AppDichVersion A.B.C
 
 # 3. Build bộ công cụ dịch thuật
-powershell -ExecutionPolicy Bypass -File wuwavh_tool\Wahu\build-community.ps1 -Version X.X.X -IncludeDatabase
+powershell -ExecutionPolicy Bypass -File wuwavh_tool\Wahu\build-community.ps1 -Version A.B.C -IncludeDatabase
 
 # 4. Upload GitHub Release
-gh release upload vX.X.X "VHWuWa\dist\VietHoa-WuWa-vX.X.X.zip" "VHWuWa\dist\App-Dich-WuWa-vX.X.X.zip" "VHWuWa\dist\WuWaVH_EN_99_P.pak" "VHWuWa\dist\WuWaVH_HanViet_99_P.pak" --repo WahuVN/Viet-Hoa-WuWa --clobber
+gh release upload vX.X.X "VHWuWa\dist\VietHoa-WuWa-vX.X.X.zip" "VHWuWa\dist\WuWaVH_EN_99_P.pak" "VHWuWa\dist\WuWaVH_HanViet_99_P.pak" --repo WahuVN/Viet-Hoa-WuWa --clobber
+# Chỉ thêm App-Dich-WuWa-vA.B.C.zip nếu WAHU Community A.B.C đã được build + QA riêng; tuyệt đối không đổi tên ZIP cũ cho khớp Player.
 
 # 5. Cập nhật README.md & commit push
 git add README.md VHWuWa\README.md

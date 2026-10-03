@@ -1,11 +1,11 @@
-# 📥 Hướng Dẫn Tải & Cài Đặt VHWuWa
+﻿# 📥 Hướng Dẫn Tải & Cài Đặt VHWuWa
 
 [![Discord Server](https://img.shields.io/badge/Discord-Tham_Gia_Server_VHWuWa-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/Gy5YQ84Yc2)
 
 > 💬 **Discord Wuthering Waves VN:** https://discord.gg/Gy5YQ84Yc2
 > 📱 **VHWuWa Mobile (Android):** https://github.com/WahuVN/VHWuWa-Mobile/releases · Android 10+ · Shizuku
 
-Bản hiện tại: **VHWuWa v3.0.12**
+Bản phát hành hiện tại: **VHWuWa v3.0.16**
 Đã kiểm thử với: **Wuthering Waves 3.7.0 (PC/Windows)**
 
 Truy cập [trang phát hành trên GitHub](https://github.com/WahuVN/Viet-Hoa-WuWa/releases/latest) và chọn đúng gói theo nhu cầu.
@@ -16,24 +16,26 @@ Truy cập [trang phát hành trên GitHub](https://github.com/WahuVN/Viet-Hoa-W
 
 | Nhu cầu | Tệp cần tải | Sau khi giải nén |
 | :--- | :--- | :--- |
-| 🎮 **Cài và chơi Việt hóa** | `VietHoa-WuWa-v3.0.12.zip` | Mở `VHWuWa.exe` |
-| 👥 **Dịch / duyệt / đóng góp** | `App-Dich-WuWa-v3.0.12.zip` | Mở `WAHU Community.exe` |
+| 🎮 **Cài và chơi Việt hóa** | `VietHoa-WuWa-v3.0.16.zip` | Mở `VHWuWa.exe` |
+| 👥 **Dịch / duyệt / đóng góp** | `App-Dich-WuWa-v3.0.16.zip` | Mở `WAHU Community.exe` |
 
 > [!IMPORTANT]
-> Người chơi thông thường chỉ cần **`VietHoa-WuWa-v3.0.12.zip`**. Không cần tải mã nguồn hay bộ WAHU Community.
+> Người chơi thông thường chỉ cần **`VietHoa-WuWa-v3.0.16.zip`**. Không cần tải mã nguồn hay bộ WAHU Community.
+>
+> **Version Player và App-Dịch độc lập.** Chỉ tăng version App-Dịch khi WAHU Community được rebuild + QA; không đổi tên ZIP cũ để khớp Player.
 
 ---
 
 ## ⚡ Cài đặt cho người chơi
 
-1. Tải **`VietHoa-WuWa-v3.0.12.zip`** và giải nén toàn bộ ra một thư mục riêng.
+1. Tải **`VietHoa-WuWa-v3.0.16.zip`** và giải nén toàn bộ ra một thư mục riêng.
 2. Mở **`VHWuWa.exe`**.
 3. Bấm **Tự tìm game**; nếu không tìm thấy, chọn thủ công thư mục game có thư mục con `Client`.
 4. Chọn kiểu tên **Tiếng Anh** hoặc **Hán Việt** và phông chữ mong muốn.
 5. Bấm **Cài Việt hóa**.
 6. Trong game đặt **Settings → Language → Text Language = English**.
 
-Khi cài/cập nhật, v3.0.12 có thể tự dọn các mod đã được detector xác định là xung đột rồi phục hồi PAK/.sig/font/loader canonical. Các `pakchunk*` gốc của game không thuộc tập cleanup này.
+Khi cài/cập nhật, v3.0.16 tự dọn các mod/VH ngoài đã được detector xác định là xung đột rồi ghi lại PAK/font/loader chuẩn của VHWuWa. Bộ VHWuWa legacy của chính dự án (`WuWaVH_99_P.pak`, `WahuFont_100_P.pak`, `version.dll`, `verorg.dll`, `WuWaVH.dll`) được nhận diện riêng để migrate/ghi đè đúng; các họ `wuwaVietHoa*` không thuộc VHWuWa. File official của game được bảo vệ bằng manifest. Nếu Windows không cho ghi đè/dọn file vì thiếu quyền hoặc file đang bị khóa, ứng dụng sẽ dừng cài và báo cần đóng game/launcher hoặc chạy `VHWuWa.exe` bằng quyền Administrator.
 
 ### Ví dụ thư mục game hợp lệ
 
@@ -62,7 +64,7 @@ Nếu thấy câu dịch sượng, xưng hô sai, English còn sót, text lỗi 
 - Discord: https://discord.gg/Gy5YQ84Yc2
 - GitHub Issues: https://github.com/WahuVN/Viet-Hoa-WuWa/issues
 
-Nếu tiện, gửi **ảnh + nhiệm vụ/màn hình + nhân vật/ngữ cảnh**. Bot Discord v3.0.12 cũng được chuẩn bị với lệnh **`/bao-loi`** và **`/gop-y`** để đưa phản hồi vào hàng đợi kiểm tra.
+Nếu tiện, gửi **ảnh + nhiệm vụ/màn hình + nhân vật/ngữ cảnh**. Bot Discord hiện tại cũng được chuẩn bị với lệnh **`/bao-loi`** và **`/gop-y`** để đưa phản hồi vào hàng đợi kiểm tra.
 
 ---
 

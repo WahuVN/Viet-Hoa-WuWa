@@ -58,9 +58,7 @@ public partial class InstallViewModel : ObservableObject
         var conflicts = valid ? _viet.FindConflicts(game) : Array.Empty<string>();
         HasConflicts = conflicts.Count > 0;
         ConflictText = HasConflicts
-            ? $"⚠ Phát hiện {conflicts.Count} mục có thể xung đột:\n• " + string.Join("\n• ", conflicts.Take(8))
-              + (conflicts.Count > 8 ? $"\n• … và {conflicts.Count - 8} mục khác" : "")
-              + "\nChỉ mod ngoài được liệt kê; file VHWuWa cũ được giữ lại và tự nâng cấp. Bạn có thể Cách ly hoặc chọn Xóa mod ngoài."
+            ? $"Phát hiện {conflicts.Count} mục mod ngoài; VHWuWa sẽ tự dọn trước khi cài/cập nhật."
             : "✔ Không phát hiện mod khác có thể xung đột.";
         FontAvailable = content.FontPak is not null;
         HasHanViet = File.Exists(HanVietPakPath);
@@ -77,7 +75,9 @@ public partial class InstallViewModel : ObservableObject
             ContentText = HasHanViet
                 ? "Sẵn sàng · Bản Việt hóa và Hán Việt đã có trên máy."
                 : "Sẵn sàng · Bản Việt hóa có sẵn; Hán Việt tải khi cần.";
-            CanInstall = valid && !HasConflicts;
+            // Conflict không khóa nút Cài: InstallAsync tự dọn file ngoài đã xác định
+            // trước khi chèn bản VHWuWa mới; legacy VHWuWa được bảo vệ riêng.
+            CanInstall = valid;
         }
 
         if (valid)

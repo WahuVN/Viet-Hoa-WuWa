@@ -4,10 +4,10 @@
 
 # VHWuWa — Bộ Cài & Quản Lý Việt Hóa Wuthering Waves
 
-Bộ công cụ Việt hóa dành cho **Wuthering Waves trên PC/Windows**, hỗ trợ cài đặt, cập nhật, tùy biến phông chữ và quản lý bản dịch tiếng Việt.
+Bộ công cụ mã nguồn mở hỗ trợ cài đặt, tùy biến phông chữ và quản lý bản dịch tiếng Việt cho **Wuthering Waves (PC / Windows)**.
 
-[![Phiên bản](https://img.shields.io/badge/phiên_bản-3.0.15-blue?style=flat-square)](https://github.com/WahuVN/Viet-Hoa-WuWa/releases/latest)
-[![Tương thích Game](https://img.shields.io/badge/Wuthering_Waves-3.7+-informational?style=flat-square)](https://github.com/WahuVN/Viet-Hoa-WuWa/releases/latest)
+[![Phiên bản](https://img.shields.io/badge/phiên_bản-3.0.16-blue?style=flat-square)](https://github.com/WahuVN/Viet-Hoa-WuWa/releases/latest)
+[![Game đã kiểm thử](https://img.shields.io/badge/Wuthering_Waves-3.7_đã_kiểm_thử-informational?style=flat-square)](https://github.com/WahuVN/Viet-Hoa-WuWa/releases/latest)
 [![Nền tảng](https://img.shields.io/badge/Nền_tảng-Windows_10_%7C_11_x64-0078D4?style=flat-square&logo=windows&logoColor=white)](https://github.com/WahuVN/Viet-Hoa-WuWa/releases/latest)
 [![Giấy phép](https://img.shields.io/badge/Giấy_phép-MIT-green?style=flat-square)](LICENSE)
 [![Discord](https://img.shields.io/badge/Discord-Cộng_đồng_VHWuWa-5865F2?style=flat-square&logo=discord&logoColor=white)](https://discord.gg/Gy5YQ84Yc2)
@@ -31,7 +31,8 @@ Bộ công cụ Việt hóa dành cho **Wuthering Waves trên PC/Windows**, hỗ
 VHWuWa được thiết kế nhằm hỗ trợ người chơi trải nghiệm trọn vẹn cốt truyện và hệ thống Wuthering Waves bằng tiếng Việt với thao tác trực quan, an toàn:
 
 - **Tự động nhận diện & Cài đặt 1-Click:** Tự động tìm thư mục game ngay khi mở app và thiết lập trọn gói bản dịch, font chữ chỉ với 1 click.
-- **Tự động cập nhật:** Tự phát hiện bản mới và cập nhật trực tiếp từ ứng dụng, không cần tải lại thủ công.
+- **Tự động Cập nhật Thông minh (1-Click Update):** Tự động phát hiện phiên bản mới và cập nhật tại chỗ mượt mà mà không cần tải lại thủ công.
+- **Shortcut WuWa gọn gàng:** Mở app một lần để tự tạo shortcut Desktop tên `WuWa` với icon nền trong suốt.
 - **Ẩn hoặc đổi biệt hiệu UID:** Tùy biến hoặc ẩn hoàn toàn UID ở góc màn hình, thẻ Profile Esc, khung Chat/Co-op và chế độ Chụp ảnh giúp bảo vệ riêng tư khi stream, quay clip.
 - **Làm mới 100% Danh Hiệu Nhân Vật:** Tinh chỉnh danh hiệu ngắn gọn, chuẩn tiếng Việt (2 - 4 từ), không bị tràn viền giao diện.
 - **Tùy chọn phong cách hiển thị tên nhân vật:**
@@ -47,12 +48,14 @@ VHWuWa được thiết kế nhằm hỗ trợ người chơi trải nghiệm tr
 
 | Gói tải về | Đối tượng | Mô tả |
 | :--- | :--- | :--- |
-| 🎮 [**VietHoa-WuWa-v3.0.15.zip**](https://github.com/WahuVN/Viet-Hoa-WuWa/releases/latest) | **Người chơi** | Ứng dụng cài đặt Việt hóa trên Windows (Khuyên dùng) |
-| 🛠️ [**App-Dich-WuWa-v3.0.15.zip**](https://github.com/WahuVN/Viet-Hoa-WuWa/releases/latest) | **Dịch giả / Người đóng góp** | Bộ công cụ WAHU Community hỗ trợ xem ngữ cảnh, kiểm tra chất lượng bản dịch và đóng gói dữ liệu |
-| 📱 [**VHWuWa Mobile 0.2.0-alpha.13**](https://github.com/WahuVN/VHWuWa-Mobile/releases) | **Android** | Android 10+, cài Việt hóa qua Shizuku; hỗ trợ game 3.7.0, nội dung Việt hóa 3.7.0-R4 |
+| 🎮 [**VietHoa-WuWa-v3.0.16.zip**](https://github.com/WahuVN/Viet-Hoa-WuWa/releases/latest) | **Người chơi** | Ứng dụng cài đặt Việt hóa trên Windows (Khuyên dùng) |
+| 🛠️ [**App-Dich-WuWa-v3.0.16.zip**](https://github.com/WahuVN/Viet-Hoa-WuWa/releases/latest) | **Dịch giả / Modder** | Bộ công cụ WAHU Community hỗ trợ duyệt ngữ cảnh, QA và đóng gói PAK |
+| 📱 [**VHWuWa Mobile 0.2.0-alpha.13**](https://github.com/WahuVN/VHWuWa-Mobile/releases) | **Android** | Android 10+, cài patch qua Shizuku; game 3.7.0, content 3.7.0-R4 |
 
 > [!IMPORTANT]
-> Người chơi chỉ cần tải gói **`VietHoa-WuWa-v3.0.15.zip`**. Ứng dụng sẽ tự động tải các gói tài nguyên cần thiết khi cài đặt.
+> Người chơi chỉ cần tải gói **`VietHoa-WuWa-v3.0.16.zip`**. Ứng dụng sẽ tự động tải các gói tài nguyên cần thiết khi cài đặt.
+>
+> **Lưu ý version:** `VietHoa-WuWa` (Player) và `App-Dich-WuWa` (WAHU Community) có version độc lập. Không đổi tên App-Dịch theo Player nếu WAHU Community chưa được rebuild + QA.
 
 ---
 
@@ -63,8 +66,8 @@ VHWuWa được thiết kế nhằm hỗ trợ người chơi trải nghiệm tr
 - **Game:** Wuthering Waves phiên bản PC (Launcher chính thức hoặc Epic Games Store).
 
 ### Các bước thực hiện
-1. Tải file **`VietHoa-WuWa-v3.0.15.zip`** mới nhất và giải nén ra một thư mục riêng.
-2. Mở file **`VHWuWa.exe`** (hoặc `Chay VHWuWa.bat`).
+1. Tải file **`VietHoa-WuWa-v3.0.16.zip`** mới nhất và giải nén ra một thư mục riêng.
+2. Mở file **`VHWuWa.exe`**.
 3. Chọn **"Tự tìm game"** (nếu chưa tìm thấy, hãy chọn thủ công thư mục game có chứa thư mục `Client`).
 4. Chọn kiểu tên nhân vật mong muốn (**Tiếng Anh** hoặc **Hán Việt**) và chọn phông chữ yêu thích.
 5. Bấm **"Cài Việt Hóa"** và đợi thông báo hoàn tất.
@@ -80,23 +83,22 @@ VHWuWa được thiết kế nhằm hỗ trợ người chơi trải nghiệm tr
 ### Cấu trúc thư mục
 
 ```text
-WuwaVH/
-├── VHWuWa/                  # Repo app/bộ cài người chơi (.NET 8)
-├── wuwavh_tool/
-│   └── Wahu/                # Pipeline dịch, QA, build PAK, WAHU Community
-│       ├── project.db       # Database project hiện hành
-│       ├── data/            # Authority và dữ liệu build
-│       ├── _dbcfg/          # ConfigDB nguồn
-│       └── dist/            # R7 final và artifact local
-├── _QUY_UOC_DICH_NOI_BO/    # Chỉ giữ authority V6.2.1 hiện hành
-├── Text Gốc/                # Nguồn text cần tra cứu
-├── camera_mod/              # Project camera mod độc lập
-└── docs/                    # Hướng dẫn, layout và báo cáo lưu trữ
+VHWuWa/
+├── src/
+│   ├── VHWuWa.App/              # Ứng dụng WPF cho người chơi
+│   ├── VHWuWa.Core/             # Model, abstraction và logic dùng chung
+│   ├── VHWuWa.Infrastructure/   # Cài/gỡ PAK, updater, game launch, settings
+│   └── VHWuWa.Updater/          # Updater self-contained + rollback/health-check
+├── tests/                        # Unit/integration tests
+├── scripts/                      # Build, đóng gói và self-update E2E
+├── Assets/                       # Logo/icon và tài nguyên ứng dụng
+├── docs/                         # Hình ảnh/tài liệu public
+└── VHWuWa.sln
 ```
 
-Xem sơ đồ chi tiết và quy tắc đặt file tại [`docs/PROJECT_LAYOUT.md`](docs/PROJECT_LAYOUT.md).
+> Pipeline dữ liệu/PAK và MASTER dịch thuật được duy trì ở workspace phát triển riêng; không phải toàn bộ dữ liệu game đều nằm trong repository public.
 
-### Hướng dẫn biên dịch từ mã nguồn
+### Hướng dẫn Build từ mã nguồn
 
 **Yêu cầu môi trường:**
 - [.NET 8.0 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
@@ -104,17 +106,17 @@ Xem sơ đồ chi tiết và quy tắc đặt file tại [`docs/PROJECT_LAYOUT.m
 - Python 3.10+ (dành cho bộ công cụ Wahu đóng gói dữ liệu).
 
 ```powershell
-# 1. Khôi phục các thư viện cần thiết cho ứng dụng
-dotnet restore VHWuWa/VHWuWa.sln
+# 1. Khôi phục dependencies
+dotnet restore VHWuWa.sln
 
-# 2. Biên dịch bản phát hành
-dotnet build VHWuWa/VHWuWa.sln -c Release
+# 2. Biên dịch bản Release
+dotnet build VHWuWa.sln -c Release
 
 # 3. Chạy kiểm thử tự động
-dotnet test VHWuWa/VHWuWa.sln -c Release
+dotnet test VHWuWa.sln -c Release
 
-# 4. Đóng gói bộ cài phát hành (tùy chọn)
-powershell -ExecutionPolicy Bypass -File VHWuWa/scripts/build-dist.ps1 -Version 3.0.15
+# 4. Đóng gói bộ cài đặt phát hành (cần các asset PAK canonical trong workspace phát triển)
+powershell -ExecutionPolicy Bypass -File scripts/build-dist.ps1 -Version X.Y.Z -AppDichVersion A.B.C
 ```
 
 ---
@@ -122,14 +124,18 @@ powershell -ExecutionPolicy Bypass -File VHWuWa/scripts/build-dist.ps1 -Version 
 ## ⚠️ Lưu ý & Tuyên bố miễn trừ
 
 - **Dự án cộng đồng phi thương mại:** VHWuWa là dự án do cộng đồng người chơi phát triển nhằm hỗ trợ người dùng Việt Nam, không trực thuộc, không được tài trợ hay ủy quyền bởi Kuro Games.
-- **An toàn tệp tin:** Công cụ chỉ thay đổi các tệp phục vụ hiển thị ngôn ngữ, không can thiệp vào bộ nhớ đang chạy hay cơ chế chiến đấu của game. Tuy nhiên, đây vẫn là công cụ bên thứ ba nên người dùng cần tự cân nhắc trước khi sử dụng.
+- **An toàn tệp tin:** Công cụ chỉ can thiệp vào tầng hiển thị ngôn ngữ (`Localization / ConfigDB`), không can thiệp vào bộ nhớ động hay logic xử lý của game. Tuy nhiên, người dùng cần tự cân nhắc và chịu trách nhiệm khi sử dụng các bản mod của bên thứ ba.
 - **Thao tác an toàn:** Luôn tắt hoàn toàn game và launcher trước khi cài đặt hoặc gỡ bỏ bản dịch.
 
 ---
 
+## 🤝 Đóng góp & phản hồi
+
+VHWuWa là dự án cộng đồng phi thương mại. Bạn có thể hỗ trợ dự án bằng cách Star repository, chia sẻ release, gửi báo lỗi có ngữ cảnh hoặc góp ý bản dịch trên Discord.
+
 ## 💬 Kênh hỗ trợ & Liên hệ
 
-- **Thảo luận & Hỗ trợ kỹ thuật:** [Server Discord Wuthering Waves VN](https://discord.gg/Gy5YQ84Yc2)
+- **Thảo luận & Hỗ trợ kỹ thuật:** [Server Discord VHWuWa](https://discord.gg/Gy5YQ84Yc2)
 - **Báo lỗi & Đóng góp ý kiến:** [Gửi phản hồi tại GitHub Issues](https://github.com/WahuVN/Viet-Hoa-WuWa/issues)
 - **Bản Việt hóa Android:** [VHWuWa Mobile — WahuVN](https://github.com/WahuVN/VHWuWa-Mobile/releases) · Android 10+ · Shizuku · game 3.7.0 / content 3.7.0-R4
 

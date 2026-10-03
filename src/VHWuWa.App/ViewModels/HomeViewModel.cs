@@ -43,7 +43,12 @@ public partial class HomeViewModel : ObservableObject
     {
         _settings = settings; _detect = detect; _gameLaunch = gameLaunch; _installer = installer; _viet = viet; _fonts = fonts; _log = log; _main = main;
         GameName = string.IsNullOrWhiteSpace(detect.GameConfig.GameName) ? "Wuthering Waves" : detect.GameConfig.GameName;
-        ForceCSharpEnvironment = settings.Settings.ForceCSharpEnvironment;
+        // WuWa 3.7 must start through the official Kuro launcher. The old experimental
+        // C# client flag is no longer user-facing and must not leak from previous settings.
+        ForceCSharpEnvironment = false;
+        settings.Settings.ForceCSharpEnvironment = false;
+        settings.Save();
+        LaunchButtonText = "Mở launcher";
         OnActivated();
     }
 
@@ -232,24 +237,10 @@ public partial class HomeViewModel : ObservableObject
             return;
         }
 
-        if (ForceCSharpEnvironment && !_settings.Settings.CSharpLaunchWarningAccepted)
-        {
-            var accepted = MessageBox.Show(
-                "Đây là môi trường C# thử nghiệm của game, không bảo đảm tăng FPS trên mọi máy. " +
-                "Lần chạy đầu có thể tải thêm dữ liệu; nếu giật, crash hoặc lỗi, hãy tắt công tắc để trở về chế độ thường.\n\n" +
-                "Khi kích hoạt thành công, cuối phiên bản trong game sẽ có dấu *. Bạn có muốn tiếp tục?",
-                "Môi trường C# thử nghiệm", MessageBoxButton.YesNo, MessageBoxImage.Warning);
-            if (accepted != MessageBoxResult.Yes) return;
-            _settings.Settings.CSharpLaunchWarningAccepted = true;
-            _settings.Save();
-        }
-
-        var result = _gameLaunch.Launch(GamePath, ForceCSharpEnvironment);
+        var result = _gameLaunch.Launch(GamePath, forceCSharpEnvironment: false);
         Message = result.Success
-            ? ForceCSharpEnvironment
-                ? "Đã mở game với môi trường C# thử nghiệm."
-                : "Game đã được mở."
-            : "Không thể mở game: " + result.Error;
+            ? "Đã mở launcher Wuthering Waves. Bấm Start trong launcher để vào game."
+            : "Không thể mở launcher: " + result.Error;
     }
 
     [RelayCommand]

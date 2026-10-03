@@ -83,7 +83,7 @@ $supportItems = @(
     @{ Source = (Join-Path $wahuRoot 'data\base_vi'); Target = 'Wahu\data\base_vi' },
     @{ Source = (Join-Path $wahuRoot 'data\translations'); Target = 'Wahu\data\translations' },
     @{ Source = (Join-Path $wahuRoot 'data\translations_hv'); Target = 'Wahu\data\translations_hv' },
-    @{ Source = (Join-Path $wahuRoot 'data\translations_3_6_story_final'); Target = 'Wahu\data\translations_3_6_story_final' },
+    @{ Source = (Join-Path $wahuRoot 'data\translations_v36_story'); Target = 'Wahu\data\translations_v36_story' },
     @{ Source = (Join-Path $wahuRoot '_dbcfg\Client\Content\Aki\ConfigDB\en'); Target = 'Wahu\_dbcfg\Client\Content\Aki\ConfigDB\en' },
     @{ Source = (Join-Path $wahuRoot '_dbcfg\Client\Content\Aki\ConfigDB\zh-Hans'); Target = 'Wahu\_dbcfg\Client\Content\Aki\ConfigDB\zh-Hans' },
     @{ Source = (FindTextDirectory '3.4 txt*'); Target = 'TextSource\34_source' },

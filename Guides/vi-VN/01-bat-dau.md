@@ -2,7 +2,7 @@
 
 ## Trước khi cài
 
-- Giải nén toàn bộ `VietHoa-WuWa-v3.0.6.zip` ra một thư mục riêng.
+- Tải `VietHoa-WuWa-vX.Y.Z.zip` từ GitHub Releases, rồi giải nén toàn bộ ra một thư mục riêng; không chạy trực tiếp trong ZIP.
 - Tắt game và launcher nếu launcher đang cập nhật file.
 - Mở `Chay VHWuWa.bat` hoặc `app\VHWuWa.exe`.
 

@@ -39,9 +39,6 @@
         </ui:Card>
 
         <StackPanel Grid.Row="2">
-            <ui:InfoBar IsOpen="True" Severity="Warning" Margin="0,0,0,10"
-                        Title="Cần xử lý mod xung đột" Message="{Binding ConflictText}"
-                        Visibility="{Binding HasConflicts, Converter={StaticResource BoolToVis}}" />
             <ui:Card Padding="16" Margin="0,0,0,12" VerticalAlignment="Top">
                 <StackPanel>
                     <TextBlock Text="2 · Cài đặt hoặc Gỡ bỏ" FontWeight="SemiBold" FontSize="14" Margin="0,0,0,10" />
@@ -50,17 +47,6 @@
                                    Command="{Binding InstallCommand}" Margin="0,0,8,8" MinWidth="160" Padding="14,8" FontSize="13" FontWeight="SemiBold" />
                         <Button Content="🗑 Gỡ Việt hóa" Command="{Binding UninstallCommand}" Margin="0,0,8,8" Padding="12,8" FontSize="12" />
                         <Button Content="Quét lại" Command="{Binding CheckConflictsCommand}" Margin="4,0,8,8" Padding="12,8" FontSize="12" />
-                        <ui:Button Content="Cách ly" Appearance="Danger"
-                                   Command="{Binding QuarantineConflictsCommand}"
-                                   Visibility="{Binding HasConflicts, Converter={StaticResource BoolToVis}}"
-                                   Margin="0,0,8,8" Padding="12,8" FontSize="12" />
-                        <ui:Button Content="Xóa xung đột" Appearance="Danger"
-                                   Command="{Binding DeleteConflictsCommand}"
-                                   Visibility="{Binding HasConflicts, Converter={StaticResource BoolToVis}}"
-                                   Margin="0,0,8,8" Padding="12,8" FontSize="12" />
-                        <Button Content="📂 Mở vùng cách ly" Command="{Binding OpenQuarantineCommand}"
-                                Visibility="{Binding HasQuarantine, Converter={StaticResource BoolToVis}}"
-                                Margin="0,0,8,8" Padding="12,8" FontSize="12" />
                         <Button Content="✖ Hủy" Command="{Binding CancelCommand}"
                                 Visibility="{Binding Busy, Converter={StaticResource BoolToVis}}" Margin="0,0,8,8" Padding="12,8" FontSize="12" />
                     </WrapPanel>

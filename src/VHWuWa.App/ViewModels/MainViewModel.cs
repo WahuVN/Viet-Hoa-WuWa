@@ -40,7 +40,7 @@ public partial class MainViewModel : ObservableObject
     /// <summary>Phiên bản bản dịch đi cùng bản build hiện tại.</summary>
     public string VhVersion => "Bản dịch v"
         + (Assembly.GetEntryAssembly()?.GetName().Version?.ToString(3) ?? "0.0.0")
-        + " · game 3.6";
+        + " · game 3.7";
 
     public MainViewModel(ISettingsService settings, IGameDetectionService detect, IUpdateService update, ILogService log, IViethoaInstaller? vietHoa = null)
     {

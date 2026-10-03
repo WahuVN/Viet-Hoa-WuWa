@@ -1,10 +1,48 @@
-﻿using VHWuWa.Infrastructure;
+﻿using VHWuWa.Core.Abstractions;
+using VHWuWa.Core.Models;
+using VHWuWa.Infrastructure;
 using Xunit;
 
 namespace VHWuWa.Infrastructure.Tests;
 
 public sealed class GameLaunchServiceTests
 {
+    [Fact]
+    public void GetOfficialLauncherPath_PrefersRealKuroLauncherInParentFolder()
+    {
+        var temp = Path.Combine(Path.GetTempPath(), "vhwuwa-launch-" + Guid.NewGuid().ToString("N"));
+        var installRoot = Path.Combine(temp, "Wuthering Waves");
+        var gameRoot = Path.Combine(installRoot, "Wuthering Waves Game");
+        Directory.CreateDirectory(gameRoot);
+        var launcher = Path.Combine(installRoot, "launcher.exe");
+        File.WriteAllBytes(launcher, Array.Empty<byte>());
+
+        try
+        {
+            var service = new GameLaunchService(new TestLogService());
+            Assert.Equal(launcher, service.GetOfficialLauncherPath(gameRoot));
+        }
+        finally
+        {
+            Directory.Delete(temp, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void GetOfficialLauncherPath_FallsBackToLegacyGameWrapper()
+    {
+        var temp = Path.Combine(Path.GetTempPath(), "vhwuwa-launch-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(temp);
+        try
+        {
+            var service = new GameLaunchService(new TestLogService());
+            Assert.Equal(Path.Combine(temp, "Wuthering Waves.exe"), service.GetOfficialLauncherPath(temp));
+        }
+        finally
+        {
+            Directory.Delete(temp, recursive: true);
+        }
+    }
     [Fact]
     public void CreateStartInfo_ForceCSharp_AddsOnlyExpectedArgument()
     {
@@ -55,5 +93,16 @@ public sealed class GameLaunchServiceTests
             forceCSharpEnvironment: true);
 
         Assert.Equal("true", info.ArgumentList[^1]);
+    }
+
+    private sealed class TestLogService : ILogService
+    {
+        public string LogDirectory => Path.GetTempPath();
+        public void Info(string operation, string message) { }
+        public void Warn(string operation, string message) { }
+        public void Error(string operation, string message, Exception? ex = null) { }
+        public IReadOnlyList<LogEntry> ReadRecent(int max = 500, string? levelFilter = null,
+            string? search = null) => Array.Empty<LogEntry>();
+        public void Clear() { }
     }
 }

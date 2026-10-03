@@ -2,6 +2,56 @@
 
 Tất cả các thay đổi đáng chú ý của dự án VHWuWa được ghi lại tại đây theo chuẩn [SemVer](https://semver.org/lang/vi/).
 
+## [3.0.16] - 2026-10-04
+
+### Khởi chạy Wuthering Waves 3.7
+- Sửa nút mở game: dùng `launcher.exe` Kuro chính thức ở thư mục cài thay vì wrapper/client trực tiếp gây `kuro: Use launcher to start game!`.
+- Bỏ công tắc **Chế độ C# thử nghiệm** khỏi UI vì luồng launcher chuẩn 3.7 không sử dụng cờ này.
+- Chống mở nhiều VHWuWa cùng lúc để tránh hai cửa sổ giữ trạng thái cài/gỡ khác nhau.
+
+### Clean install và mod xung đột
+- Khi cài mới/cài lại: kiểm tra đủ payload trước, dọn trực tiếp mod/VH ngoài đã xác định là xung đột, rồi chèn bản VHWuWa; auto-flow không tạo Quarantine.
+- Không còn khóa nút Cài chỉ vì phát hiện mod ngoài; clean-install xử lý tự động trong operation lock.
+- Nhận diện thêm mod/VH ngoài để dọn xung đột: WWMI/3DMigoto, UE4SS, proxy DLL phổ biến, `wuwaVietHoa.dll`, `wuwaVietHoa_Wahu_SDK.dll`, `wuwaVietHoa_SDK.dll`, `wuwaVietHoa_VH.dll`, `wuwaVietHoa.off`, `SigPakV2.dll`, cùng thư mục `Win64\wuwaVietHoa\`. Nhóm `wuwaVietHoa*` không phải file managed của VHWuWa.
+- Bảo vệ file official bằng `OriginResource.json`; khi có nhiều manifest ưu tiên version game cao nhất thay vì mtime.
+- Với 3.7, không phục hồi `version_goc.dll` proxy cũ nếu manifest không xác nhận `version.dll` là file official.
+- Gỡ Việt hóa dọn file/log do VHWuWa quản lý nhưng không xóa file lạ ngoài marker.
+
+### Kiểm tra phát hành
+- Build solution Release đạt, 0 warning / 0 error.
+- Audit hai ZIP phát hành: không chứa foreign artifact; Player đủ EN + Hán Việt + 3 loader canonical; App-Dịch đủ DB, ConfigDB 3.7, font và 3 loader canonical.
+- Đợt cleanup cuối không chạy lại unit test theo yêu cầu; payload PAK EN/Hán Việt giữ nguyên dữ liệu QA của 3.0.15.
+
+## [3.0.15] - 2026-10-03
+
+### Dữ liệu Việt hóa 3.7
+- Materialize đúng DB runtime cho **2.417 identity** trước đó chỉ nằm ở `lang_multi_text_1sthalf.db`.
+- Materialize **1.535 identity source rỗng** để không fallback thành raw key.
+- Ẩn **6 identity debug/test** còn lại.
+- Gate exact identity đạt **25.278/25.278** đúng `dbfile/table/key`.
+- Final PAK: raw key 3.7 = 0, token topology lỗi = 0, P0 = 0, P1 3.7 = 0.
+
+### Kiểm thử
+- EN strict checker PASS, 0 failure / 0 warning.
+- Hán Việt fresh-unpack đạt 25.278/25.278 identity và SQLite quick-check sạch.
+
+## [3.0.14] - 2026-10-02
+
+### Hoàn thiện text 3.7
+- Quét lại toàn bộ nhóm text 3.7, sửa raw key/mã nội bộ và text còn sót Anh/Trung.
+- Đồng bộ cả hai biến thể Tên Anh và Hán Việt.
+- Rebuild cả bộ cài Player và WAHU Community từ authority mới.
+- Unit test ứng dụng: 110/110 PASS.
+
+## [3.0.13] - 2026-10-01
+
+### Bản vá thiếu text 3.7
+- Bổ sung **6.693 dòng dữ liệu 3.7** bị thiếu trong PAK.
+- Sửa các trường hợp hiện raw key như `Main_Mengzhou_3_7_29_2`.
+- Đồng bộ text trùng giữa `lang_multi_text.db` và `lang_multi_text_1sthalf.db`.
+- Bổ sung row thiếu ở speaker, hot-patch và occupation DB.
+- Fresh-unpack sau đóng PAK: official row thiếu còn lại = 0.
+
 ## [3.0.12] - 2026-10-01
 
 ### Sửa lỗi cài đặt

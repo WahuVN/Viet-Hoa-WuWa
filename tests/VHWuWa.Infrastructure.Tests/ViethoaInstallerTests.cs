@@ -242,6 +242,7 @@ public sealed class ViethoaInstallerTests : IDisposable
         File.WriteAllText(activeFont, "FOREIGN_FONT");
         File.WriteAllText(versionDll, "FOREIGN_PROXY");
         File.WriteAllText(loaderDll, "FOREIGN_LOADER");
+        File.WriteAllText(Path.Combine(_win64, "wuwaVietHoa.dll"), "FOREIGN_OLD_VH");
         File.Delete(activeSig);
         File.WriteAllText(Path.Combine(_content, "WuWaVH_EN_99_P.pak"), "ENGLISH_V2");
 
@@ -253,8 +254,12 @@ public sealed class ViethoaInstallerTests : IDisposable
         Assert.Equal("FONT", File.ReadAllText(activeFont));
         Assert.Equal("LOADER_VERSION", File.ReadAllText(versionDll));
         Assert.Equal("SDKDLL", File.ReadAllText(loaderDll));
+        Assert.False(File.Exists(Path.Combine(_win64, "wuwaVietHoa.dll")));
         Assert.Equal("en", _viet.GetStatus(_game).Variant);
         Assert.Empty(_viet.FindConflicts(_game));
+        var quarantineRoot = Path.Combine(_work, "quarantine");
+        Assert.False(Directory.Exists(quarantineRoot)
+                     && Directory.EnumerateDirectories(quarantineRoot).Any());
     }
 
     [Fact]
@@ -526,6 +531,187 @@ public sealed class ViethoaInstallerTests : IDisposable
 
         var uninstall = await _viet.UninstallAsync(_game);
         Assert.True(uninstall.Success, uninstall.Error);
+    }
+
+    [Fact]
+    public async Task Install_CleanFlow_RemovesForeignModDirectly()
+    {
+        var otherDir = Path.Combine(_paks, "~mods");
+        Directory.CreateDirectory(otherDir);
+        var otherPak = Path.Combine(otherDir, "OtherMod_P.pak");
+        File.WriteAllText(otherPak, "OTHER_MOD");
+
+        var result = await _viet.InstallAsync(_game, NameVariant.English, withFont: true);
+
+        Assert.True(result.Success, result.Error);
+        Assert.False(File.Exists(otherPak));
+        Assert.False(Directory.Exists(otherDir));
+        var quarantineRoot = Path.Combine(_work, "quarantine");
+        Assert.False(Directory.Exists(quarantineRoot)
+                     && Directory.EnumerateDirectories(quarantineRoot).Any());
+    }
+
+    [Fact]
+    public async Task Install_MissingSelectedPak_DoesNotTouchForeignMods()
+    {
+        File.Delete(Path.Combine(_content, "WuWaVH_EN_99_P.pak"));
+        var otherDir = Path.Combine(_paks, "~mods");
+        Directory.CreateDirectory(otherDir);
+        var otherPak = Path.Combine(otherDir, "KeepUntilInstallCanProceed_P.pak");
+        File.WriteAllText(otherPak, "KEEP_ME");
+
+        var result = await _viet.InstallAsync(_game, NameVariant.English, withFont: true);
+
+        Assert.False(result.Success);
+        Assert.True(File.Exists(otherPak));
+        Assert.Equal("KEEP_ME", File.ReadAllText(otherPak));
+        var quarantineRoot = Path.Combine(_work, "quarantine");
+        Assert.False(Directory.Exists(quarantineRoot)
+                     && Directory.EnumerateDirectories(quarantineRoot).Any());
+    }
+
+    [Fact]
+    public async Task Install_CleansKnownWwmi3DmigotoAndLegacyLocalizationArtifacts()
+    {
+        var legacyFiles = new[]
+        {
+            "d3d11.dll", "d3dx.ini", "3DMigoto Loader.exe",
+            "wuwaVietHoa.dll", "wuwaVietHoa_Wahu_SDK.dll", "wuwaVietHoa_SDK.dll",
+            "wuwaVietHoa_VH.dll", "wuwaVietHoa.off", "SigPakV2.dll",
+            "camera.dll", "photoCloseUp.dll", "photoCloseUp_full.dll", "injectdll.exe",
+            "version.dll.backup", "version.dll.bak_wuwa", "version.dll.lai-hoang.bak",
+            "wuwaVietHoa.dll.lai-hoang.bak", "wuwaVietHoa.dll.SDK.bak"
+        };
+        foreach (var name in legacyFiles)
+            File.WriteAllText(Path.Combine(_win64, name), "FOREIGN_" + name);
+
+        var legacyLocalizationDir = Path.Combine(_win64, "wuwaVietHoa");
+        Directory.CreateDirectory(legacyLocalizationDir);
+        File.WriteAllText(Path.Combine(legacyLocalizationDir, "TiengVietCuaToi_99_P.pak"), "OLD_VH_PAK");
+        File.WriteAllText(Path.Combine(legacyLocalizationDir, "UTMAlexander_100_P.pak"), "OLD_FONT_PAK");
+
+        var shaderFixes = Path.Combine(_win64, "ShaderFixes", "Nested");
+        Directory.CreateDirectory(shaderFixes);
+        File.WriteAllText(Path.Combine(shaderFixes, "fix.txt"), "FOREIGN_SHADER_FIX");
+
+        var conflicts = _viet.FindConflicts(_game);
+        Assert.Contains(conflicts, x => x.Contains("d3d11.dll", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(conflicts, x => x.Contains("d3dx.ini", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(conflicts, x => x.Contains("wuwaVietHoa.dll", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(conflicts, x => x.Contains("wuwaVietHoa_Wahu_SDK.dll", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(conflicts, x => x.Contains("camera.dll", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(conflicts, x => x.Contains("version.dll.backup", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(conflicts, x => x.Contains("wuwaVietHoa", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(conflicts, x => x.Contains("ShaderFixes", StringComparison.OrdinalIgnoreCase));
+
+        var result = await _viet.InstallAsync(_game, NameVariant.English, withFont: true);
+
+        Assert.True(result.Success, result.Error);
+        foreach (var name in legacyFiles)
+            Assert.False(File.Exists(Path.Combine(_win64, name)));
+        Assert.False(Directory.Exists(legacyLocalizationDir));
+        Assert.False(Directory.Exists(Path.Combine(_win64, "ShaderFixes")));
+        Assert.Empty(_viet.FindConflicts(_game));
+    }
+
+    [Fact]
+    public async Task Game37_StaleVersionBackup_IsCleanedAndNeverRestoredOnUninstall()
+    {
+        var manifestDir = Path.Combine(_game, "launcherDownload", "3.7.0");
+        Directory.CreateDirectory(manifestDir);
+        File.WriteAllText(Path.Combine(manifestDir, "OriginResource.json"),
+            "{\"resource\":[{\"dest\":\"Client/Binaries/Win64/Client-Win64-Shipping.exe\"}]}");
+
+        Assert.True((await _viet.InstallAsync(_game, NameVariant.English, withFont: true)).Success);
+
+        var versionBackup = Path.Combine(_win64, "version_goc.dll");
+        File.WriteAllText(versionBackup, "OLD_FOREIGN_PROXY");
+        Assert.Contains(_viet.FindConflicts(_game),
+            x => x.Contains("version_goc.dll", StringComparison.OrdinalIgnoreCase));
+
+        var reinstall = await _viet.InstallAsync(_game, NameVariant.English, withFont: true);
+        Assert.True(reinstall.Success, reinstall.Error);
+        Assert.False(File.Exists(versionBackup));
+        Assert.Empty(_viet.FindConflicts(_game));
+
+        // Mô phỏng backup proxy cũ còn sót từ bản VHWuWa trước đó ngay trước khi gỡ.
+        File.WriteAllText(versionBackup, "OLD_FOREIGN_PROXY");
+        File.WriteAllText(Path.Combine(_win64, "wahu_loader_log.txt"), "loader log");
+        var uninstall = await _viet.UninstallAsync(_game);
+
+        Assert.True(uninstall.Success, uninstall.Error);
+        Assert.False(File.Exists(Path.Combine(_win64, "version.dll")));
+        Assert.False(File.Exists(versionBackup));
+        Assert.False(File.Exists(Path.Combine(_win64, "wahu_loader_log.txt")));
+        Assert.False(_viet.GetStatus(_game).Installed);
+    }
+
+    [Fact]
+    public void ProxyPairWithoutVhwFiles_IsNotTreatedAsInstalled()
+    {
+        File.WriteAllText(Path.Combine(_win64, "version.dll"), "FOREIGN_PROXY");
+        File.WriteAllText(Path.Combine(_win64, "version_goc.dll"), "OLD_BACKUP");
+
+        Assert.False(_viet.GetStatus(_game).Installed);
+    }
+
+    [Fact]
+    public async Task LatestManifestSelection_PrefersSemanticVersionOverNewerMtime()
+    {
+        var oldDir = Path.Combine(_game, "launcherDownload", "3.6.1");
+        var newDir = Path.Combine(_game, "launcherDownload", "3.7.0");
+        Directory.CreateDirectory(oldDir);
+        Directory.CreateDirectory(newDir);
+
+        var oldManifest = Path.Combine(oldDir, "OriginResource.json");
+        var newManifest = Path.Combine(newDir, "OriginResource.json");
+        File.WriteAllText(oldManifest,
+            "{\"resource\":[{\"dest\":\"Client/Binaries/Win64/d3d11.dll\"}]}");
+        File.WriteAllText(newManifest,
+            "{\"resource\":[{\"dest\":\"Client/Binaries/Win64/Client-Win64-Shipping.exe\"}]}");
+        File.SetLastWriteTimeUtc(oldManifest, DateTime.UtcNow.AddMinutes(10));
+        File.SetLastWriteTimeUtc(newManifest, DateTime.UtcNow);
+
+        var candidate = Path.Combine(_win64, "d3d11.dll");
+        File.WriteAllText(candidate, "FOREIGN_IN_37");
+
+        var conflicts = _viet.FindConflicts(_game);
+
+        Assert.Contains(conflicts, x => x.Contains("d3d11.dll", StringComparison.OrdinalIgnoreCase));
+        var install = await _viet.InstallAsync(_game, NameVariant.English, withFont: true);
+        Assert.True(install.Success, install.Error);
+        Assert.False(File.Exists(candidate));
+    }
+
+    [Fact]
+    public async Task OfficialManifestFilesMatchingModPatterns_AreNeverDeleted()
+    {
+        var manifestDir = Path.Combine(_game, "launcherDownload", "9.9.9");
+        Directory.CreateDirectory(manifestDir);
+        File.WriteAllText(Path.Combine(manifestDir, "OriginResource.json"),
+            "{\"resource\":["
+            + "{\"dest\":\"Client/Binaries/Win64/d3d11.dll\"},"
+            + "{\"dest\":\"Client/Content/Paks/OfficialCustom_P.pak\"}"
+            + "]}");
+
+        var officialDll = Path.Combine(_win64, "d3d11.dll");
+        var officialPak = Path.Combine(_paks, "OfficialCustom_P.pak");
+        var foreignIni = Path.Combine(_win64, "d3dx.ini");
+        File.WriteAllText(officialDll, "OFFICIAL_D3D11");
+        File.WriteAllText(officialPak, "OFFICIAL_CUSTOM_PAK");
+        File.WriteAllText(foreignIni, "FOREIGN_D3DX");
+
+        var conflicts = _viet.FindConflicts(_game);
+        Assert.DoesNotContain(conflicts, x => x.Contains("d3d11.dll", StringComparison.OrdinalIgnoreCase));
+        Assert.DoesNotContain(conflicts, x => x.Contains("OfficialCustom_P.pak", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(conflicts, x => x.Contains("d3dx.ini", StringComparison.OrdinalIgnoreCase));
+
+        var install = await _viet.InstallAsync(_game, NameVariant.English, withFont: true);
+
+        Assert.True(install.Success, install.Error);
+        Assert.Equal("OFFICIAL_D3D11", File.ReadAllText(officialDll));
+        Assert.Equal("OFFICIAL_CUSTOM_PAK", File.ReadAllText(officialPak));
+        Assert.False(File.Exists(foreignIni));
     }
 
     [Fact]

@@ -1,9 +1,12 @@
 ﻿# build-dist.ps1 — Đóng gói VHWuWa thành BỘ CÀI phát cho người khác
 # Publish self-contained (không cần cài .NET) + gói sẵn nội dung Việt hóa (pak Hán Việt/EN + font + loader).
 #
-#   powershell -ExecutionPolicy Bypass -File scripts\build-dist.ps1 -Version 3.0.12
+#   powershell -ExecutionPolicy Bypass -File scripts\build-dist.ps1 -Version X.Y.Z -AppDichVersion A.B.C
 #
-param([string]$Version = "")
+param(
+  [string]$Version = "",
+  [string]$AppDichVersion = ""
+)
 
 $ErrorActionPreference = 'Stop'
 $root   = Split-Path -Parent $PSScriptRoot            # ...\VHWuWa
@@ -107,9 +110,18 @@ function CopyIf($src, $dst, $label) {
   if (Test-Path $src) { Copy-Item $src $dst -Force; Write-Host "   + $label" }
   else { Write-Host "   ! THIEU: $label ($src)" -ForegroundColor Yellow }
 }
-# Chỉ đóng gói bản VI/tên quốc tế mặc định. Bản Hán Việt được tải từ asset
-# GitHub khi người dùng chọn, hoặc được công cụ chỉnh sửa tự dựng sau khi lưu.
-CopyIf (Join-Path $wahu 'dist\WuWaVH_EN_99_P.pak') $content 'pak Tieng Anh (Co san)'
+# Player phải tự đủ cả hai biến thể để cài offline không rơi vào trạng thái
+# "đã chọn Hán Việt nhưng package thiếu PAK". Thiếu một biến thể thì dừng release.
+$enPakRelease = Join-Path $wahu 'dist\WuWaVH_EN_99_P.pak'
+$hvPakRelease = Join-Path $wahu 'dist\WuWaVH_HanViet_99_P.pak'
+foreach ($requiredPak in @($enPakRelease, $hvPakRelease)) {
+  if (-not (Test-Path -LiteralPath $requiredPak)) {
+    throw "Thieu PAK bat buoc cho Player release: $requiredPak"
+  }
+}
+Copy-Item -LiteralPath $enPakRelease -Destination $content -Force
+Copy-Item -LiteralPath $hvPakRelease -Destination $content -Force
+Write-Host "   + pak Tieng Anh + Han Viet (offline-ready)"
 
 # Loader runtime canonical chỉ lấy từ Wahu\loader. Tuyệt đối không fallback sang
 # WuwaVH_BanCai\_files cũ vì output đó có thể chứa DLL stale từ build trước.
@@ -209,6 +221,33 @@ $docTruoc = $docTruoc.Replace('__VERSION__', $Version)
 [System.IO.File]::WriteAllText((Join-Path $out 'DOC TRUOC.txt'), $docTruoc, [System.Text.UTF8Encoding]::new($true))
 
 Write-Host "== 5/5  Nen ZIP de gui ==" -ForegroundColor Green
+
+# Release guard: không cho artifact vật lý của bộ/mod ngoài lọt vào Player package.
+# Các tên này vẫn có thể tồn tại dưới dạng chuỗi trong detector để app dọn khỏi game.
+$foreignArtifactPatterns = @(
+  '^wuwaVietHoa.*',
+  '^TiengVietCuaToi.*',
+  '^UTMAlexander.*',
+  '^SigPakV2.*',
+  '^photoCloseUp.*',
+  '^injectdll.*',
+  '^3DMigoto.*',
+  '^d3dx\.ini$',
+  '^camera\.dll$'
+)
+$foreignArtifacts = @(
+  Get-ChildItem -LiteralPath $app -Recurse -Force -ErrorAction SilentlyContinue |
+    Where-Object {
+      $leaf = $_.Name
+      $foreignArtifactPatterns | Where-Object { $leaf -match $_ } | Select-Object -First 1
+    }
+)
+if ($foreignArtifacts.Count -gt 0) {
+  $bad = ($foreignArtifacts | ForEach-Object { $_.FullName }) -join [Environment]::NewLine
+  throw ("PHAT HIEN ARTIFACT NGOAI VHWuWa TRONG PLAYER PACKAGE. DUNG RELEASE:" + [Environment]::NewLine + $bad)
+}
+Write-Host "   + Foreign-artifact gate: PASS" -ForegroundColor Green
+
 $sz = [math]::Round(((Get-ChildItem $out -Recurse -File | Measure-Object Length -Sum).Sum)/1MB,1)
 $zip = Join-Path $buildRoot 'VHWuWa_BanCai.zip'
 if (Test-Path $zip) { Remove-Item $zip -Force }
@@ -242,6 +281,19 @@ Write-Host "   File gui (ZIP):   $zip  ($zsz MB)"
 Write-Host "   File Release:     $releaseZip"
 Write-Host "   SHA-256:           $sha"
 Write-Host "   -> Chỉ upload các ZIP/PAK cần phát hành; app đọc SHA-256 trực tiếp từ GitHub."
+if ($AppDichVersion) {
+  $appDichAsset = Join-Path $distRoot "App-Dich-WuWa-v$AppDichVersion.zip"
+  if (Test-Path -LiteralPath $appDichAsset) {
+    $appDichGuideLine = "  App-Dich-WuWa-v$AppDichVersion.zip"
+  }
+  else {
+    $appDichGuideLine = "  App-Dich-WuWa-v$AppDichVersion.zip  [THIEU FILE - KHONG UPLOAD]"
+    Write-Host "   ! App-Dich version $AppDichVersion duoc khai bao nhung file khong ton tai: $appDichAsset" -ForegroundColor Yellow
+  }
+}
+else {
+  $appDichGuideLine = "  (khong tu dong dat version; chi upload khi da build WAHU Community rieng)"
+}
 $uploadGuide = @"
 CAC FILE CAN UPLOAD LEN GITHUB RELEASE v$Version
 ================================================
@@ -252,7 +304,7 @@ BAT BUOC CHO NGUOI CHOI / TU CAP NHAT
   WuWaVH_HanViet_99_P.pak    Nut khoi phuc mac dinh tai truc tiep asset nay
 
 NEU PHAT HANH KEM APP DICH
-  App-Dich-WuWa-v$Version.zip
+$appDichGuideLine
 
 KHONG UPLOAD
   _build\                  Toan bo thu muc va ZIP build trung gian

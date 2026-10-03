@@ -16,6 +16,7 @@ namespace VHWuWa.App;
 
 public partial class App : Application
 {
+    private Mutex? _singleInstanceMutex;
     public static IServiceProvider Services { get; private set; } = null!;
 
     protected override void OnStartup(StartupEventArgs e)
@@ -27,6 +28,18 @@ public partial class App : Application
             ShutdownMode = ShutdownMode.OnExplicitShutdown;
             var exitCode = GameExitWatchdog.Run(e.Args);
             Shutdown(exitCode);
+            return;
+        }
+
+        _singleInstanceMutex = new Mutex(initiallyOwned: true, @"Local\VHWuWa.UI", out var firstUiInstance);
+        if (!firstUiInstance)
+        {
+            _singleInstanceMutex.Dispose();
+            _singleInstanceMutex = null;
+            MessageBox.Show(
+                "VHWuWa đang mở ở một cửa sổ khác. Hãy dùng cửa sổ đang chạy để cài/gỡ Việt hóa.",
+                "VHWuWa", MessageBoxButton.OK, MessageBoxImage.Information);
+            Shutdown(0);
             return;
         }
 
@@ -69,6 +82,14 @@ public partial class App : Application
         mainWindow.Show();
         CompleteUpdateStartup(e.Args);
         EnsureDesktopShortcut();
+    }
+
+    protected override void OnExit(ExitEventArgs e)
+    {
+        try { _singleInstanceMutex?.ReleaseMutex(); } catch { }
+        _singleInstanceMutex?.Dispose();
+        _singleInstanceMutex = null;
+        base.OnExit(e);
     }
 
     public static void ApplyTheme(string theme)
