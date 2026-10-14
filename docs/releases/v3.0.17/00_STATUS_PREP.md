@@ -1,4 +1,16 @@
-# VHWuWa 3.0.17 – tình trạng hiện tại
+# VHWuWa 3.0.17 – trạng thái RC2 Text QA (14/10/2026)
+
+**Đã tạo gói PC 3.0.17 RC2 có PAK thoại Qingxiao sửa mới, chưa phát hành công khai.** Gói `dist/VietHoa-WuWa-v3.0.17-RC2-TextQA.zip` có 569 file, ZIP/PAK fresh-unpack PASS, updater thực 3.0.16 → RC2 PASS; SHA-256 ZIP: `35c4c24dccd82f3923a74a16457691a178d4198bc364a4cc6d4e98d87f756a2e`.
+
+Android source đã đồng bộ PAK EN/Hán Việt, đổi tên hiển thị **WuWa Việt Hoá**, bump nguồn lên `0.2.0-alpha.15`. **Chưa build/ký được APK alpha.15** do Gradle plugin thiếu và JVM hết bộ nhớ trên WIN3. Không đưa APK chưa ký ra dùng thử. Chưa kiểm thử PC/Android trong game thật, chưa đăng GitHub/Discord hoặc thay đổi BotDis production.
+
+**Bản ghi kỹ thuật đầy đủ, hash và các gate HOLD:** `RC2_TEXT_QA_REPORT.md`.
+
+---
+
+## Lưu trữ: trạng thái RC1 trước khi tích hợp PAK thoại
+
+# VHWuWa 3.0.17 – tình trạng RC1 lịch sử
 
 **Đã có bản RC1 để kiểm thử, chưa đăng GitHub hoặc Discord.**
 
