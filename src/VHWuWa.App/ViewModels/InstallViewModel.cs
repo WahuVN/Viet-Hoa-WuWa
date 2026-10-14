@@ -57,8 +57,14 @@ public partial class InstallViewModel : ObservableObject
         var content = _viet.InspectContent();
         var conflicts = valid ? _viet.FindConflicts(game) : Array.Empty<string>();
         HasConflicts = conflicts.Count > 0;
+        if (!string.IsNullOrWhiteSpace(_viet.LastQuarantineDirectory))
+        {
+            LastQuarantinePath = _viet.LastQuarantineDirectory;
+            HasQuarantine = Directory.Exists(LastQuarantinePath);
+        }
         ConflictText = HasConflicts
-            ? $"Phát hiện {conflicts.Count} mục mod ngoài; VHWuWa sẽ tự dọn trước khi cài/cập nhật."
+            ? $"Phát hiện {conflicts.Count} mục mod có thể xung đột. Cài Việt hóa sẽ tự xóa các mod đã xác định (không xóa bản sao lưu).\n• "
+              + string.Join("\n• ", conflicts.Take(8))
             : "✔ Không phát hiện mod khác có thể xung đột.";
         FontAvailable = content.FontPak is not null;
         HasHanViet = File.Exists(HanVietPakPath);
@@ -100,12 +106,31 @@ public partial class InstallViewModel : ObservableObject
         if (value) VariantEnglish = false;
     }
     partial void OnVariantEnglishChanged(bool value) { if (value) VariantHanViet = false; }
-    partial void OnCanInstallChanged(bool value) => InstallCommand.NotifyCanExecuteChanged();
+    private bool CanStartInstall() => CanInstall && !Busy;
+    private bool CanManageConflicts() => HasConflicts && !Busy;
 
-    [RelayCommand]
+    partial void OnCanInstallChanged(bool value) => InstallCommand.NotifyCanExecuteChanged();
+    partial void OnHasConflictsChanged(bool value)
+    {
+        DeleteConflictsCommand.NotifyCanExecuteChanged();
+        QuarantineConflictsCommand.NotifyCanExecuteChanged();
+    }
+    partial void OnBusyChanged(bool value)
+    {
+        InstallCommand.NotifyCanExecuteChanged();
+        DeleteConflictsCommand.NotifyCanExecuteChanged();
+        QuarantineConflictsCommand.NotifyCanExecuteChanged();
+        CheckConflictsCommand.NotifyCanExecuteChanged();
+        UninstallCommand.NotifyCanExecuteChanged();
+        DownloadHanVietCommand.NotifyCanExecuteChanged();
+    }
+
+    private bool CanRefreshConflicts() => !Busy;
+
+    [RelayCommand(CanExecute = nameof(CanRefreshConflicts))]
     private void CheckConflicts() => Refresh();
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanManageConflicts))]
     private void QuarantineConflicts()
     {
         var game = _settings.Settings.GamePath;
@@ -149,7 +174,7 @@ public partial class InstallViewModel : ObservableObject
             Process.Start(new ProcessStartInfo(LastQuarantinePath) { UseShellExecute = true });
     }
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanManageConflicts))]
     private void DeleteConflicts()
     {
         var game = _settings.Settings.GamePath;
@@ -159,11 +184,26 @@ public partial class InstallViewModel : ObservableObject
             return;
         }
 
+        var currentConflicts = _viet.FindConflicts(game);
+        if (currentConflicts.Count == 0)
+        {
+            Summary = "Không còn mod xung đột cần xóa.";
+            Refresh();
+            return;
+        }
+        var error = currentConflicts.FirstOrDefault(x => x.StartsWith("Không thể kiểm tra mod:", StringComparison.OrdinalIgnoreCase));
+        if (error is not null)
+        {
+            Summary = "❌ " + error;
+            return;
+        }
+        var preview = string.Join("\n• ", currentConflicts.Take(15));
         var answer = System.Windows.MessageBox.Show(
-            "XÓA VĨNH VIỄN các file mod ngoài mà ứng dụng vừa liệt kê?\n\n"
-            + "File của VHWuWa cũ (PAK/font/loader WAHU) được bảo vệ và không nằm trong danh sách xóa. "
-            + "Thao tác này không tạo bản sao và không thể hoàn tác. Nếu muốn giữ bản sao mod ngoài, hãy dùng Cách ly.",
-            "Xóa mod ngoài", System.Windows.MessageBoxButton.YesNo,
+            "XÓA VĨNH VIỄN các file mod xung đột đã phát hiện:\n• " + preview
+            + (currentConflicts.Count > 15 ? $"\n... và {currentConflicts.Count - 15} mục khác." : "")
+            + "\n\nKhông xóa file game gốc, file WAHU hợp lệ hoặc bản sao lưu .bak/.backup. "
+            + "Không thể hoàn tác. Muốn giữ bản sao mod cũ, hãy chọn Cách ly thay vì Xóa.",
+            "Xóa mod xung đột", System.Windows.MessageBoxButton.YesNo,
             System.Windows.MessageBoxImage.Warning,
             System.Windows.MessageBoxResult.No);
         if (answer != System.Windows.MessageBoxResult.Yes) return;
@@ -247,7 +287,7 @@ public partial class InstallViewModel : ObservableObject
         }
     }
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanRefreshConflicts))]
     private async Task DownloadHanVietAsync()
     {
         if (File.Exists(HanVietPakPath))
@@ -279,7 +319,7 @@ public partial class InstallViewModel : ObservableObject
         }
     }
 
-    [RelayCommand(CanExecute = nameof(CanInstall))]
+    [RelayCommand(CanExecute = nameof(CanStartInstall))]
     private async Task InstallAsync()
     {
         var game = _settings.Settings.GamePath;
@@ -309,7 +349,10 @@ public partial class InstallViewModel : ObservableObject
             var r = await _viet.InstallAsync(game, variant, ApplyFont && FontAvailable, progress, _cts.Token);
             if (r.Success)
             {
-                Summary = "✅ Cài xong! Vào game đặt Text Language = English. Có thể dùng DirectX 11 hoặc 12.";
+                var removed = _viet.LastAutoDeletedConflictCount;
+                Summary = "✅ Cài xong!"
+                    + (removed > 0 ? $" Đã tự dọn {removed} file mod xung đột." : " Không còn mod xung đột cần dọn.")
+                    + " Vào game đặt Text Language = English. Có thể dùng DirectX 11 hoặc 12.";
             }
             else
             {
@@ -325,7 +368,7 @@ public partial class InstallViewModel : ObservableObject
         finally { Busy = false; _cts?.Dispose(); _cts = null; Refresh(); }
     }
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanRefreshConflicts))]
     private async Task UninstallAsync()
     {
         var game = _settings.Settings.GamePath;

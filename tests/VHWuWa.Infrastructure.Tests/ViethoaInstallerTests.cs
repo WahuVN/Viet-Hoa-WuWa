@@ -131,6 +131,228 @@ public sealed class ViethoaInstallerTests : IDisposable
     }
 
     [Fact]
+    public async Task Cleanup_CatchesNestedModFolderNonTildeFolderAndLegacyDll()
+    {
+        Assert.True((await _viet.InstallAsync(_game, NameVariant.English, withFont: true)).Success);
+        var nested = Path.Combine(Mods, "Sub", "ForeignPriority_P.pak");
+        Directory.CreateDirectory(Path.GetDirectoryName(nested)!);
+        File.WriteAllText(nested, "NESTED");
+        var other = Path.Combine(_paks, "Mods", "old", "Foreign_P.pak");
+        Directory.CreateDirectory(Path.GetDirectoryName(other)!);
+        File.WriteAllText(other, "FOREIGN");
+        var dll = Path.Combine(_win64, "wuwaVietHoa_SDK.dll");
+        File.WriteAllText(dll, "OLD_DLL");
+
+        var conflicts = _viet.FindConflicts(_game);
+        Assert.Contains(conflicts, x => x.Contains("ForeignPriority_P.pak", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(conflicts, x => x.Contains("Foreign_P.pak", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(conflicts, x => x.Contains("wuwaVietHoa_SDK.dll", StringComparison.OrdinalIgnoreCase));
+
+        var clean = _viet.QuarantineConflicts(_game);
+        Assert.True(clean.Success, clean.Error);
+        Assert.Equal(3, clean.Value!.MovedFiles.Count);
+        Assert.Equal("NESTED", File.ReadAllText(Path.Combine(
+            clean.Value.QuarantineDirectory, Path.GetRelativePath(_game, nested))));
+        Assert.Equal("FOREIGN", File.ReadAllText(Path.Combine(
+            clean.Value.QuarantineDirectory, Path.GetRelativePath(_game, other))));
+        Assert.True(File.Exists(Path.Combine(Mods, "WuWaVH_99_P.pak")));
+        Assert.True(File.Exists(Path.Combine(_win64, "WuWaVH.dll")));
+        Assert.Empty(_viet.FindConflicts(_game));
+    }
+
+    [Fact]
+    public async Task Install_AutomaticallyDeletesForeignMods_WithoutQuarantine()
+    {
+        var foreign = Path.Combine(_paks, "~mods", "OldMod_P.pak");
+        Directory.CreateDirectory(Path.GetDirectoryName(foreign)!);
+        File.WriteAllText(foreign, "OLD_MOD");
+
+        var install = await _viet.InstallAsync(_game, NameVariant.English, withFont: true);
+
+        Assert.True(install.Success, install.Error);
+        Assert.False(File.Exists(foreign));
+        Assert.Null(_viet.LastQuarantineDirectory);
+        Assert.False(Directory.Exists(Path.Combine(_work, "quarantine")));
+        Assert.True(File.Exists(Path.Combine(Mods, "WuWaVH_99_P.pak")));
+        Assert.Empty(_viet.FindConflicts(_game));
+    }
+
+    [Fact]
+    public async Task AutoInstall_DeletesOnlyActiveModsAndPreservesBackupsAcrossLocations()
+    {
+        var modFolder = Path.Combine(_paks, "~mods", "Nested");
+        Directory.CreateDirectory(modFolder);
+        var active = Path.Combine(modFolder, "OtherTranslation_P.pak");
+        var backup = Path.Combine(modFolder, "OtherTranslation_P.pak.bak");
+        File.WriteAllText(active, "FOREIGN_ACTIVE");
+        File.WriteAllText(backup, "BACKUP_COPY");
+
+        var oldWin64Dll = Path.Combine(_win64, "wuwaVietHoa.dll");
+        var oldWin64Backup = Path.Combine(_win64, "version.dll.backup");
+        var versionOriginalBackup = Path.Combine(_win64, "version_goc.dll");
+        File.WriteAllText(oldWin64Dll, "FOREIGN_DLL");
+        File.WriteAllText(oldWin64Backup, "BACKUP_VERSION");
+        File.WriteAllText(versionOriginalBackup, "ORIGINAL_VERSION");
+
+        var result = await _viet.InstallAsync(_game, NameVariant.English, withFont: true);
+        Assert.True(result.Success, result.Error);
+        Assert.False(File.Exists(active));
+        Assert.False(File.Exists(oldWin64Dll));
+        Assert.Equal("BACKUP_COPY", File.ReadAllText(backup));
+        Assert.Equal("BACKUP_VERSION", File.ReadAllText(oldWin64Backup));
+        Assert.Equal("ORIGINAL_VERSION", File.ReadAllText(versionOriginalBackup));
+        Assert.True(File.Exists(Path.Combine(Mods, "WuWaVH_99_P.pak")));
+        Assert.True(File.Exists(Path.Combine(_win64, "WuWaVH.dll")));
+        Assert.Empty(_viet.FindConflicts(_game));
+        Assert.Null(_viet.LastQuarantineDirectory);
+    }
+
+    [Fact]
+    public void ManualDelete_RemovesActiveForeignModButLeavesBackups()
+    {
+        SeedLegacyVhwuwaInstall();
+        var foreignDir = Path.Combine(_paks, "~mods", "OldPatch");
+        Directory.CreateDirectory(foreignDir);
+        var active = Path.Combine(foreignDir, "OldTranslation_P.pak");
+        var backup = Path.Combine(foreignDir, "OldTranslation_P.pak.backup");
+        File.WriteAllText(active, "FOREIGN_PAK");
+        File.WriteAllText(backup, "SAFE_BACKUP");
+        var dll = Path.Combine(_win64, "wuwaVietHoa.dll");
+        var dllBackup = Path.Combine(_win64, "wuwaVietHoa.dll.lai-hoang.bak");
+        File.WriteAllText(dll, "FOREIGN_DLL");
+        File.WriteAllText(dllBackup, "SAFE_DLL_BACKUP");
+
+        var deleted = _viet.DeleteConflicts(_game);
+        Assert.True(deleted.Success, deleted.Error);
+        Assert.Equal(2, deleted.Value);
+        Assert.False(File.Exists(active));
+        Assert.False(File.Exists(dll));
+        Assert.Equal("SAFE_BACKUP", File.ReadAllText(backup));
+        Assert.Equal("SAFE_DLL_BACKUP", File.ReadAllText(dllBackup));
+        Assert.True(File.Exists(Path.Combine(Mods, "WuWaVH_99_P.pak")));
+        Assert.Empty(_viet.FindConflicts(_game));
+    }
+
+    [Fact]
+    public async Task CorruptedMarker_FailsClosedWithoutDeletingAnyMod()
+    {
+        Assert.True((await _viet.InstallAsync(_game, NameVariant.English, withFont: true)).Success);
+        var marker = Path.Combine(Mods, "vhwuwa_install.json");
+        File.WriteAllText(marker, "{not valid json");
+        var foreign = Path.Combine(_paks, "~mods", "Foreign_P.pak");
+        Directory.CreateDirectory(Path.GetDirectoryName(foreign)!);
+        File.WriteAllText(foreign, "FOREIGN");
+
+        Assert.Contains(_viet.FindConflicts(_game),
+            x => x.Contains("Không thể kiểm tra mod", StringComparison.OrdinalIgnoreCase));
+        var install = await _viet.InstallAsync(_game, NameVariant.English, withFont: true);
+        var clean = _viet.DeleteConflicts(_game);
+        var uninstall = await _viet.UninstallAsync(_game);
+        Assert.False(install.Success);
+        Assert.False(clean.Success);
+        Assert.False(uninstall.Success);
+        Assert.Equal("FOREIGN", File.ReadAllText(foreign));
+        Assert.True(File.Exists(Path.Combine(Mods, "WuWaVH_99_P.pak")));
+    }
+
+    [Fact]
+    public async Task UnknownStandaloneLoader_IsNotUninstalledAsWAHU()
+    {
+        var foreign = Path.Combine(_win64, "WuWaVH.dll");
+        File.WriteAllText(foreign, "UNRELATED_MOD");
+        var remove = await _viet.UninstallAsync(_game);
+        Assert.False(remove.Success);
+        Assert.Equal("UNRELATED_MOD", File.ReadAllText(foreign));
+    }
+
+    [Fact]
+    public async Task PartialUnmarkedWahuInstall_PreservesReservedNamesAndSelfRepairs()
+    {
+        Directory.CreateDirectory(Mods);
+        var pak = Path.Combine(Mods, "WuWaVH_99_P.pak");
+        var sig = Path.Combine(Mods, "WuWaVH_99_P.sig");
+        File.WriteAllText(pak, "PARTIAL_WAHU");
+        File.WriteAllText(sig, "PARTIAL_SIG");
+        var foreign = Path.Combine(_paks, "~mods", "OldPriority_P.pak");
+        Directory.CreateDirectory(Path.GetDirectoryName(foreign)!);
+        File.WriteAllText(foreign, "FOREIGN");
+
+        Assert.DoesNotContain(_viet.FindConflicts(_game),
+            x => x.Contains("WuWaVH_99_P.pak", StringComparison.OrdinalIgnoreCase));
+        var result = await _viet.InstallAsync(_game, NameVariant.English, withFont: false);
+        Assert.True(result.Success, result.Error);
+        Assert.False(File.Exists(foreign));
+        Assert.Equal("ENGLISH", File.ReadAllText(pak));
+        Assert.Equal("SEEDSIG", File.ReadAllText(sig));
+    }
+
+    [Fact]
+    public async Task LockedManagedPak_BlocksAutoDeleteBeforeAnyForeignFilesAreRemoved()
+    {
+        Assert.True((await _viet.InstallAsync(_game, NameVariant.English, withFont: false)).Success);
+        var foreign = Path.Combine(_paks, "~mods", "KeepUntilUnlocked_P.pak");
+        Directory.CreateDirectory(Path.GetDirectoryName(foreign)!);
+        File.WriteAllText(foreign, "SAFE_UNTIL_REINSTALL");
+        var managed = Path.Combine(Mods, "WuWaVH_99_P.pak");
+        using (var lockStream = new FileStream(managed, FileMode.Open, FileAccess.Read, FileShare.Read))
+        {
+            var retry = await _viet.InstallAsync(_game, NameVariant.English, withFont: false);
+            Assert.False(retry.Success);
+            Assert.Contains("kiểm tra file đích", retry.Error!, StringComparison.OrdinalIgnoreCase);
+        }
+        Assert.Equal("SAFE_UNTIL_REINSTALL", File.ReadAllText(foreign));
+    }
+
+    [Fact]
+    public async Task UnverifiedVersionProxy_IsBackedUpBeforeAutoDeletion()
+    {
+        var proxy = Path.Combine(_win64, "version.dll");
+        var backup = Path.Combine(_win64, "version_goc.dll");
+        File.WriteAllText(proxy, "UNKNOWN_PROXY_OR_OLD_LOADER");
+        var result = await _viet.InstallAsync(_game, NameVariant.English, withFont: false);
+        Assert.True(result.Success, result.Error);
+        Assert.Equal("UNKNOWN_PROXY_OR_OLD_LOADER", File.ReadAllText(backup));
+        Assert.Equal("LOADER_VERSION", File.ReadAllText(proxy));
+    }
+
+    [Fact]
+    public async Task RunningGame_BlocksAllDestructiveCleanupAndInstall()
+    {
+        var foreign = Path.Combine(_paks, "~mods", "RunningGameMod_P.pak");
+        Directory.CreateDirectory(Path.GetDirectoryName(foreign)!);
+        File.WriteAllText(foreign, "DONT_TOUCH");
+        var blocked = new ViethoaInstaller(_log, _content,
+            Path.Combine(_work, "blocked-quarantine"), isGameRunning: () => true);
+        var install = await blocked.InstallAsync(_game, NameVariant.English, withFont: false);
+        var remove = blocked.DeleteConflicts(_game);
+        var quarantine = blocked.QuarantineConflicts(_game);
+        Assert.False(install.Success);
+        Assert.False(remove.Success);
+        Assert.False(quarantine.Success);
+        Assert.Equal("DONT_TOUCH", File.ReadAllText(foreign));
+        Assert.False(File.Exists(Path.Combine(Mods, "WuWaVH_99_P.pak")));
+    }
+
+    [Fact]
+    public void Quarantine_LockedSecondFile_DoesNotMoveFirstFile()
+    {
+        var folder = Path.Combine(_paks, "~mods");
+        Directory.CreateDirectory(folder);
+        var first = Path.Combine(folder, "A_P.pak");
+        var second = Path.Combine(folder, "Z_P.pak");
+        File.WriteAllText(first, "KEEP_FIRST");
+        File.WriteAllText(second, "KEEP_SECOND");
+        using (var locked = new FileStream(second, FileMode.Open, FileAccess.Read, FileShare.Read))
+        {
+            var quarantine = _viet.QuarantineConflicts(_game);
+            Assert.False(quarantine.Success);
+            Assert.Null(_viet.LastQuarantineDirectory);
+        }
+        Assert.Equal("KEEP_FIRST", File.ReadAllText(first));
+        Assert.Equal("KEEP_SECOND", File.ReadAllText(second));
+    }
+
+    [Fact]
     public async Task Install_UpgradesLegacyBundleWithoutMarker_AndCreatesManagedMarker()
     {
         SeedLegacyVhwuwaInstall();
@@ -257,9 +479,7 @@ public sealed class ViethoaInstallerTests : IDisposable
         Assert.False(File.Exists(Path.Combine(_win64, "wuwaVietHoa.dll")));
         Assert.Equal("en", _viet.GetStatus(_game).Variant);
         Assert.Empty(_viet.FindConflicts(_game));
-        var quarantineRoot = Path.Combine(_work, "quarantine");
-        Assert.False(Directory.Exists(quarantineRoot)
-                     && Directory.EnumerateDirectories(quarantineRoot).Any());
+        Assert.Null(_viet.LastQuarantineDirectory);
     }
 
     [Fact]
@@ -546,9 +766,7 @@ public sealed class ViethoaInstallerTests : IDisposable
         Assert.True(result.Success, result.Error);
         Assert.False(File.Exists(otherPak));
         Assert.False(Directory.Exists(otherDir));
-        var quarantineRoot = Path.Combine(_work, "quarantine");
-        Assert.False(Directory.Exists(quarantineRoot)
-                     && Directory.EnumerateDirectories(quarantineRoot).Any());
+        Assert.Null(_viet.LastQuarantineDirectory);
     }
 
     [Fact]
@@ -578,12 +796,17 @@ public sealed class ViethoaInstallerTests : IDisposable
             "d3d11.dll", "d3dx.ini", "3DMigoto Loader.exe",
             "wuwaVietHoa.dll", "wuwaVietHoa_Wahu_SDK.dll", "wuwaVietHoa_SDK.dll",
             "wuwaVietHoa_VH.dll", "wuwaVietHoa.off", "SigPakV2.dll",
-            "camera.dll", "photoCloseUp.dll", "photoCloseUp_full.dll", "injectdll.exe",
-            "version.dll.backup", "version.dll.bak_wuwa", "version.dll.lai-hoang.bak",
-            "wuwaVietHoa.dll.lai-hoang.bak", "wuwaVietHoa.dll.SDK.bak"
+            "camera.dll", "photoCloseUp.dll", "photoCloseUp_full.dll", "injectdll.exe"
         };
         foreach (var name in legacyFiles)
             File.WriteAllText(Path.Combine(_win64, name), "FOREIGN_" + name);
+        var protectedBackups = new[]
+        {
+            "version.dll.backup", "version.dll.bak_wuwa", "version.dll.lai-hoang.bak",
+            "wuwaVietHoa.dll.lai-hoang.bak", "wuwaVietHoa.dll.SDK.bak"
+        };
+        foreach (var name in protectedBackups)
+            File.WriteAllText(Path.Combine(_win64, name), "BACKUP_" + name);
 
         var legacyLocalizationDir = Path.Combine(_win64, "wuwaVietHoa");
         Directory.CreateDirectory(legacyLocalizationDir);
@@ -600,7 +823,7 @@ public sealed class ViethoaInstallerTests : IDisposable
         Assert.Contains(conflicts, x => x.Contains("wuwaVietHoa.dll", StringComparison.OrdinalIgnoreCase));
         Assert.Contains(conflicts, x => x.Contains("wuwaVietHoa_Wahu_SDK.dll", StringComparison.OrdinalIgnoreCase));
         Assert.Contains(conflicts, x => x.Contains("camera.dll", StringComparison.OrdinalIgnoreCase));
-        Assert.Contains(conflicts, x => x.Contains("version.dll.backup", StringComparison.OrdinalIgnoreCase));
+        Assert.DoesNotContain(conflicts, x => x.Contains("version.dll.backup", StringComparison.OrdinalIgnoreCase));
         Assert.Contains(conflicts, x => x.Contains("wuwaVietHoa", StringComparison.OrdinalIgnoreCase));
         Assert.Contains(conflicts, x => x.Contains("ShaderFixes", StringComparison.OrdinalIgnoreCase));
 
@@ -609,13 +832,15 @@ public sealed class ViethoaInstallerTests : IDisposable
         Assert.True(result.Success, result.Error);
         foreach (var name in legacyFiles)
             Assert.False(File.Exists(Path.Combine(_win64, name)));
+        foreach (var name in protectedBackups)
+            Assert.Equal("BACKUP_" + name, File.ReadAllText(Path.Combine(_win64, name)));
         Assert.False(Directory.Exists(legacyLocalizationDir));
         Assert.False(Directory.Exists(Path.Combine(_win64, "ShaderFixes")));
         Assert.Empty(_viet.FindConflicts(_game));
     }
 
     [Fact]
-    public async Task Game37_StaleVersionBackup_IsCleanedAndNeverRestoredOnUninstall()
+    public async Task Game37_StaleVersionBackup_IsPreservedButNeverRestoredOnUninstall()
     {
         var manifestDir = Path.Combine(_game, "launcherDownload", "3.7.0");
         Directory.CreateDirectory(manifestDir);
@@ -626,12 +851,12 @@ public sealed class ViethoaInstallerTests : IDisposable
 
         var versionBackup = Path.Combine(_win64, "version_goc.dll");
         File.WriteAllText(versionBackup, "OLD_FOREIGN_PROXY");
-        Assert.Contains(_viet.FindConflicts(_game),
+        Assert.DoesNotContain(_viet.FindConflicts(_game),
             x => x.Contains("version_goc.dll", StringComparison.OrdinalIgnoreCase));
 
         var reinstall = await _viet.InstallAsync(_game, NameVariant.English, withFont: true);
         Assert.True(reinstall.Success, reinstall.Error);
-        Assert.False(File.Exists(versionBackup));
+        Assert.Equal("OLD_FOREIGN_PROXY", File.ReadAllText(versionBackup));
         Assert.Empty(_viet.FindConflicts(_game));
 
         // Mô phỏng backup proxy cũ còn sót từ bản VHWuWa trước đó ngay trước khi gỡ.
@@ -641,7 +866,7 @@ public sealed class ViethoaInstallerTests : IDisposable
 
         Assert.True(uninstall.Success, uninstall.Error);
         Assert.False(File.Exists(Path.Combine(_win64, "version.dll")));
-        Assert.False(File.Exists(versionBackup));
+        Assert.Equal("OLD_FOREIGN_PROXY", File.ReadAllText(versionBackup));
         Assert.False(File.Exists(Path.Combine(_win64, "wahu_loader_log.txt")));
         Assert.False(_viet.GetStatus(_game).Installed);
     }
@@ -756,7 +981,7 @@ public sealed class ViethoaInstallerTests : IDisposable
         var reinstall = await _viet.InstallAsync(_game, NameVariant.English, withFont: false);
 
         Assert.False(reinstall.Success);
-        Assert.Contains("Không thể ghi đè file", reinstall.Error!, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("kiểm tra file đích trước khi dọn mod", reinstall.Error!, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("đang bị game", reinstall.Error!, StringComparison.OrdinalIgnoreCase);
     }
 

@@ -95,11 +95,19 @@ if ($LASTEXITCODE -ne 0) { throw 'Runtime server-text registry khong hop le.' }
 $appFonts = Join-Path $app 'Fonts'
 New-Item -ItemType Directory -Force -Path $appFonts | Out-Null
 Copy-Item (Join-Path $root 'Fonts\fonts.json') $appFonts -Force
-Write-Host "   + Đã đính kèm danh mục 72 font (chế độ tải on-demand thông minh)"
+Copy-Item (Join-Path $root 'Fonts\Lexend-Variable.ttf') $appFonts -Force
+Copy-Item (Join-Path $root 'Fonts\OFL-Lexend.txt') $appFonts -Force
+Write-Host "   + Đã đính kèm danh mục 73 font (Lexend Variable đi kèm offline)"
 
 # Đính kèm công cụ repak.exe hỗ trợ tự động đóng gói font ngoài (.ttf/.otf)
 $appTools = Join-Path $app 'tools'
 New-Item -ItemType Directory -Force -Path $appTools | Out-Null
+Copy-Item (Join-Path $root 'scripts\font-weight-instance.py') (Join-Path $appTools 'font-weight-instance.py') -Force
+$fontInstanceExe = Join-Path $root 'tools\font-weight-instance.exe'
+if (-not (Test-Path $fontInstanceExe)) {
+  throw 'Thieu font-weight-instance.exe: phai build cong cu static font truoc release'
+}
+Copy-Item $fontInstanceExe (Join-Path $appTools 'font-weight-instance.exe') -Force
 $repakSrc = Join-Path $repo 'wuwavh_tool\Wahu\tools\repak.exe'
 if (Test-Path $repakSrc) {
   Copy-Item $repakSrc (Join-Path $appTools 'repak.exe') -Force

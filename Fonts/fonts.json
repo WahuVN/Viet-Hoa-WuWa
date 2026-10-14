@@ -1,6 +1,16 @@
 {
-  "count": 72,
+  "count": 73,
   "fonts": [
+    {
+      "name": "Lexend Variable",
+      "family": "Lexend",
+      "pak": "",
+      "sizeKb": 0,
+      "viGlyphs": "Vietnamese",
+      "src": "Lexend-Variable.ttf",
+      "variable": true,
+      "defaultWeight": 650
+    },
     {
       "name": "Arial",
       "family": "Arial",

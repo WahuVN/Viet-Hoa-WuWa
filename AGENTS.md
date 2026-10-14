@@ -11,7 +11,7 @@ Tài liệu này quy định các kiểm tra logic bắt buộc khi chỉnh sử
 4. **Kiểm tra Logic Game & 2 Biến Thể:**
    - Dữ liệu `project.db` phải đồng bộ cả 2 biến thể: `English` (Tên Anh chuẩn quốc tế) và `HanViet` (Tên Hán Việt).
    - Thư mục game hợp lệ phải có `Client\Binaries\Win64\Client-Win64-Shipping.exe`.
-   - File PAK đặt tại `Client\Content\Paks\~mods\`.
+   - File PAK do VHWuWa quản lý đặt tại `Client\Content\Paks\~WuWaMods\` (không nhầm với thư mục mod bên ngoài `~mods`).
    - Loader 3 DLLs (`version.dll`, `verorg.dll`, `WuWaVH.dll`) đặt tại `Client\Binaries\Win64\`.
    - Tính năng Ẩn/Đổi UID phải đồng bộ đủ 4 vị trí: HUD góc dưới phải, Thẻ Profile Esc, Khung Chat/Co-op và Chế độ Chụp ảnh.
 

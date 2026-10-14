@@ -65,6 +65,10 @@ public interface IViethoaInstaller
     ViethoaStatus GetStatus(string gamePath);
     /// <summary>Dò PAK/mod/loader khác có thể xung đột với bản Việt hóa tích hợp.</summary>
     IReadOnlyList<string> FindConflicts(string gamePath);
+    /// <summary>Thư mục cách ly gần nhất, kể cả khi app tự cách ly lúc cài.</summary>
+    string? LastQuarantineDirectory { get; }
+    /// <summary>Số file mod ngoài tự động xóa trong lần cài/cập nhật gần nhất.</summary>
+    int LastAutoDeletedConflictCount { get; }
     /// <summary>Chuyển file mod xung đột sang vùng cách ly có thể khôi phục, không xóa vĩnh viễn.</summary>
     Result<ModQuarantineReport> QuarantineConflicts(string gamePath);
     /// <summary>Xóa vĩnh viễn các file mod xung đột sau khi người dùng xác nhận trên giao diện.</summary>

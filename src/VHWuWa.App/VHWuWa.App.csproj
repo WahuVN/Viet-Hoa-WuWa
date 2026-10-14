@@ -28,5 +28,9 @@
     <None Include="..\..\Config\**\*" Link="Config\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\..\Guides\**\*" Link="Guides\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\..\Fonts\fonts.json" Link="Fonts\fonts.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\Fonts\Lexend-Variable.ttf" Link="Fonts\Lexend-Variable.ttf" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
+    <None Include="..\..\Fonts\OFL-Lexend.txt" Link="Fonts\OFL-Lexend.txt" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\scripts\font-weight-instance.py" Link="tools\font-weight-instance.py" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\tools\font-weight-instance.exe" Link="tools\font-weight-instance.exe" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true" Condition="Exists('..\..\tools\font-weight-instance.exe')" />
   </ItemGroup>
 </Project>

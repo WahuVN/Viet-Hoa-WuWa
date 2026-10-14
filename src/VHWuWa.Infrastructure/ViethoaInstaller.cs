@@ -33,12 +33,13 @@ public sealed class ViethoaInstaller : IViethoaInstaller
             "wuwaVietHoa_VH.dll", "wuwaVietHoa.off", "SigPakV2.dll",
             // Mod camera/injector từng dùng chung cơ chế proxy version.dll.
             "camera.dll", "photoCloseUp.dll", "photoCloseUp_full.dll", "injectdll.exe",
-            // Backup/proxy legacy có thể làm detector hoặc loader nhận nhầm.
-            "version.dll.backup", "version.dll.bak_wuwa", "version.dll.lai-hoang.bak",
-            "wuwaVietHoa.dll.lai-hoang.bak", "wuwaVietHoa.dll.SDK.bak"
+            // Backup files are deliberately excluded from automatic deletion.
         };
     private static readonly string[] KnownForeignWin64Dirs =
         { "Mods", "WWMI", "3Dmigoto", "ShaderFixes", "ShaderCache", "ue4ss", "RE-UE4SS", "wuwaVietHoa" };
+    // Latest quarantine is retained for the UI even when cleanup was triggered automatically.
+    public string? LastQuarantineDirectory { get; private set; }
+    public int LastAutoDeletedConflictCount { get; private set; }
     private readonly ILogService _log;
     private readonly string _contentDir;
     private readonly string _quarantineRoot;
@@ -165,7 +166,8 @@ public sealed class ViethoaInstaller : IViethoaInstaller
     private static bool DirectoryHasForeignFiles(string gamePath, string directory)
     {
         if (!Directory.Exists(directory)) return false;
-        return SafeEnumerateFiles(directory).Any(file => !IsOfficialGameFile(gamePath, file));
+        return SafeEnumerateFiles(directory).Any(file =>
+            !IsProtectedBackupFile(file) && !IsOfficialGameFile(gamePath, file));
     }
 
     private static bool IsStaleVersionBackup(string gamePath)
@@ -222,10 +224,14 @@ public sealed class ViethoaInstaller : IViethoaInstaller
         {
             var mods = ModsOf(gamePath);
             var win64 = Win64Of(gamePath);
-            st.Installed = File.Exists(Path.Combine(mods, PakName))
-                        || File.Exists(Path.Combine(win64, "WuWaVH.dll"))
-                        || File.Exists(Path.Combine(win64, "verorg.dll"));
             var marker = ViethoaInstallMarker.Load(Path.Combine(mods, MarkerName));
+            var hasWahuFiles = File.Exists(Path.Combine(mods, PakName))
+                || File.Exists(Path.Combine(win64, "WuWaVH.dll"))
+                || File.Exists(Path.Combine(win64, "verorg.dll"));
+            // A single foreign DLL using the same filename does not prove that
+            // VHWuWa is installed. Require a valid marker or a complete legacy set.
+            st.Installed = (marker is not null && hasWahuFiles)
+                || IsLegacyVhwuwaBundle(gamePath, marker);
             if (marker is not null)
             {
                 st.Version = string.IsNullOrWhiteSpace(marker.PackageVersion)
@@ -408,7 +414,90 @@ public sealed class ViethoaInstaller : IViethoaInstaller
                 errors.Add("File xác nhận cài đặt không đọc được: " + ex.Message);
             }
         }
+        // Read the persisted marker again: existence alone is insufficient.
+        // Every managed PAK/SIG/DLL must have a matching SHA-256 entry.
+        if (File.Exists(markerPath))
+        {
+            var attestation = ViethoaInstallMarker.Load(markerPath);
+            if (attestation is null)
+                errors.Add("Marker quản lý file không đọc được hoặc bị hỏng.");
+            else
+            {
+                var expected = new List<(string Scope, string Path)>
+                {
+                    ("mods", Path.Combine(mods, PakName)),
+                    ("mods", Path.Combine(mods, Path.ChangeExtension(PakName, ".sig"))),
+                    ("win64", Path.Combine(win64, "version.dll")),
+                    ("win64", Path.Combine(win64, "verorg.dll")),
+                    ("win64", Path.Combine(win64, "WuWaVH.dll"))
+                };
+                if (fontName is not null)
+                {
+                    expected.Add(("mods", Path.Combine(mods, fontName)));
+                    expected.Add(("mods", Path.Combine(mods, Path.ChangeExtension(fontName, ".sig"))));
+                }
+                foreach (var (scope, installedFile) in expected)
+                {
+                    var key = scope == "mods"
+                        ? ViethoaInstallMarker.ModKey(Path.GetFileName(installedFile))
+                        : ViethoaInstallMarker.LoaderKey(Path.GetFileName(installedFile));
+                    if (!attestation.ManagedFiles.TryGetValue(key, out var sha))
+                    {
+                        errors.Add("Marker thiếu SHA-256 cho file: " + key);
+                        continue;
+                    }
+                    try
+                    {
+                        if (!string.Equals(sha, ViethoaInstallMarker.Sha256(installedFile),
+                            StringComparison.OrdinalIgnoreCase))
+                            errors.Add("SHA-256 file cài không khớp marker: " + key);
+                    }
+                    catch (Exception ex)
+                    {
+                        errors.Add("Không thể kiểm tra SHA-256 " + key + ": " + ex.Message);
+                    }
+                }
+            }
+        }
         return errors;
+    }
+
+    private static IEnumerable<string> EnumerateModFolders(string paks) =>
+        Directory.EnumerateDirectories(paks, "*", SearchOption.TopDirectoryOnly)
+            .Where(path => Path.GetFileName(path).StartsWith("~", StringComparison.OrdinalIgnoreCase)
+                || Path.GetFileName(path).Equals("Mods", StringComparison.OrdinalIgnoreCase)
+                || Path.GetFileName(path).Equals("_mods", StringComparison.OrdinalIgnoreCase));
+
+    private static void EnsureManagedMarkerReadable(string mods)
+    {
+        var markerPath = Path.Combine(mods, MarkerName);
+        if (File.Exists(markerPath) && ViethoaInstallMarker.Load(markerPath) is null)
+            throw new InvalidDataException("File vhwuwa_install.json bị hỏng hoặc không đọc được. Không tự động xóa mod để tránh mất file WAHU; hãy sao lưu thư mục ~WuWaMods và kiểm tra marker trước.");
+    }
+
+    private static bool IsReservedWahuModName(string name) =>
+        name.Equals(PakName, StringComparison.OrdinalIgnoreCase)
+        || name.Equals(Path.ChangeExtension(PakName, ".sig"), StringComparison.OrdinalIgnoreCase)
+        || name.Equals(MarkerName, StringComparison.OrdinalIgnoreCase);
+
+    private static bool IsLinkedDirectory(string path)
+    {
+        try { return (File.GetAttributes(path) & FileAttributes.ReparsePoint) != 0; }
+        catch { return true; }
+    }
+
+    // Backups never participate in mod auto-clean or permanent-delete, even when
+    // located inside third-party mod folders. version_goc.dll can be the sole
+    // recoverable copy of a pre-install loader and is not itself an active injector.
+    private static bool IsProtectedBackupFile(string path)
+    {
+        var name = Path.GetFileName(path);
+        return name.Equals("version_goc.dll", StringComparison.OrdinalIgnoreCase)
+            || name.EndsWith(".bak", StringComparison.OrdinalIgnoreCase)
+            || name.EndsWith(".backup", StringComparison.OrdinalIgnoreCase)
+            || name.EndsWith(".bak_wuwa", StringComparison.OrdinalIgnoreCase)
+            || name.EndsWith(".orig", StringComparison.OrdinalIgnoreCase)
+            || name.EndsWith(".old", StringComparison.OrdinalIgnoreCase);
     }
 
     /// <summary>Dò mod phổ biến nhưng tránh quét nhầm pakchunk chính thức ở gốc Paks.</summary>
@@ -419,6 +508,7 @@ public sealed class ViethoaInstaller : IViethoaInstaller
         {
             var paks = PaksOf(gamePath);
             var mods = ModsOf(gamePath);
+            EnsureManagedMarkerReadable(mods);
             var markerExists = File.Exists(Path.Combine(mods, MarkerName));
             var marker = ViethoaInstallMarker.Load(Path.Combine(mods, MarkerName));
             var legacyBundle = IsLegacyVhwuwaBundle(gamePath, marker);
@@ -433,6 +523,7 @@ public sealed class ViethoaInstaller : IViethoaInstaller
                     var name = Path.GetFileName(file);
                     var extension = Path.GetExtension(file);
                     if (!ModExtensions.Contains(extension)
+                        || IsProtectedBackupFile(file)
                         || name.StartsWith("pakchunk", StringComparison.OrdinalIgnoreCase)
                         || !Path.GetFileNameWithoutExtension(name).EndsWith("_P", StringComparison.OrdinalIgnoreCase)
                         || IsOfficialGameFile(gamePath, file))
@@ -442,19 +533,27 @@ public sealed class ViethoaInstaller : IViethoaInstaller
                     conflicts.Add("Mod ngoài ở thư mục Paks: " + name);
                 }
 
-                foreach (var dir in Directory.EnumerateDirectories(paks, "~*", SearchOption.TopDirectoryOnly))
+                foreach (var dir in EnumerateModFolders(paks))
                 {
+                    if (IsLinkedDirectory(dir))
+                    {
+                        conflicts.Add("Thư mục mod liên kết cần kiểm tra thủ công: " + Path.GetRelativePath(paks, dir));
+                        continue;
+                    }
                     var isOwnDirectory = Path.GetFullPath(dir)
                         .Equals(Path.GetFullPath(mods), StringComparison.OrdinalIgnoreCase);
                     foreach (var file in SafeEnumerateFiles(dir))
                     {
-                        if (IsOfficialGameFile(gamePath, file)) continue;
+                        if (IsProtectedBackupFile(file) || IsOfficialGameFile(gamePath, file)) continue;
                         var isTopLevel = Path.GetDirectoryName(file)!
                             .Equals(dir, StringComparison.OrdinalIgnoreCase);
                         var name = Path.GetFileName(file);
 
                         if (isOwnDirectory && isTopLevel)
                         {
+                            // A missing marker is not evidence that reserved WAHU files are foreign.
+                            // The installer will overwrite and track these names after cleanup.
+                            if (marker is null && IsReservedWahuModName(name)) continue;
                             if (IsLegacyVhwuwaModFile(file, legacyBundle)) continue;
                             if (markerExists && owned.Contains(name))
                             {
@@ -464,6 +563,11 @@ public sealed class ViethoaInstaller : IViethoaInstaller
                                 continue;
                             }
                         }
+
+                        // A signature belonging to a listed PAK is one conflict group in the UI.
+                        // Both files are still copied to quarantine by CollectConflictFiles.
+                        if (Path.GetExtension(file).Equals(".sig", StringComparison.OrdinalIgnoreCase)
+                            && File.Exists(Path.ChangeExtension(file, ".pak"))) continue;
 
                         // Mọi file còn lại trong thư mục mod ~* đều là ngoài phạm vi
                         // managed của VHWuWa, kể cả .json/.ini/.txt phụ của mod cũ.
@@ -494,11 +598,11 @@ public sealed class ViethoaInstaller : IViethoaInstaller
             foreach (var name in KnownForeignWin64Files)
             {
                 var installed = Path.Combine(win64, name);
-                if (File.Exists(installed) && !IsOfficialGameFile(gamePath, installed))
+                if (File.Exists(installed) && !IsProtectedBackupFile(installed)
+                    && !IsOfficialGameFile(gamePath, installed))
                     conflicts.Add("File mod ngoài: Win64\\" + name);
             }
-            if (IsStaleVersionBackup(gamePath))
-                conflicts.Add("Backup proxy cũ không thuộc game 3.7: Win64\\version_goc.dll");
+            // Backup files are deliberately omitted from conflict scan.
             foreach (var dirName in KnownForeignWin64Dirs)
             {
                 var dir = Path.Combine(win64, dirName);
@@ -513,7 +617,10 @@ public sealed class ViethoaInstaller : IViethoaInstaller
         return conflicts.Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(x => x).ToList();
     }
 
-    public Result<ModQuarantineReport> QuarantineConflicts(string gamePath)
+    public Result<ModQuarantineReport> QuarantineConflicts(string gamePath) =>
+        QuarantineConflictsCore(gamePath, acquireLock: true);
+
+    private Result<ModQuarantineReport> QuarantineConflictsCore(string gamePath, bool acquireLock)
     {
         var moved = new List<(string Source, string Target, string Relative, string Hash)>();
         try
@@ -521,13 +628,26 @@ public sealed class ViethoaInstaller : IViethoaInstaller
             if (IsGameRunning())
                 return Result<ModQuarantineReport>.Fail("Game hoặc launcher đang chạy. Hãy đóng hẳn trước khi dọn mod xung đột.");
 
-            using var operationLock = TryAcquireOperationLock(gamePath);
-            if (operationLock is null)
+            using var operationLock = acquireLock ? TryAcquireOperationLock(gamePath) : null;
+            if (acquireLock && operationLock is null)
                 return Result<ModQuarantineReport>.Fail("Đang có một tiến trình VHWuWa khác cài/gỡ. Hãy chờ hoàn tất.");
 
             var targets = CollectConflictFiles(gamePath);
             if (targets.Count == 0)
                 return Result<ModQuarantineReport>.Fail("Không tìm thấy file mod xung đột có thể cách ly an toàn.");
+
+            // Validate every source BEFORE moving the first one, including symlinks
+            // and file locks. A linked file could otherwise read from outside game.
+            var gameRoot = Path.GetFullPath(gamePath);
+            foreach (var source in targets)
+            {
+                var relative = Path.GetRelativePath(gameRoot, source);
+                if (relative.StartsWith("..", StringComparison.Ordinal))
+                    throw new InvalidOperationException("Mod nằm ngoài thư mục game: " + source);
+                if ((File.GetAttributes(source) & FileAttributes.ReparsePoint) != 0)
+                    throw new IOException("Không cách ly symbolic link/reparse point: " + source);
+                using var probe = new FileStream(source, FileMode.Open, FileAccess.Read, FileShare.None);
+            }
 
             var quarantine = Path.Combine(_quarantineRoot,
                 DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss") + "_" + Guid.NewGuid().ToString("N")[..6]);
@@ -566,6 +686,7 @@ public sealed class ViethoaInstaller : IViethoaInstaller
                 QuarantineDirectory = quarantine,
                 MovedFiles = moved.Select(x => x.Relative).ToList()
             };
+            LastQuarantineDirectory = quarantine;
             _log.Info("Conflict", $"Đã cách ly {moved.Count} file mod xung đột vào {quarantine}");
             return Result<ModQuarantineReport>.Ok(report);
         }
@@ -664,6 +785,30 @@ public sealed class ViethoaInstaller : IViethoaInstaller
             return Result<int>.Fail("Chưa xóa file nào vì preflight dọn mod thất bại:\n- "
                 + string.Join("\n- ", preflightFailures.Take(8)));
 
+        // Preserve the previous version.dll before removing an unverified proxy.
+        // It stays inactive and is not automatically restored on uninstall unless
+        // the current official game manifest explicitly verifies version.dll.
+        var win64 = Win64Of(gamePath);
+        var installedVersion = Path.Combine(win64, "version.dll");
+        var versionBackup = Path.Combine(win64, "version_goc.dll");
+        if (targets.Contains(installedVersion, StringComparer.OrdinalIgnoreCase)
+            && File.Exists(installedVersion) && !File.Exists(versionBackup))
+        {
+            try
+            {
+                File.Copy(installedVersion, versionBackup, overwrite: false);
+                if (!SameFile(installedVersion, versionBackup))
+                {
+                    File.Delete(versionBackup);
+                    return Result<int>.Fail("Sao lưu version.dll không đạt SHA-256; chưa xóa mod nào.");
+                }
+            }
+            catch (Exception ex)
+            {
+                return Result<int>.Fail("Không thể sao lưu version.dll trước khi xóa mod; chưa xóa file nào: " + ex.Message);
+            }
+        }
+
         var deleted = 0;
         var failures = new List<string>();
         foreach (var target in targets)
@@ -710,7 +855,8 @@ public sealed class ViethoaInstaller : IViethoaInstaller
         var files = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         void AddFile(string path)
         {
-            if (File.Exists(path) && !IsOfficialGameFile(gamePath, path))
+            if (File.Exists(path) && !IsProtectedBackupFile(path)
+                && !IsOfficialGameFile(gamePath, path))
                 files.Add(Path.GetFullPath(path));
         }
         void AddTree(string path)
@@ -721,6 +867,7 @@ public sealed class ViethoaInstaller : IViethoaInstaller
 
         var paks = PaksOf(gamePath);
         var mods = ModsOf(gamePath);
+        EnsureManagedMarkerReadable(mods);
         var win64 = Win64Of(gamePath);
         var markerExists = File.Exists(Path.Combine(mods, MarkerName));
         var marker = ViethoaInstallMarker.Load(Path.Combine(mods, MarkerName));
@@ -738,8 +885,9 @@ public sealed class ViethoaInstaller : IViethoaInstaller
                     continue;
                 AddFile(file);
             }
-            foreach (var dir in Directory.EnumerateDirectories(paks, "~*", SearchOption.TopDirectoryOnly))
+            foreach (var dir in EnumerateModFolders(paks))
             {
+                if (IsLinkedDirectory(dir)) continue;
                 var isOwnDirectory = Path.GetFullPath(dir)
                     .Equals(Path.GetFullPath(mods), StringComparison.OrdinalIgnoreCase);
                 foreach (var file in SafeEnumerateFiles(dir))
@@ -747,6 +895,7 @@ public sealed class ViethoaInstaller : IViethoaInstaller
                     var isTopLevel = Path.GetDirectoryName(file)!
                         .Equals(dir, StringComparison.OrdinalIgnoreCase);
                     var name = Path.GetFileName(file);
+                    if (isOwnDirectory && isTopLevel && marker is null && IsReservedWahuModName(name)) continue;
                     if (isOwnDirectory && isTopLevel && IsLegacyVhwuwaModFile(file, legacyBundle)) continue;
                     if (isOwnDirectory && isTopLevel && markerExists && owned.Contains(name)
                         && MatchesLegacyManagedFile(marker, "mods", file)) continue;
@@ -764,10 +913,18 @@ public sealed class ViethoaInstaller : IViethoaInstaller
                 && MatchesLegacyManagedFile(marker, "win64", installed)) continue;
             AddFile(installed);
         }
+        // A third-party mod may overwrite our loader without changing its filename.
+        // Only quarantine it if the installed SHA differs from the managed marker.
+        foreach (var name in new[] { "verorg.dll", "WuWaVH.dll" })
+        {
+            var installed = Path.Combine(win64, name);
+            if (markerExists && File.Exists(installed)
+                && !MatchesLegacyManagedFile(marker, "win64", installed))
+                AddFile(installed);
+        }
         foreach (var name in KnownForeignWin64Files)
             AddFile(Path.Combine(win64, name));
-        if (IsStaleVersionBackup(gamePath))
-            AddFile(Path.Combine(win64, "version_goc.dll"));
+        // Backup files are never candidates for automatic cleanup.
         foreach (var dirName in KnownForeignWin64Dirs)
             AddTree(Path.Combine(win64, dirName));
 
@@ -778,7 +935,7 @@ public sealed class ViethoaInstaller : IViethoaInstaller
     {
         var paks = PaksOf(gamePath);
         if (Directory.Exists(paks))
-            foreach (var dir in Directory.EnumerateDirectories(paks, "~*", SearchOption.TopDirectoryOnly))
+            foreach (var dir in EnumerateModFolders(paks))
                 RemoveEmptyTree(dir);
         var win64 = Win64Of(gamePath);
         foreach (var name in KnownForeignWin64Dirs)
@@ -813,6 +970,7 @@ public sealed class ViethoaInstaller : IViethoaInstaller
 
     private static IEnumerable<string> SafeEnumerateFiles(string root)
     {
+        if (IsLinkedDirectory(root)) yield break;
         foreach (var directory in new[] { root }.Concat(SafeEnumerateDirectories(root)))
         {
             string[] files;
@@ -872,6 +1030,22 @@ public sealed class ViethoaInstaller : IViethoaInstaller
             $"Không thể {action} '{path}'. File có thể đang bị game, launcher hoặc chương trình khác sử dụng.\n" +
             "👉 Hãy đóng hoàn toàn Wuthering Waves/launcher rồi thử lại. Nếu vẫn lỗi, hãy chạy VHWuWa bằng quyền Administrator.",
             inner);
+    }
+
+    private static void EnsureManagedTargetAvailable(string path)
+    {
+        if (!File.Exists(path)) return;
+        try
+        {
+            if ((File.GetAttributes(path) & FileAttributes.ReparsePoint) != 0)
+                throw new IOException("File đích là symbolic link/reparse point: " + path);
+            // Verify locks/permissions before deleting any old mod. Do not modify bytes here.
+            using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.None);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            throw ManagedWriteException("kiểm tra file đích trước khi dọn mod", path, ex);
+        }
     }
 
     private static void EnsureDirectoryWritable(string directory, string label)
@@ -978,6 +1152,7 @@ public sealed class ViethoaInstaller : IViethoaInstaller
     public async Task<Result> UpdateTranslationPakAsync(string gamePath, NameVariant variant,
         CancellationToken ct = default)
     {
+        LastAutoDeletedConflictCount = 0;
         try
         {
             var status = GetStatus(gamePath);
@@ -1017,6 +1192,11 @@ public sealed class ViethoaInstaller : IViethoaInstaller
             EnsureDirectoryWritable(paks, "thư mục Paks của game");
             EnsureDirectoryWritable(mods, "thư mục mod của VHWuWa");
             EnsureDirectoryWritable(win64, "thư mục Win64 của game");
+            EnsureManagedTargetAvailable(pakDst);
+            EnsureManagedTargetAvailable(Path.ChangeExtension(pakDst, ".sig"));
+            EnsureManagedTargetAvailable(markerPath);
+            foreach (var dll in new[] { "version.dll", "verorg.dll", "WuWaVH.dll" })
+                EnsureManagedTargetAvailable(Path.Combine(win64, dll));
             foreach (var dll in new[] { "version.dll", "verorg.dll", "WuWaVH.dll" })
             {
                 var source = Path.Combine(LoaderDir, dll);
@@ -1049,12 +1229,12 @@ public sealed class ViethoaInstaller : IViethoaInstaller
                 return Result.Fail(scanError);
             if (conflicts.Count > 0)
             {
-                var cleanup = DeleteConflictsUnderLock(
-                    gamePath,
-                    failWhenEmpty: false,
-                    reason: "tự động trước cập nhật nhanh Việt hóa");
+                var cleanup = DeleteConflictsUnderLock(gamePath,
+                    failWhenEmpty: false, reason: "tự động trước cập nhật nhanh");
                 if (!cleanup.Success)
-                    return Result.Fail("Không thể dọn sạch mod ngoài trước cập nhật nhanh: " + cleanup.Error);
+                    return Result.Fail("Không thể xóa mod xung đột trước cập nhật nhanh: " + cleanup.Error);
+                LastAutoDeletedConflictCount = cleanup.Value;
+                _log.Info("Viethoa", $"Cập nhật nhanh tự dọn {cleanup.Value} file mod xung đột.");
 
                 var remaining = FindConflicts(gamePath);
                 var remainingScanError = remaining.FirstOrDefault(x =>
@@ -1162,6 +1342,7 @@ public sealed class ViethoaInstaller : IViethoaInstaller
     public async Task<Result> InstallAsync(string gamePath, NameVariant variant, bool withFont,
         IProgress<InstallProgress>? progress = null, CancellationToken ct = default)
     {
+        LastAutoDeletedConflictCount = 0;
         try
         {
             var win64 = Win64Of(gamePath);
@@ -1194,6 +1375,17 @@ public sealed class ViethoaInstaller : IViethoaInstaller
             EnsureDirectoryWritable(paks, "thư mục Paks của game");
             EnsureDirectoryWritable(mods, "thư mục mod của VHWuWa");
             EnsureDirectoryWritable(win64, "thư mục Win64 của game");
+            EnsureManagedTargetAvailable(Path.Combine(mods, PakName));
+            EnsureManagedTargetAvailable(Path.Combine(mods, Path.ChangeExtension(PakName, ".sig")));
+            EnsureManagedTargetAvailable(Path.Combine(mods, MarkerName));
+            foreach (var loader in new[] { "version.dll", "verorg.dll", "WuWaVH.dll" })
+                EnsureManagedTargetAvailable(Path.Combine(win64, loader));
+            if (withFont && content.FontPak is not null)
+            {
+                var selectedFont = Path.Combine(mods, Path.GetFileName(content.FontPak));
+                EnsureManagedTargetAvailable(selectedFont);
+                EnsureManagedTargetAvailable(Path.ChangeExtension(selectedFont, ".sig"));
+            }
 
             // Chỉ nhận hủy trước pha destructive; sau khi purge bắt đầu phải hoàn tất cài.
             ct.ThrowIfCancellationRequested();
@@ -1205,12 +1397,12 @@ public sealed class ViethoaInstaller : IViethoaInstaller
                 return Result.Fail(scanError);
             if (conflicts.Count > 0)
             {
-                var cleanup = DeleteConflictsUnderLock(
-                    gamePath,
-                    failWhenEmpty: false,
-                    reason: "tự động trước clean install");
+                var cleanup = DeleteConflictsUnderLock(gamePath,
+                    failWhenEmpty: false, reason: "tự động trước cài Việt hóa");
                 if (!cleanup.Success)
-                    return Result.Fail("Không thể dọn sạch mod ngoài trước khi cài:\n" + cleanup.Error);
+                    return Result.Fail("Không thể xóa mod xung đột trước khi cài:\n" + cleanup.Error);
+                LastAutoDeletedConflictCount = cleanup.Value;
+                _log.Info("Viethoa", $"Cài đặt đã tự dọn {cleanup.Value} file mod xung đột.");
 
                 var remaining = FindConflicts(gamePath);
                 var remainingScanError = remaining.FirstOrDefault(x =>
@@ -1367,6 +1559,12 @@ public sealed class ViethoaInstaller : IViethoaInstaller
             if (operationLock is null)
                 return Result.Fail("Đang có một tiến trình VHWuWa khác cài/gỡ. Hãy chờ tiến trình đó hoàn tất.");
 
+            var modsPath = ModsOf(gamePath);
+            EnsureManagedMarkerReadable(modsPath);
+            var verifiedMarker = ViethoaInstallMarker.Load(Path.Combine(modsPath, MarkerName));
+            if (verifiedMarker is null && !IsLegacyVhwuwaBundle(gamePath, null))
+                return Result.Fail("Không đủ bằng chứng đây là bản Việt hóa WAHU: thiếu marker và bộ loader/PAK legacy đầy đủ. Dừng gỡ để bảo vệ file không rõ nguồn gốc.");
+
             var changedFiles = FindManagedFileChanges(gamePath);
             if (changedFiles.Count > 0 && !forceRemoveChangedFiles)
                 return Result.Fail("Không gỡ để tránh xóa nhầm file của mod khác. Các file do VHWuWa quản lý đã bị thay đổi:\n- "
@@ -1402,10 +1600,10 @@ public sealed class ViethoaInstaller : IViethoaInstaller
                     }
                     else
                     {
-                        // WuWa 3.7 không có version.dll official. Nếu manifest thiếu/không đọc được,
-                        // ưu tiên không đưa proxy/mod cũ trở lại game.
+                        // Nếu không xác minh được version.dll là file chính thức,
+                        // không khôi phục proxy cũ vào game. Giữ bản sao lưu để
+                        // người dùng có thể tự kiểm tra hoặc khôi phục khi cần.
                         DeleteManagedFile(ver);
-                        DeleteManagedFile(verBak);
                     }
                 }
                 else

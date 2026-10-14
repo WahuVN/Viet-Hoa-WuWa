@@ -6,6 +6,7 @@ using System.Windows.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Win32;
+using VHWuWa.App.Services;
 using VHWuWa.Core.Abstractions;
 using VHWuWa.Core.Models;
 
@@ -20,10 +21,16 @@ public partial class FontViewModel : ObservableObject
     [ObservableProperty] private string _message = "Sẵn sàng.";
     [ObservableProperty] private string _currentFont = "Mặc định";
     [ObservableProperty] private bool _busy;
-    [ObservableProperty] private string _sampleText = "Wuthering Waves Việt hóa — Sóng Gió, Hoàng Long, Kim Châu";
+    [ObservableProperty] private string _sampleText = "Người Lữ Hành đã thức tỉnh sức mạnh. Phần thưởng quý giá sẽ được trao sau trận chiến. ắ ằ ẳ ẵ ặ · ấ ầ ẩ ẫ ậ · ữ ự ỡ ợ";
     [ObservableProperty] private ImageSource? _previewImage;
     [ObservableProperty] private string _previewMessage = "Chọn một font để xem trước.";
     [ObservableProperty] private int _previewFontSize = 30;
+    [ObservableProperty] private int _fontWeight = 650;
+    [ObservableProperty] private int _minimumFontWeight = 100;
+    [ObservableProperty] private int _maximumFontWeight = 900;
+    [ObservableProperty] private bool _canAdjustFontWeight;
+    [ObservableProperty] private string _weightHelp = "Font tĩnh: hãy chọn bản Regular / SemiBold / Bold trong thư viện.";
+    public string WeightLabel => $"Weight {FontWeight}";
     public string PreviewFontSizeLabel => $"{PreviewFontSize} px";
 
     private readonly List<FontLibraryItem> _allFonts = new();
@@ -64,7 +71,7 @@ public partial class FontViewModel : ObservableObject
                 _allFonts.Add(item);
                 Library.Add(item);
             }
-            SelectedLibraryFont = Library.FirstOrDefault();
+            SelectedLibraryFont = Library.FirstOrDefault(f => f.Name == "Lexend Variable") ?? Library.FirstOrDefault();
             LibraryMessage = $"{Library.Count} font có sẵn";
         }
         catch (Exception ex) { LibraryMessage = "Không đọc được thư viện: " + VHWuWa.Core.Services.ErrorFormatter.Humanize(null, ex); }
@@ -139,17 +146,34 @@ public partial class FontViewModel : ObservableObject
             Filter = "Font (*.ttf;*.otf;*.ttc)|*.ttf;*.otf;*.ttc|Tất cả (*.*)|*.*"
         };
         if (dlg.ShowDialog() != true) return;
-        RenderPreview(dlg.FileName);
+        RenderPreview(dlg.FileName, isCustom: true);
     }
 
     private string? _lastFontPath;
     [ObservableProperty] private bool _hasCustomFontSelected;
+    private CancellationTokenSource? _previewRefreshCts;
 
-    private void RenderPreview(string fontPath)
+    private static string ResolveSource(string src)
+        => Path.IsPathRooted(src) ? src : Path.Combine(FontDir, src);
+
+    private void RenderPreview(string fontPath, bool isCustom = false)
     {
         _lastFontPath = fontPath;
-        HasCustomFontSelected = !string.IsNullOrWhiteSpace(fontPath) && File.Exists(fontPath);
-        var png = _preview.RenderPreview(fontPath, SampleText, PreviewFontSize);
+        HasCustomFontSelected = isCustom && File.Exists(fontPath);
+        var info = FontWeightTools.Inspect(fontPath);
+        CanAdjustFontWeight = info.IsVariable;
+        MinimumFontWeight = info.IsVariable ? info.Minimum : info.Default;
+        MaximumFontWeight = info.IsVariable ? info.Maximum : info.Default;
+        WeightHelp = info.IsVariable
+            ? $"Variable Font: chỉnh được từ {info.Minimum} đến {info.Maximum}; xuất font thật trước khi cài."
+            : $"Font tĩnh (weight {info.Default}): chọn phiên bản đậm khác trong thư viện.";
+        FontWeight = info.IsVariable ? Math.Clamp(650, info.Minimum, info.Maximum) : info.Default;
+        RequestPreviewRefresh();
+    }
+
+    private void DisplayPreview(string path)
+    {
+        var png = _preview.RenderPreview(path, SampleText, PreviewFontSize);
         if (png is null)
         {
             PreviewImage = null;
@@ -164,29 +188,52 @@ public partial class FontViewModel : ObservableObject
         img.EndInit();
         img.Freeze();
         PreviewImage = img;
-        PreviewMessage = Path.GetFileName(fontPath);
+        var displayName = Path.GetFileName(_lastFontPath) ?? "Font";
+        PreviewMessage = CanAdjustFontWeight ? $"Weight {FontWeight} · {displayName}" : displayName;
     }
 
-    private CancellationTokenSource? _previewRefreshCts;
-
-    partial void OnPreviewFontSizeChanged(int value)
+    private void RequestPreviewRefresh()
     {
-        OnPropertyChanged(nameof(PreviewFontSizeLabel));
         if (string.IsNullOrWhiteSpace(_lastFontPath)) return;
         _previewRefreshCts?.Cancel();
         _previewRefreshCts = new CancellationTokenSource();
         _ = RefreshPreviewAfterDelayAsync(_previewRefreshCts.Token);
     }
 
+    partial void OnFontWeightChanged(int value)
+    {
+        OnPropertyChanged(nameof(WeightLabel));
+        if (CanAdjustFontWeight) RequestPreviewRefresh();
+    }
+
+    partial void OnPreviewFontSizeChanged(int value)
+    {
+        OnPropertyChanged(nameof(PreviewFontSizeLabel));
+        RequestPreviewRefresh();
+    }
+
     private async Task RefreshPreviewAfterDelayAsync(CancellationToken token)
     {
         try
         {
-            await Task.Delay(120, token);
-            if (!token.IsCancellationRequested && !string.IsNullOrWhiteSpace(_lastFontPath))
-                RenderPreview(_lastFontPath);
+            await Task.Delay(180, token);
+            var source = _lastFontPath;
+            if (string.IsNullOrWhiteSpace(source)) return;
+            var actual = CanAdjustFontWeight
+                ? await FontWeightTools.InstantiateAsync(source, FontWeight, token)
+                : source;
+            if (!token.IsCancellationRequested && source == _lastFontPath) DisplayPreview(actual);
         }
         catch (OperationCanceledException) { }
+        catch (Exception ex)
+        {
+            if (!token.IsCancellationRequested)
+            {
+                PreviewImage = null;
+                PreviewMessage = "Không tạo được bản xem trước weight: " +
+                    VHWuWa.Core.Services.ErrorFormatter.Humanize(null, ex);
+            }
+        }
     }
 
     [RelayCommand]
@@ -213,8 +260,16 @@ public partial class FontViewModel : ObservableObject
         Message = $"Đang tạo và cài {Path.GetFileName(_lastFontPath)}…";
         try
         {
-            var r = await _fonts.BuildAndApplyCustomFontAsync(path, _lastFontPath);
-            Message = r.Success ? $"✅ Đã cài {Path.GetFileName(_lastFontPath)}." : "❌ " + r.Error;
+            var selectedPath = _lastFontPath!;
+            var effectiveFont = CanAdjustFontWeight
+                ? await FontWeightTools.InstantiateAsync(selectedPath, FontWeight)
+                : selectedPath;
+            var r = await _fonts.BuildAndApplyCustomFontAsync(path, effectiveFont);
+            Message = r.Success ? $"✅ Đã cài {Path.GetFileName(_lastFontPath)} · weight {FontWeight}." : "❌ " + r.Error;
+        }
+        catch (Exception ex)
+        {
+            Message = "❌ " + VHWuWa.Core.Services.ErrorFormatter.Humanize(null, ex);
         }
         finally
         {
@@ -225,7 +280,7 @@ public partial class FontViewModel : ObservableObject
 
     partial void OnSampleTextChanged(string value)
     {
-        if (!string.IsNullOrEmpty(_lastFontPath)) RenderPreview(_lastFontPath);
+        RequestPreviewRefresh();
     }
 
     [ObservableProperty] private bool _isFontDownloaded = true;
@@ -270,10 +325,20 @@ public partial class FontViewModel : ObservableObject
     partial void OnSelectedLibraryFontChanged(FontLibraryItem? value)
     {
         if (value is null) return;
-        if (!string.IsNullOrEmpty(value.Src) && File.Exists(value.Src))
-            RenderPreview(value.Src);
+        var source = ResolveSource(value.Src);
+        if (!string.IsNullOrWhiteSpace(value.Src) && File.Exists(source))
+            RenderPreview(source);
         else
             RenderPreview(value.Name);
+
+        if (CanAdjustFontWeight)
+        {
+            IsFontDownloaded = true;
+            ShowDownloadButton = false;
+            ApplyButtonText = "Tạo & áp dụng";
+            LibraryMessage = $"Font biến thiên · {value.Name}";
+            return;
+        }
 
         var pak = Path.Combine(FontDir, value.Pak);
         IsFontDownloaded = File.Exists(pak);
@@ -296,6 +361,7 @@ public partial class FontViewModel : ObservableObject
     private async Task DownloadFontOnlyAsync()
     {
         if (SelectedLibraryFont is null) return;
+        if (CanAdjustFontWeight) return; // Variable fonts are generated locally.
         var pak = Path.Combine(FontDir, SelectedLibraryFont.Pak);
         if (File.Exists(pak))
         {
@@ -339,6 +405,21 @@ public partial class FontViewModel : ObservableObject
         Busy = true;
         try
         {
+            if (string.IsNullOrWhiteSpace(SelectedLibraryFont.Pak) && !CanAdjustFontWeight)
+            {
+                LibraryMessage = "❌ Không tìm thấy font Variable nguồn; kiểm tra Fonts/Lexend-Variable.ttf.";
+                return;
+            }
+            if (CanAdjustFontWeight)
+            {
+                var source = ResolveSource(SelectedLibraryFont.Src);
+                var generated = await FontWeightTools.InstantiateAsync(source, FontWeight);
+                var result = await _fonts.BuildAndApplyCustomFontAsync(path, generated);
+                LibraryMessage = result.Success
+                    ? $"✅ Đã áp dụng {SelectedLibraryFont.Name} · weight {FontWeight}."
+                    : "❌ " + result.Error;
+                return;
+            }
             if (!File.Exists(pak))
             {
                 LibraryMessage = $"Đang tải {SelectedLibraryFont.Name}…";
