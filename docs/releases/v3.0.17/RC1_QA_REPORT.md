@@ -17,9 +17,11 @@ Trạng thái: **Đạt kiểm tra code, bộ cài và giao diện Windows; chư
 | Tùy chọn khác mở/đóng trên app thật | PASS |
 | ZIP đủ 569 entry + CRC | PASS |
 | SHA ZIP, SHA font | PASS |
-| Updater fixture 3.0.16→3.0.17, rollback, bad SHA | PASS |
+| Updater 3.0.16→3.0.17, thử ZIP RC1 thật, giữ cấu hình | PASS |
+| Full ZIP, ứng dụng mới khởi động, báo health và chốt update | PASS |
+| Updater fixture rollback khi lỗi và từ chối SHA sai | PASS |
 | Client Wuthering Waves thật, DX11/DX12, font/dialog | CHƯA TEST |
-| Updater dùng ZIP RC1 trên máy chơi thật | CHƯA TEST |
+| Tải ZIP 3.0.17 từ GitHub qua app đang chạy 3.0.16 | CHƯA TEST (CHƯA PUBLIC) |
 | PAK thoại mới 3.0.17 so với bản 3.0.16 | KHÔNG CÓ, GIỮ NỘI DUNG CŨ |
 | GitHub release / Discord | CHƯA ĐĂNG |
 
