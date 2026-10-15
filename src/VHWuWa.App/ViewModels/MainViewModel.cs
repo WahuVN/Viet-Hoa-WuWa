@@ -231,6 +231,7 @@ public partial class MainViewModel : ObservableObject
             }
 
             var gamePath = _settings.Settings.GamePath;
+            var appliedToGame = false;
             if (!string.IsNullOrWhiteSpace(gamePath) && _vietHoa != null)
             {
                 var status = _vietHoa.GetStatus(gamePath);
@@ -243,10 +244,13 @@ public partial class MainViewModel : ObservableObject
                     var applyPak = await _vietHoa.UpdateTranslationPakAsync(gamePath, variant);
                     if (!applyPak.Success)
                         throw new Exception("Không thể cập nhật PAK đang hoạt động trong game: " + applyPak.Error);
+                    appliedToGame = true;
                 }
             }
 
-            UpdateStatusMessage = "🎉 Cập nhật nhanh tệp Việt hóa thành công!";
+            UpdateStatusMessage = appliedToGame
+                ? "Đã cập nhật bản dịch trong ứng dụng và game."
+                : "Đã tải bản dịch mới. Chọn Cài Việt hóa để áp dụng vào game.";
             UpdateProgress = 100;
             // Chỉ cập nhật PAK không làm thay đổi phiên bản VHWuWa.exe. Nếu release
             // cũng có app mới thì vẫn phải giữ nút cập nhật đầy đủ hiển thị để người
@@ -262,7 +266,9 @@ public partial class MainViewModel : ObservableObject
 
             System.Windows.MessageBox.Show(
                 $"Đã cập nhật nhanh tệp Việt hóa lên bản v{CurrentUpdateManifest.Version} thành công!\n\n"
-                + "Nội dung bản dịch mới đã được nạp trực tiếp vào ứng dụng và thư mục game của bạn.",
+                + (appliedToGame
+                    ? "Bản dịch mới đã được áp dụng vào game. Bạn có thể mở game để sử dụng."
+                    : "Bản dịch mới đã được lưu trong ứng dụng. Hãy chọn đúng thư mục game và bấm Cài Việt hóa để áp dụng."),
                 "VHWuWa — Cập Nhật Nhanh",
                 System.Windows.MessageBoxButton.OK,
                 System.Windows.MessageBoxImage.Information);

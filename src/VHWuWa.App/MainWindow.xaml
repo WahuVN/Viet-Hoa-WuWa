@@ -88,12 +88,12 @@
                                         <ColumnDefinition Width="*" />
                                     </Grid.ColumnDefinitions>
                                     <ui:Button Grid.Column="0" Content="⚡ Nhanh" Appearance="Secondary"
-                                               ToolTip="Cập nhật nhanh tệp Việt hóa (~60MB)"
+                                               ToolTip="Chỉ tải bản dịch mới, không thay đổi phiên bản ứng dụng"
                                                Command="{Binding ApplyDeltaPakUpdateCommand}"
                                                IsEnabled="{Binding HasDeltaPak}"
                                                HorizontalAlignment="Stretch" Padding="2,3" FontSize="10" />
                                     <ui:Button Grid.Column="2" Content="⬇ Đầy đủ" Appearance="Primary"
-                                               ToolTip="Cập nhật toàn bộ ứng dụng (~190MB)"
+                                               ToolTip="Cập nhật ứng dụng và bản dịch, giữ nguyên cấu hình"
                                                Command="{Binding ApplyUpdateCommand}"
                                                HorizontalAlignment="Stretch" Padding="2,3" FontSize="10" />
                                 </Grid>
