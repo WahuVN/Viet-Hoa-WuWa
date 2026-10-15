@@ -186,6 +186,123 @@ public sealed class ViethoaInstallerTests : IDisposable
     }
 
     [Fact]
+    public async Task SeparateOldTranslationScan_DoesNotIncludeWAHUOrGenericMods()
+    {
+        Assert.True((await _viet.InstallAsync(_game, NameVariant.English, withFont: true)).Success);
+        var other = Path.Combine(_paks, "~mods", "OtherMod_99_P.pak");
+        Directory.CreateDirectory(Path.GetDirectoryName(other)!);
+        File.WriteAllText(other, "OTHER");
+
+        Assert.Empty(_viet.FindOldTranslationConflicts(_game));
+        var clean = _viet.QuarantineOldTranslationConflicts(_game);
+        Assert.False(clean.Success);
+        Assert.Equal("ENGLISH", File.ReadAllText(Path.Combine(Mods, "WuWaVH_99_P.pak")));
+        Assert.Equal("OTHER", File.ReadAllText(other));
+    }
+
+    [Fact]
+    public async Task SeparateOldTranslationCleanup_MovesOnlyDangDevFilesPreservesUnknownProxyAndWAHU()
+    {
+        Assert.True((await _viet.InstallAsync(_game, NameVariant.English, withFont: true)).Success);
+        var oldDir = Path.Combine(_win64, "wuwaVietHoa");
+        Directory.CreateDirectory(oldDir);
+        var oldPak = Path.Combine(oldDir, "WuWaVH_99_P.pak");
+        var oldFont = Path.Combine(oldDir, "Default_font_99_P.pak");
+        var foreignProxy = Path.Combine(_win64, "winhttp.dll");
+        var separateMod = Path.Combine(_paks, "~mods", "Other_P.pak");
+        Directory.CreateDirectory(Path.GetDirectoryName(separateMod)!);
+        File.WriteAllText(oldPak, "DANGDEV_MOD");
+        File.WriteAllText(oldFont, "DANGDEV_FONT");
+        File.WriteAllText(foreignProxy, "UNVERIFIED_DLL_MUST_BE_PRESERVED");
+        File.WriteAllText(separateMod, "INDEPENDENT");
+        var waPak = Path.Combine(Mods, "WuWaVH_99_P.pak");
+        var waDll = Path.Combine(_win64, "version.dll");
+        var beforeWahu = File.ReadAllText(waPak);
+        var beforeLoader = File.ReadAllText(waDll);
+
+        var identified = _viet.FindOldTranslationConflicts(_game);
+        Assert.Equal(2, identified.Count);
+        Assert.All(identified, file => Assert.Contains("wuwaVietHoa", file, StringComparison.OrdinalIgnoreCase));
+        var clean = _viet.QuarantineOldTranslationConflicts(_game);
+
+        Assert.True(clean.Success, clean.Error);
+        Assert.NotNull(clean.Value);
+        Assert.Equal(2, clean.Value!.MovedFiles.Count);
+        Assert.False(Directory.Exists(oldDir));
+        Assert.Equal("UNVERIFIED_DLL_MUST_BE_PRESERVED", File.ReadAllText(foreignProxy));
+        Assert.Equal("INDEPENDENT", File.ReadAllText(separateMod));
+        Assert.Equal(beforeWahu, File.ReadAllText(waPak));
+        Assert.Equal(beforeLoader, File.ReadAllText(waDll));
+        Assert.True(File.Exists(Path.Combine(clean.Value.QuarantineDirectory, "quarantine-manifest.json")));
+        Assert.True(File.Exists(Path.Combine(clean.Value.QuarantineDirectory,
+            Path.GetRelativePath(_game, oldPak))));
+        Assert.True(File.Exists(Path.Combine(clean.Value.QuarantineDirectory,
+            Path.GetRelativePath(_game, oldFont))));
+        Assert.Empty(_viet.FindOldTranslationConflicts(_game));
+    }
+
+    [Fact]
+    public void SeparateOldTranslationCleanup_RecoversFromFileLockWithoutTouchingGame()
+    {
+        var dir = Path.Combine(_win64, "wuwaVietHoa");
+        Directory.CreateDirectory(dir);
+        var locked = Path.Combine(dir, "WuWaVH_99_P.pak");
+        File.WriteAllText(locked, "LOCKED_CONTENT");
+        Result<ModQuarantineReport> result;
+        using (var stream = new FileStream(locked, FileMode.Open, FileAccess.Read, FileShare.None))
+            result = _viet.QuarantineOldTranslationConflicts(_game);
+
+        Assert.False(result.Success);
+        Assert.Equal("LOCKED_CONTENT", File.ReadAllText(locked));
+        Assert.Null(_viet.LastQuarantineDirectory);
+    }
+
+    [Fact]
+    public void SeparateOldTranslationCleanup_PreservesUnknownLoaderWithoutOldModFolder()
+    {
+        var proxy = Path.Combine(_win64, "winhttp.dll");
+        File.WriteAllText(proxy, "NOT_DANGDEV_SHA");
+
+        Assert.Empty(_viet.FindOldTranslationConflicts(_game));
+        var result = _viet.QuarantineOldTranslationConflicts(_game);
+
+        Assert.False(result.Success);
+        Assert.Equal("NOT_DANGDEV_SHA", File.ReadAllText(proxy));
+    }
+
+    [Fact]
+    public void SeparateOldTranslationCleanup_RejectsWrongGameRootWithoutTouchingFiles()
+    {
+        var wrongGame = Path.Combine(_work, "NOT_GAME");
+        var foreignDir = Path.Combine(wrongGame, "Client", "Binaries", "Win64", "wuwaVietHoa");
+        Directory.CreateDirectory(foreignDir);
+        var foreign = Path.Combine(foreignDir, "WuWaVH_99_P.pak");
+        File.WriteAllText(foreign, "DO_NOT_DELETE");
+
+        var result = _viet.QuarantineOldTranslationConflicts(wrongGame);
+
+        Assert.False(result.Success);
+        Assert.Equal("DO_NOT_DELETE", File.ReadAllText(foreign));
+    }
+
+    [Fact]
+    public void SeparateOldTranslationCleanup_RefusesToRunWhenGameIsOpen()
+    {
+        var dir = Path.Combine(_win64, "wuwaVietHoa");
+        Directory.CreateDirectory(dir);
+        var pak = Path.Combine(dir, "WuWaVH_99_P.pak");
+        File.WriteAllText(pak, "KEEP");
+        var blocked = new ViethoaInstaller(_log, _content, Path.Combine(_work, "blocked-old-clean"),
+            isGameRunning: () => true);
+
+        var result = blocked.QuarantineOldTranslationConflicts(_game);
+
+        Assert.False(result.Success);
+        Assert.Equal("KEEP", File.ReadAllText(pak));
+        Assert.Null(blocked.LastQuarantineDirectory);
+    }
+
+    [Fact]
     public void InspectContent_Ready()
     {
         var c = _viet.InspectContent();

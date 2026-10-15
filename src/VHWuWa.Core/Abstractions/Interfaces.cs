@@ -71,6 +71,10 @@ public interface IViethoaInstaller
     int LastAutoDeletedConflictCount { get; }
     /// <summary>Chuyển file mod xung đột sang vùng cách ly có thể khôi phục, không xóa vĩnh viễn.</summary>
     Result<ModQuarantineReport> QuarantineConflicts(string gamePath);
+    /// <summary>Chỉ quét dấu vết bộ Việt hóa WinHTTP cũ (Đặng Dev/fork), không quét mod khác hoặc WAHU.</summary>
+    IReadOnlyList<string> FindOldTranslationConflicts(string gamePath);
+    /// <summary>Dọn riêng bộ Việt hóa WinHTTP cũ vào vùng cách ly có SHA và manifest, có thể phục hồi.</summary>
+    Result<ModQuarantineReport> QuarantineOldTranslationConflicts(string gamePath);
     /// <summary>Xóa vĩnh viễn các file mod xung đột sau khi người dùng xác nhận trên giao diện.</summary>
     Result<int> DeleteConflicts(string gamePath);
     /// <summary>Cập nhật riêng PAK bản dịch đang hoạt động, giữ nguyên font/loader và đồng bộ marker SHA.</summary>

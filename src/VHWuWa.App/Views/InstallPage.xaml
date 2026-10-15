@@ -63,6 +63,27 @@
                     </StackPanel>
                 </ui:Card>
 
+                <ui:Card Padding="16" Margin="0,0,0,12">
+                    <StackPanel>
+                        <TextBlock Text="3 · Xóa xung đột Việt hóa cũ" FontWeight="SemiBold"
+                                   FontSize="14" Margin="0,0,0,6" />
+                        <TextBlock Text="Dọn riêng bộ Đặng Dev / WuwaID khỏi Win64. File được cách ly để khôi phục, không xóa WAHU hoặc game."
+                                   TextWrapping="Wrap" FontSize="12" Opacity="0.8" Margin="0,0,0,8" />
+                        <TextBlock Text="{Binding OldTranslationConflictText}" TextWrapping="Wrap"
+                                   FontSize="12" Margin="0,0,0,10" />
+                        <WrapPanel>
+                            <Button Content="Quét lại xung đột" Command="{Binding CheckConflictsCommand}"
+                                    Margin="0,0,8,8" Padding="12,8" FontSize="12" />
+                            <ui:Button Content="Xóa xung đột cũ" Appearance="Danger"
+                                       Command="{Binding RemoveOldTranslationConflictsCommand}"
+                                       Margin="0,0,8,8" Padding="12,8" FontSize="12" />
+                            <Button Content="Mở vùng cách ly" Command="{Binding OpenQuarantineCommand}"
+                                    Visibility="{Binding HasQuarantine, Converter={StaticResource BoolToVis}}"
+                                    Margin="0,0,8,8" Padding="12,8" FontSize="12" />
+                        </WrapPanel>
+                    </StackPanel>
+                </ui:Card>
+
                 <!-- Các thao tác ít dùng được thu gọn; lệnh và cơ chế xác nhận không đổi. -->
                 <Expander Header="Tùy chọn khác · Quản lý mod / Gỡ Việt hóa"
                           IsExpanded="False" Margin="0,0,0,12" Padding="8,4">
@@ -82,12 +103,12 @@
                             <Button Content="Gỡ Việt hóa" Command="{Binding UninstallCommand}"
                                     Margin="0,0,8,8" Padding="12,8" FontSize="12" />
                         </WrapPanel>
-                        <ui:Button Content="Xóa mod xung đột" Appearance="Danger"
+                        <ui:Button Content="Xóa tất cả mod ngoài (vĩnh viễn)" Appearance="Danger"
                                    Command="{Binding DeleteConflictsCommand}"
                                    Visibility="{Binding HasConflicts, Converter={StaticResource BoolToVis}}"
                                    Margin="0,0,8,4" Padding="12,8" FontSize="12"
                                    HorizontalAlignment="Left" />
-                        <TextBlock Text="Xóa mod là vĩnh viễn. Hãy cách ly trước nếu muốn giữ bản sao."
+                        <TextBlock Text="Thao tác nâng cao: xóa vĩnh viễn mọi file được quét là mod ngoài, khác với nút dọn riêng Đặng Dev ở trên."
                                    TextWrapping="Wrap" FontSize="11" Opacity="0.7" />
                     </StackPanel>
                 </Expander>

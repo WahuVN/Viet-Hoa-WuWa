@@ -35,6 +35,8 @@ public partial class InstallViewModel : ObservableObject
     [ObservableProperty] private string _conflictText = "✔ Không phát hiện mod khác.";
     [ObservableProperty] private bool _hasQuarantine;
     [ObservableProperty] private string _lastQuarantinePath = "";
+    [ObservableProperty] private bool _hasOldTranslationConflicts;
+    [ObservableProperty] private string _oldTranslationConflictText = "Chưa quét dấu vết Việt hóa cũ.";
 
     public InstallViewModel(ISettingsService settings, IGameDetectionService detect, IViethoaInstaller viet,
         IUpdateService update)
@@ -57,6 +59,15 @@ public partial class InstallViewModel : ObservableObject
         var content = _viet.InspectContent();
         var conflicts = valid ? _viet.FindConflicts(game) : Array.Empty<string>();
         HasConflicts = conflicts.Count > 0;
+        var oldTranslationFiles = valid ? _viet.FindOldTranslationConflicts(game) : Array.Empty<string>();
+        var oldScanError = oldTranslationFiles.FirstOrDefault(x =>
+            x.StartsWith("Không thể kiểm tra mod:", StringComparison.OrdinalIgnoreCase));
+        HasOldTranslationConflicts = oldScanError is null && oldTranslationFiles.Count > 0;
+        OldTranslationConflictText = oldScanError is not null ? "❌ " + oldScanError
+            : HasOldTranslationConflicts
+                ? $"Phát hiện {oldTranslationFiles.Count} file từ bộ Việt hóa cũ có thể dọn riêng:\n• "
+                  + string.Join("\n• ", oldTranslationFiles.Take(8))
+                : "✔ Không tìm thấy file Việt hóa Đặng Dev/fork có thể dọn tự động.";
         if (!string.IsNullOrWhiteSpace(_viet.LastQuarantineDirectory))
         {
             LastQuarantinePath = _viet.LastQuarantineDirectory;
@@ -108,6 +119,9 @@ public partial class InstallViewModel : ObservableObject
     partial void OnVariantEnglishChanged(bool value) { if (value) VariantHanViet = false; }
     private bool CanStartInstall() => CanInstall && !Busy;
     private bool CanManageConflicts() => HasConflicts && !Busy;
+    private bool CanRemoveOldTranslationConflicts() => HasOldTranslationConflicts && !Busy;
+    partial void OnHasOldTranslationConflictsChanged(bool value) =>
+        RemoveOldTranslationConflictsCommand.NotifyCanExecuteChanged();
 
     partial void OnCanInstallChanged(bool value) => InstallCommand.NotifyCanExecuteChanged();
     partial void OnHasConflictsChanged(bool value)
@@ -120,6 +134,7 @@ public partial class InstallViewModel : ObservableObject
         InstallCommand.NotifyCanExecuteChanged();
         DeleteConflictsCommand.NotifyCanExecuteChanged();
         QuarantineConflictsCommand.NotifyCanExecuteChanged();
+        RemoveOldTranslationConflictsCommand.NotifyCanExecuteChanged();
         CheckConflictsCommand.NotifyCanExecuteChanged();
         UninstallCommand.NotifyCanExecuteChanged();
         DownloadHanVietCommand.NotifyCanExecuteChanged();
@@ -159,6 +174,62 @@ public partial class InstallViewModel : ObservableObject
             HasQuarantine = true;
             Summary = $"✅ Đã cách ly {result.Value.MovedFiles.Count} file mod xung đột. "
                 + "Có thể mở vùng cách ly để xem hoặc khôi phục thủ công.";
+        }
+        finally
+        {
+            Busy = false;
+            Refresh();
+        }
+    }
+
+    [RelayCommand(CanExecute = nameof(CanRemoveOldTranslationConflicts))]
+    private void RemoveOldTranslationConflicts()
+    {
+        var game = _settings.Settings.GamePath;
+        if (string.IsNullOrWhiteSpace(game) || !_detect.Validate(game).IsValid)
+        {
+            Summary = "❌ Chưa chọn đúng thư mục game.";
+            return;
+        }
+
+        var files = _viet.FindOldTranslationConflicts(game);
+        var scanError = files.FirstOrDefault(x =>
+            x.StartsWith("Không thể kiểm tra mod:", StringComparison.OrdinalIgnoreCase));
+        if (scanError is not null)
+        {
+            Summary = "❌ " + scanError;
+            return;
+        }
+        if (files.Count == 0)
+        {
+            Summary = "Không còn file Việt hóa cũ đã xác minh để dọn.";
+            Refresh();
+            return;
+        }
+
+        var preview = string.Join("\n• ", files.Take(15));
+        var answer = System.Windows.MessageBox.Show(
+            "DỌN RIÊNG BỘ VIỆT HÓA CŨ (ĐẶNG DEV / FORK):\n\n• " + preview
+            + (files.Count > 15 ? $"\n... và {files.Count - 15} file khác." : "")
+            + "\n\nChuyển file vào vùng cách ly, KHÔNG xoá vĩnh viễn. "
+            + "Giữ nguyên PAK game, WAHU và mod không xác minh. Tiếp tục?",
+            "Xóa xung đột Việt hóa cũ", System.Windows.MessageBoxButton.YesNo,
+            System.Windows.MessageBoxImage.Warning, System.Windows.MessageBoxResult.No);
+        if (answer != System.Windows.MessageBoxResult.Yes) return;
+
+        Busy = true;
+        try
+        {
+            var result = _viet.QuarantineOldTranslationConflicts(game);
+            if (!result.Success || result.Value is null)
+            {
+                Summary = "❌ " + result.Error;
+                return;
+            }
+            LastQuarantinePath = result.Value.QuarantineDirectory;
+            HasQuarantine = true;
+            Summary = $"✅ Đã dọn {result.Value.MovedFiles.Count} file Việt hóa cũ vào cách ly. "
+                + "File loader không xác minh và các mod khác được giữ nguyên.";
         }
         finally
         {

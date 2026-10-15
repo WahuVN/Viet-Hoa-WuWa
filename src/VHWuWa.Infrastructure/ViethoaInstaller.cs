@@ -650,21 +650,81 @@ public sealed class ViethoaInstaller : IViethoaInstaller
     public Result<ModQuarantineReport> QuarantineConflicts(string gamePath) =>
         QuarantineConflictsCore(gamePath, acquireLock: true);
 
-    private Result<ModQuarantineReport> QuarantineConflictsCore(string gamePath, bool acquireLock)
+    // Restricted old-translation cleanup: do not touch a WAHU-managed file, a
+    // game file, another WinHTTP proxy, or an unrelated mod directory.
+    private IReadOnlyList<string> CollectOldTranslationFiles(string gamePath)
+    {
+        var win64 = Win64Of(gamePath);
+        var found = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var folder in new[] { "wuwaVietHoa", "wuwaIndonesia" })
+        {
+            var dir = Path.Combine(win64, folder);
+            if (IsLinkedDirectory(dir)) continue;
+            foreach (var file in SafeEnumerateFiles(dir))
+            {
+                if (!IsProtectedBackupFile(file) && !IsOfficialGameFile(gamePath, file))
+                    found.Add(Path.GetFullPath(file));
+            }
+        }
+
+        var winhttp = Path.Combine(win64, "winhttp.dll");
+        if (File.Exists(winhttp) && !IsOfficialGameFile(gamePath, winhttp))
+        {
+            // Only quarantine the byte-for-byte known official DangDev loader.
+            // Unknown WinHTTP proxies must be reviewed manually.
+            try
+            {
+                using var source = File.OpenRead(winhttp);
+                if (Convert.ToHexString(SHA256.HashData(source)).Equals(
+                    "E757622BB86041860CEA04EB164D298C21B5AC3565EF7B44C0D6126939F4E083",
+                    StringComparison.OrdinalIgnoreCase))
+                    found.Add(Path.GetFullPath(winhttp));
+            }
+            catch (IOException) { /* deny automatic removal if file cannot be verified */ }
+            catch (UnauthorizedAccessException) { /* deny automatic removal */ }
+        }
+
+        return found.OrderBy(x => x, StringComparer.OrdinalIgnoreCase).ToList();
+    }
+
+    public IReadOnlyList<string> FindOldTranslationConflicts(string gamePath)
+    {
+        try
+        {
+            var root = Path.GetFullPath(gamePath);
+            return CollectOldTranslationFiles(root)
+                .Select(file => Path.GetRelativePath(root, file)).ToList();
+        }
+        catch (Exception ex)
+        {
+            return new[] { "Không thể kiểm tra mod: " + ex.Message };
+        }
+    }
+
+    public Result<ModQuarantineReport> QuarantineOldTranslationConflicts(string gamePath) =>
+        QuarantineConflictsCore(gamePath, acquireLock: true, oldTranslationOnly: true);
+
+    private Result<ModQuarantineReport> QuarantineConflictsCore(string gamePath, bool acquireLock,
+        bool oldTranslationOnly = false)
     {
         var moved = new List<(string Source, string Target, string Relative, string Hash)>();
         try
         {
             if (IsGameRunning())
                 return Result<ModQuarantineReport>.Fail("Game hoặc launcher đang chạy. Hãy đóng hẳn trước khi dọn mod xung đột.");
+            if (oldTranslationOnly && (!File.Exists(Path.Combine(Win64Of(gamePath), "Client-Win64-Shipping.exe"))
+                || !Directory.Exists(PaksOf(gamePath))))
+                return Result<ModQuarantineReport>.Fail("Hãy chọn đúng thư mục gốc game (có Client\\Binaries\\Win64 và Client\\Content\\Paks).");
 
             using var operationLock = acquireLock ? TryAcquireOperationLock(gamePath) : null;
             if (acquireLock && operationLock is null)
                 return Result<ModQuarantineReport>.Fail("Đang có một tiến trình VHWuWa khác cài/gỡ. Hãy chờ hoàn tất.");
 
-            var targets = CollectConflictFiles(gamePath);
+            var targets = oldTranslationOnly ? CollectOldTranslationFiles(gamePath) : CollectConflictFiles(gamePath);
             if (targets.Count == 0)
-                return Result<ModQuarantineReport>.Fail("Không tìm thấy file mod xung đột có thể cách ly an toàn.");
+                return Result<ModQuarantineReport>.Fail(oldTranslationOnly
+                    ? "Không tìm thấy file Đặng Dev/fork đã xác minh có thể dọn an toàn. Loader không rõ nguồn cần kiểm tra thủ công."
+                    : "Không tìm thấy file mod xung đột có thể cách ly an toàn.");
 
             // Validate every source BEFORE moving the first one, including symlinks
             // and file locks. A linked file could otherwise read from outside game.
