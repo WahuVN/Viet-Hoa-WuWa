@@ -47,11 +47,13 @@ foreach($name in @('~WuWaMods','~mods','~MODS')) {
     Select-Object -First 120 @{Name='relative';Expression={$_.FullName.Substring($dir.Length+1)}}, Length)
   $modFolders += [ordered]@{name=$name; files=$files; count=$files.Count }
 }
-$winModPath = Join-Path $win64 'wuwaIndonesia'
 $winPaks = @()
-if (Test-Path -LiteralPath $winModPath -PathType Container) {
-  $winPaks = @(Get-ChildItem -LiteralPath $winModPath -Filter '*.pak' -File -ErrorAction SilentlyContinue |
-    Select-Object Name,Length)
+foreach ($folderName in @('wuwaVietHoa','wuwaIndonesia')) {
+  $winModPath = Join-Path $win64 $folderName
+  if (Test-Path -LiteralPath $winModPath -PathType Container) {
+    $winPaks += @(Get-ChildItem -LiteralPath $winModPath -Filter '*.pak' -File -ErrorAction SilentlyContinue |
+      Select-Object @{n='folder';e={$folderName}},Name,Length)
+  }
 }
 $warnings = [Collections.Generic.List[string]]::new()
 $names=@($loaders |ForEach-Object {$_.name})
@@ -66,7 +68,13 @@ if (@($modFolders|Where-Object {$_.name -eq '~mods'}).Count -gt 0 -and $hasWahu)
   $warnings.Add('PAK trong ~mods va ~WuWaMods: co the co 2 ban dich/font duoc nap.')
 }
 if ($winPaks.Count -gt 0 -and $hasWahu) {
-  $warnings.Add('PAK trong Win64\wuwaIndonesia va WAHU: co the co 2 ban dich.')
+  $warnings.Add('PAK trong Win64\wuwaVietHoa/wuwaIndonesia va WAHU: co the co 2 ban dich.')
+}
+if (@($loaders|Where-Object {
+  $_.name -eq 'winhttp.dll' -and
+  $_.sha256 -eq 'e757622bb86041860cea04eb164d298c21b5ac3565ef7b44c0d6126939f4e083'
+}).Count -gt 0) {
+  $warnings.Add('winhttp.dll trung SHA ban chinh thuc DangDevVH 2.3.0 Wuwa: co the con loader tu bo Viet hoa khac.')
 }
 foreach($rec in $loaders) {
   if ($waSha.ContainsKey($rec.name) -and $rec.identifiedAs -ne 'WAHU_3.0.17') {
@@ -95,7 +103,7 @@ if ($markerInfo.present) {
  } catch { $warnings.Add('Marker WAHU ton tai nhung JSON khong hop le.') }
 }
 $report = [ordered]@{
- version = 'WAHU_WUWA_MOD_CONFLICT_READONLY_1'
+ version = 'WAHU_WUWA_MOD_CONFLICT_READONLY_2'
  gameRoot = $GameRoot
  mode = 'READ_ONLY_NO_GAME_WRITE'
  loaderFiles = $loaders

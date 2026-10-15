@@ -131,6 +131,61 @@ public sealed class ViethoaInstallerTests : IDisposable
     }
 
     [Fact]
+    public async Task OfficialDangDevModFolder_BlocksInstallAndPreservesThirdPartyFiles()
+    {
+        var dir = Path.Combine(_win64, "wuwaVietHoa");
+        Directory.CreateDirectory(dir);
+        var pak = Path.Combine(dir, "WuWaVH_99_P.pak");
+        var dll = Path.Combine(_win64, "winhttp.dll");
+        File.WriteAllText(pak, "DANGDEV_TRANSLATION");
+        File.WriteAllText(dll, "DANGDEV_PROXY");
+
+        var result = await _viet.InstallAsync(_game, NameVariant.English, withFont: true);
+
+        Assert.False(result.Success);
+        Assert.Contains("wuwaVietHoa", result.Error!, StringComparison.OrdinalIgnoreCase);
+        Assert.Equal("DANGDEV_TRANSLATION", File.ReadAllText(pak));
+        Assert.Equal("DANGDEV_PROXY", File.ReadAllText(dll));
+        Assert.False(File.Exists(Path.Combine(Mods, "WuWaVH_99_P.pak")));
+        Assert.Equal(0, _viet.LastAutoDeletedConflictCount);
+    }
+
+    [Fact]
+    public async Task OfficialDangDevModFolder_BlocksQuickUpdateAndKeepsPreviousWahuPak()
+    {
+        Assert.True((await _viet.InstallAsync(_game, NameVariant.English, withFont: true)).Success);
+        var original = Path.Combine(Mods, "WuWaVH_99_P.pak");
+        var foreignDir = Path.Combine(_win64, "wuwaVietHoa");
+        var foreignPak = Path.Combine(foreignDir, "WuWaVH_99_P.pak");
+        Directory.CreateDirectory(foreignDir);
+        File.WriteAllText(foreignPak, "DANGDEV_TRANSLATION");
+        File.WriteAllText(Path.Combine(_content, "WuWaVH_EN_99_P.pak"), "NEW_WAHU");
+
+        var result = await _viet.UpdateTranslationPakAsync(_game, NameVariant.English);
+
+        Assert.False(result.Success);
+        Assert.Contains("wuwaVietHoa", result.Error!, StringComparison.OrdinalIgnoreCase);
+        Assert.Equal("ENGLISH", File.ReadAllText(original));
+        Assert.Equal("DANGDEV_TRANSLATION", File.ReadAllText(foreignPak));
+        Assert.Equal(0, _viet.LastAutoDeletedConflictCount);
+    }
+
+    [Fact]
+    public async Task OfficialDangDevOrphanFolder_StillBlocksInstall()
+    {
+        var dir = Path.Combine(_win64, "wuwaVietHoa");
+        Directory.CreateDirectory(dir);
+        File.WriteAllText(Path.Combine(dir, "orphan.txt"), "LEFTOVER");
+
+        var result = await _viet.InstallAsync(_game, NameVariant.HanViet, withFont: false);
+
+        Assert.False(result.Success);
+        Assert.Contains("wuwaVietHoa", result.Error!, StringComparison.OrdinalIgnoreCase);
+        Assert.Equal("LEFTOVER", File.ReadAllText(Path.Combine(dir, "orphan.txt")));
+        Assert.Equal(0, _viet.LastAutoDeletedConflictCount);
+    }
+
+    [Fact]
     public void InspectContent_Ready()
     {
         var c = _viet.InspectContent();
@@ -643,7 +698,7 @@ public sealed class ViethoaInstallerTests : IDisposable
         File.WriteAllText(Path.Combine(nested, "NestedMod_P.ucas"), "NESTED_UCAS");
 
         File.WriteAllText(Path.Combine(_win64, "winhttp.dll"), "FOREIGN_PROXY");
-        foreach (var dirName in new[] { "Mods", "ue4ss", "RE-UE4SS", "wuwaVietHoa" })
+        foreach (var dirName in new[] { "Mods", "ue4ss", "RE-UE4SS" })
         {
             var dir = Path.Combine(_win64, dirName, "Nested");
             Directory.CreateDirectory(dir);
@@ -872,10 +927,8 @@ public sealed class ViethoaInstallerTests : IDisposable
         foreach (var name in protectedBackups)
             File.WriteAllText(Path.Combine(_win64, name), "BACKUP_" + name);
 
-        var legacyLocalizationDir = Path.Combine(_win64, "wuwaVietHoa");
-        Directory.CreateDirectory(legacyLocalizationDir);
-        File.WriteAllText(Path.Combine(legacyLocalizationDir, "TiengVietCuaToi_99_P.pak"), "OLD_VH_PAK");
-        File.WriteAllText(Path.Combine(legacyLocalizationDir, "UTMAlexander_100_P.pak"), "OLD_FONT_PAK");
+        // Do not put wuwaVietHoa in the generic cleanup test: its presence
+        // now intentionally blocks install to protect the official DangDevVH package.
 
         var shaderFixes = Path.Combine(_win64, "ShaderFixes", "Nested");
         Directory.CreateDirectory(shaderFixes);
@@ -888,7 +941,6 @@ public sealed class ViethoaInstallerTests : IDisposable
         Assert.Contains(conflicts, x => x.Contains("wuwaVietHoa_Wahu_SDK.dll", StringComparison.OrdinalIgnoreCase));
         Assert.Contains(conflicts, x => x.Contains("camera.dll", StringComparison.OrdinalIgnoreCase));
         Assert.DoesNotContain(conflicts, x => x.Contains("version.dll.backup", StringComparison.OrdinalIgnoreCase));
-        Assert.Contains(conflicts, x => x.Contains("wuwaVietHoa", StringComparison.OrdinalIgnoreCase));
         Assert.Contains(conflicts, x => x.Contains("ShaderFixes", StringComparison.OrdinalIgnoreCase));
 
         var result = await _viet.InstallAsync(_game, NameVariant.English, withFont: true);
@@ -898,7 +950,6 @@ public sealed class ViethoaInstallerTests : IDisposable
             Assert.False(File.Exists(Path.Combine(_win64, name)));
         foreach (var name in protectedBackups)
             Assert.Equal("BACKUP_" + name, File.ReadAllText(Path.Combine(_win64, name)));
-        Assert.False(Directory.Exists(legacyLocalizationDir));
         Assert.False(Directory.Exists(Path.Combine(_win64, "ShaderFixes")));
         Assert.Empty(_viet.FindConflicts(_game));
     }

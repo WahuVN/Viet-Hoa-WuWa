@@ -99,21 +99,35 @@ public sealed class ViethoaInstaller : IViethoaInstaller
     private static string Win64Of(string gamePath) =>
         Path.Combine(gamePath, "Client", "Binaries", "Win64");
 
-    // A third-party WinHTTP proxy loader can mount a second translation directly
-    // from Win64\\wuwaIndonesia. Never auto-purge either part of that installation.
-    // This signature is known from an open-source WuwaID fork, not proof of the DLL author.
+    // Official DangDevVH 2.3.0 installs winhttp.dll and Win64\wuwaVietHoa.
+    // An older public fork uses Win64\wuwaIndonesia. Detect both before cleanup.
     private static bool HasForeignWinHttpPakLoader(string gamePath)
     {
-        // The folder can persist after somebody removes winhttp.dll. Blocking
-        // before cleanup also protects orphaned third-party translation PAKs.
-        return Directory.Exists(Path.Combine(Win64Of(gamePath), "wuwaIndonesia"));
+        var win64 = Win64Of(gamePath);
+        if (Directory.Exists(Path.Combine(win64, "wuwaVietHoa"))
+            || Directory.Exists(Path.Combine(win64, "wuwaIndonesia")))
+            return true;
+
+        // A partial DangDev installation may retain only the official DLL.
+        // Match the immutable SHA-256 from the publisher's Wuwa/dlls/winhttp.dll.
+        var loader = Path.Combine(win64, "winhttp.dll");
+        if (!File.Exists(loader)) return false;
+        try
+        {
+            using var stream = File.OpenRead(loader);
+            var hash = Convert.ToHexString(SHA256.HashData(stream));
+            return hash.Equals("E757622BB86041860CEA04EB164D298C21B5AC3565EF7B44C0D6126939F4E083",
+                StringComparison.OrdinalIgnoreCase);
+        }
+        catch (IOException) { return true; }
+        catch (UnauthorizedAccessException) { return true; }
     }
 
     private static string ForeignWinHttpInstallWarning =>
-        "Phát hiện thư mục Win64\\wuwaIndonesia của bộ mod khác (có thể dùng winhttp.dll). "
-        + "Không cài hoặc cập nhật chồng lên vì có thể nạp hai bản dịch cùng lúc. "
-        + "WAHU chưa xóa hay ghi đè file nào. Hãy dùng chức năng Quét mod/Cách ly mod "
-        + "và xác nhận bản mod cần gỡ trước khi thử lại.";
+        "Phát hiện dấu vết bộ Việt hoá khác (Win64\\wuwaVietHoa, wuwaIndonesia "
+        + "hoặc winhttp.dll của Đặng Dev). Không tự dọn hoặc cài chồng lên WAHU "
+        + "vì có thể nạp hai bộ PAK cùng lúc. Chưa xóa hoặc ghi đè file nào. "
+        + "Hãy quét mod, xác minh nguồn file và gỡ bộ không dùng trước khi cài.";
     private static string PaksOf(string gamePath) =>
         Path.Combine(gamePath, "Client", "Content", "Paks");
     private static string ModsOf(string gamePath) =>
