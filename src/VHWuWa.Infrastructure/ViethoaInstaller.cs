@@ -36,7 +36,7 @@ public sealed class ViethoaInstaller : IViethoaInstaller
             // Backup files are deliberately excluded from automatic deletion.
         };
     private static readonly string[] KnownForeignWin64Dirs =
-        { "Mods", "WWMI", "3Dmigoto", "ShaderFixes", "ShaderCache", "ue4ss", "RE-UE4SS", "wuwaVietHoa" };
+        { "Mods", "WWMI", "3Dmigoto", "ShaderFixes", "ShaderCache", "ue4ss", "RE-UE4SS", "wuwaVietHoa", "wuwaIndonesia" };
     // Latest quarantine is retained for the UI even when cleanup was triggered automatically.
     public string? LastQuarantineDirectory { get; private set; }
     public int LastAutoDeletedConflictCount { get; private set; }
@@ -98,6 +98,22 @@ public sealed class ViethoaInstaller : IViethoaInstaller
 
     private static string Win64Of(string gamePath) =>
         Path.Combine(gamePath, "Client", "Binaries", "Win64");
+
+    // A third-party WinHTTP proxy loader can mount a second translation directly
+    // from Win64\\wuwaIndonesia. Never auto-purge either part of that installation.
+    // This signature is known from an open-source WuwaID fork, not proof of the DLL author.
+    private static bool HasForeignWinHttpPakLoader(string gamePath)
+    {
+        // The folder can persist after somebody removes winhttp.dll. Blocking
+        // before cleanup also protects orphaned third-party translation PAKs.
+        return Directory.Exists(Path.Combine(Win64Of(gamePath), "wuwaIndonesia"));
+    }
+
+    private static string ForeignWinHttpInstallWarning =>
+        "Phát hiện thư mục Win64\\wuwaIndonesia của bộ mod khác (có thể dùng winhttp.dll). "
+        + "Không cài hoặc cập nhật chồng lên vì có thể nạp hai bản dịch cùng lúc. "
+        + "WAHU chưa xóa hay ghi đè file nào. Hãy dùng chức năng Quét mod/Cách ly mod "
+        + "và xác nhận bản mod cần gỡ trước khi thử lại.";
     private static string PaksOf(string gamePath) =>
         Path.Combine(gamePath, "Client", "Content", "Paks");
     private static string ModsOf(string gamePath) =>
@@ -1164,6 +1180,8 @@ public sealed class ViethoaInstaller : IViethoaInstaller
             using var operationLock = TryAcquireOperationLock(gamePath);
             if (operationLock is null)
                 return Result.Fail("Đang có một tiến trình VHWuWa khác cài/gỡ/cập nhật. Hãy chờ tiến trình đó hoàn tất.");
+            if (HasForeignWinHttpPakLoader(gamePath))
+                return Result.Fail(ForeignWinHttpInstallWarning);
 
             var srcPak = variant == NameVariant.English ? EnPak : HanVietPak;
             if (!File.Exists(srcPak))
@@ -1359,6 +1377,9 @@ public sealed class ViethoaInstaller : IViethoaInstaller
             using var operationLock = TryAcquireOperationLock(gamePath);
             if (operationLock is null)
                 return Result.Fail("Đang có một tiến trình VHWuWa khác cài/gỡ. Hãy chờ tiến trình đó hoàn tất.");
+
+            if (HasForeignWinHttpPakLoader(gamePath))
+                return Result.Fail(ForeignWinHttpInstallWarning);
 
             var content = InspectContent();
             if (!content.Ready)

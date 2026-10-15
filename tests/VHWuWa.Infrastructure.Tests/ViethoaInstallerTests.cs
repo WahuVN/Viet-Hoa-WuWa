@@ -67,6 +67,70 @@ public sealed class ViethoaInstallerTests : IDisposable
     }
 
     [Fact]
+    public async Task ForeignWinHttpPakLoader_BlocksInstallWithoutDeletingExternalFiles()
+    {
+        var proxy = Path.Combine(_win64, "winhttp.dll");
+        var foreignDir = Path.Combine(_win64, "wuwaIndonesia");
+        var foreignPak = Path.Combine(foreignDir, "pakchunk0-ID-WindowsNoEditor_1000_P.pak");
+        Directory.CreateDirectory(foreignDir);
+        File.WriteAllText(proxy, "OTHER_WINHTTP_LOADER");
+        File.WriteAllText(foreignPak, "OTHER_TRANSLATION_PAK");
+        var conflictList = _viet.FindConflicts(_game);
+        Assert.Contains(conflictList, x => x.Contains("winhttp.dll", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(conflictList, x => x.Contains("wuwaIndonesia", StringComparison.OrdinalIgnoreCase));
+
+        var result = await _viet.InstallAsync(_game, NameVariant.English, withFont: true);
+
+        Assert.False(result.Success);
+        Assert.Contains("winhttp.dll", result.Error!, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("chưa xóa", result.Error!, StringComparison.OrdinalIgnoreCase);
+        Assert.Equal("OTHER_WINHTTP_LOADER", File.ReadAllText(proxy));
+        Assert.Equal("OTHER_TRANSLATION_PAK", File.ReadAllText(foreignPak));
+        Assert.False(File.Exists(Path.Combine(Mods, "WuWaVH_99_P.pak")));
+        Assert.Equal(0, _viet.LastAutoDeletedConflictCount);
+    }
+
+    [Fact]
+    public async Task ForeignWinHttpPakLoader_BlocksQuickUpdateWithoutTouchingWahuOrForeignFiles()
+    {
+        Assert.True((await _viet.InstallAsync(_game, NameVariant.English, withFont: true)).Success);
+        var managedPak = Path.Combine(Mods, "WuWaVH_99_P.pak");
+        var proxy = Path.Combine(_win64, "winhttp.dll");
+        var foreignDir = Path.Combine(_win64, "wuwaIndonesia");
+        var foreignPak = Path.Combine(foreignDir, "OtherTranslation.pak");
+        Directory.CreateDirectory(foreignDir);
+        File.WriteAllText(proxy, "FOREIGN_PROXY");
+        File.WriteAllText(foreignPak, "FOREIGN_PAK");
+        File.WriteAllText(Path.Combine(_content, "WuWaVH_EN_99_P.pak"), "UPDATED_ENGLISH");
+
+        var result = await _viet.UpdateTranslationPakAsync(_game, NameVariant.English);
+
+        Assert.False(result.Success);
+        Assert.Contains("winhttp.dll", result.Error!, StringComparison.OrdinalIgnoreCase);
+        Assert.Equal("ENGLISH", File.ReadAllText(managedPak));
+        Assert.Equal("FOREIGN_PROXY", File.ReadAllText(proxy));
+        Assert.Equal("FOREIGN_PAK", File.ReadAllText(foreignPak));
+        Assert.Equal(0, _viet.LastAutoDeletedConflictCount);
+    }
+
+    [Fact]
+    public async Task ForeignWinHttpPakLoader_DirectoryWithoutWinHttp_IsPreservedByInstall()
+    {
+        var foreignDir = Path.Combine(_win64, "wuwaIndonesia");
+        var foreignPak = Path.Combine(foreignDir, "OldTranslation.pak");
+        Directory.CreateDirectory(foreignDir);
+        File.WriteAllText(foreignPak, "OLD");
+
+        Assert.Contains(_viet.FindConflicts(_game),
+            x => x.Contains("wuwaIndonesia", StringComparison.OrdinalIgnoreCase));
+        var install = await _viet.InstallAsync(_game, NameVariant.English, withFont: true);
+        Assert.False(install.Success);
+        Assert.Contains("wuwaIndonesia", install.Error!, StringComparison.OrdinalIgnoreCase);
+        Assert.Equal("OLD", File.ReadAllText(foreignPak));
+        Assert.Equal(0, _viet.LastAutoDeletedConflictCount);
+    }
+
+    [Fact]
     public void InspectContent_Ready()
     {
         var c = _viet.InspectContent();
