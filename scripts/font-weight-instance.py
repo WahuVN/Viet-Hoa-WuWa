@@ -26,7 +26,11 @@ def main():
             raise ValueError(f"Weight {weight} ngoài khoảng {axis.minValue:g}–{axis.maxValue:g}")
         # Instantiate all variations at their defaults except wght. This creates a
         # deterministic, non-variable TTF/OTF suitable for the game's raw font loader.
-        instance = instantiateVariableFont(font, {"wght": float(weight)}, inplace=True, optimize=True)
+        # Pin every secondary variation axis (opsz/wdth/etc.) to its default.
+        # Otherwise multi-axis Google Fonts remain variable after wght instancing.
+        pins = {tag: float(axis.defaultValue) for tag, axis in axes.items()}
+        pins["wght"] = float(weight)
+        instance = instantiateVariableFont(font, pins, inplace=True, optimize=True)
         if "OS/2" in instance:
             instance["OS/2"].usWeightClass = weight
         if "name" in instance:
