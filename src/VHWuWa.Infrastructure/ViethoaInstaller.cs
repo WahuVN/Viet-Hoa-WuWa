@@ -25,6 +25,12 @@ public sealed class ViethoaInstaller : IViethoaInstaller
         { ".pak", ".sig", ".utoc", ".ucas" };
     private static readonly string[] ProxyLoaders =
         { "version.dll", "dxgi.dll", "dinput8.dll", "winmm.dll", "xinput1_3.dll", "xinput1_4.dll", "dsound.dll", "winhttp.dll" };
+    // Known foreign injector names; do NOT remove .bak / version.dll.backup files.
+    private static readonly string[] LegacyInjectorFiles =
+        { "wuwaVietHoa.dll", "wuwaVietHoa_SDK.dll", "wuwaVietHoa_VH.dll", "wuwaVietHoa_Wahu_SDK.dll", "wuwaVietHoa.off" };
+    private static readonly string[] LegacyInjectorFolders =
+        { "Mods", "ue4ss", "RE-UE4SS", "wuwaVietHoa", "~mods", "~mod" };
+    public string? LastQuarantineDirectory { get; private set; }
     private readonly ILogService _log;
     private readonly string _contentDir;
     private readonly string _quarantineRoot;
@@ -324,6 +330,19 @@ public sealed class ViethoaInstaller : IViethoaInstaller
         return errors;
     }
 
+    /// <summary>Recognize both ~mods and non-tilde legacy mod folders, not official Paks.</summary>
+    private static IEnumerable<string> EnumerateModFolders(string paks) =>
+        Directory.EnumerateDirectories(paks, "*", SearchOption.TopDirectoryOnly)
+            .Where(path => Path.GetFileName(path).StartsWith("~", StringComparison.OrdinalIgnoreCase)
+                || Path.GetFileName(path).Equals("Mods", StringComparison.OrdinalIgnoreCase)
+                || Path.GetFileName(path).Equals("_mods", StringComparison.OrdinalIgnoreCase));
+
+    private static bool IsLinkedDirectory(string path)
+    {
+        try { return (File.GetAttributes(path) & FileAttributes.ReparsePoint) != 0; }
+        catch { return true; }
+    }
+
     /// <summary>Dò mod phổ biến nhưng tránh quét nhầm pakchunk chính thức ở gốc Paks.</summary>
     public IReadOnlyList<string> FindConflicts(string gamePath)
     {
@@ -354,16 +373,22 @@ public sealed class ViethoaInstaller : IViethoaInstaller
                     conflicts.Add("Mod ngoài ở thư mục Paks: " + name);
                 }
 
-                foreach (var dir in Directory.EnumerateDirectories(paks, "~*", SearchOption.TopDirectoryOnly))
+                foreach (var dir in EnumerateModFolders(paks))
                 {
+                    if (IsLinkedDirectory(dir))
+                    {
+                        conflicts.Add("Thư mục mod liên kết cần xử lý thủ công: " + Path.GetRelativePath(paks, dir));
+                        continue;
+                    }
                     if (Path.GetFullPath(dir).Equals(Path.GetFullPath(mods), StringComparison.OrdinalIgnoreCase))
                     {
-                        foreach (var file in Directory.EnumerateFiles(dir, "*", SearchOption.TopDirectoryOnly))
+                        foreach (var file in SafeEnumerateFiles(dir))
                         {
                             if (!ModExtensions.Contains(Path.GetExtension(file))) continue;
                             var name = Path.GetFileName(file);
-                            if (IsLegacyVhwuwaModFile(file, legacyBundle)) continue;
-                            if (markerExists && owned.Contains(name))
+                            var isTopLevel = Path.GetDirectoryName(file)!.Equals(dir, StringComparison.OrdinalIgnoreCase);
+                            if (isTopLevel && IsLegacyVhwuwaModFile(file, legacyBundle)) continue;
+                            if (isTopLevel && markerExists && owned.Contains(name))
                             {
                                 if (!MatchesLegacyManagedFile(marker, "mods", file))
                                     conflicts.Add("File của Việt hóa đã bị mod khác ghi đè: " + Path.GetRelativePath(paks, file));
@@ -400,11 +425,12 @@ public sealed class ViethoaInstaller : IViethoaInstaller
                     && !MatchesLegacyManagedFile(marker, "win64", installed))
                     conflicts.Add("Loader Việt hóa đã bị mod khác ghi đè: Win64\\" + name);
             }
-            foreach (var dirName in new[] { "Mods", "ue4ss", "RE-UE4SS" })
+            foreach (var name in LegacyInjectorFiles)
+                if (File.Exists(Path.Combine(win64, name)))
+                    conflicts.Add("DLL/mod Việt hóa cũ: Win64\\" + name);
+            foreach (var dirName in LegacyInjectorFolders)
                 if (Directory.Exists(Path.Combine(win64, dirName)))
                     conflicts.Add("Bộ nạp mod khác: Win64\\" + dirName + "\\");
-            if (Directory.Exists(Path.Combine(win64, "wuwaVietHoa")))
-                conflicts.Add("Bộ Việt hóa khác: Win64\\wuwaVietHoa\\ (PAK/font được nạp qua proxy)");
         }
         catch (Exception ex)
         {
@@ -413,7 +439,14 @@ public sealed class ViethoaInstaller : IViethoaInstaller
         return conflicts.Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(x => x).ToList();
     }
 
-    public Result<ModQuarantineReport> QuarantineConflicts(string gamePath)
+    public Result<ModQuarantineReport> QuarantineConflicts(string gamePath) =>
+        QuarantineConflictsCore(gamePath, acquireLock: true);
+
+    // Installation / quick-update already owns the operation lock. Re-locking would deadlock.
+    private Result<ModQuarantineReport> QuarantineConflictsUnderLock(string gamePath) =>
+        QuarantineConflictsCore(gamePath, acquireLock: false);
+
+    private Result<ModQuarantineReport> QuarantineConflictsCore(string gamePath, bool acquireLock)
     {
         var moved = new List<(string Source, string Target, string Relative, string Hash)>();
         try
@@ -421,8 +454,8 @@ public sealed class ViethoaInstaller : IViethoaInstaller
             if (IsGameRunning())
                 return Result<ModQuarantineReport>.Fail("Game hoặc launcher đang chạy. Hãy đóng hẳn trước khi dọn mod xung đột.");
 
-            using var operationLock = TryAcquireOperationLock(gamePath);
-            if (operationLock is null)
+            using var operationLock = acquireLock ? TryAcquireOperationLock(gamePath) : null;
+            if (acquireLock && operationLock is null)
                 return Result<ModQuarantineReport>.Fail("Đang có một tiến trình VHWuWa khác cài/gỡ. Hãy chờ hoàn tất.");
 
             var targets = CollectConflictFiles(gamePath);
@@ -466,6 +499,7 @@ public sealed class ViethoaInstaller : IViethoaInstaller
                 QuarantineDirectory = quarantine,
                 MovedFiles = moved.Select(x => x.Relative).ToList()
             };
+            LastQuarantineDirectory = quarantine;
             _log.Info("Conflict", $"Đã cách ly {moved.Count} file mod xung đột vào {quarantine}");
             return Result<ModQuarantineReport>.Ok(report);
         }
@@ -594,8 +628,9 @@ public sealed class ViethoaInstaller : IViethoaInstaller
                     continue;
                 AddFile(file);
             }
-            foreach (var dir in Directory.EnumerateDirectories(paks, "~*", SearchOption.TopDirectoryOnly))
+            foreach (var dir in EnumerateModFolders(paks))
             {
+                if (IsLinkedDirectory(dir)) continue;
                 var isOwnDirectory = Path.GetFullPath(dir).Equals(Path.GetFullPath(mods), StringComparison.OrdinalIgnoreCase);
                 foreach (var file in SafeEnumerateFiles(dir))
                 {
@@ -619,7 +654,9 @@ public sealed class ViethoaInstaller : IViethoaInstaller
                 && MatchesLegacyManagedFile(marker, "win64", installed)) continue;
             AddFile(installed);
         }
-        foreach (var dirName in new[] { "Mods", "ue4ss", "RE-UE4SS", "wuwaVietHoa" })
+        foreach (var name in LegacyInjectorFiles)
+            AddFile(Path.Combine(win64, name));
+        foreach (var dirName in LegacyInjectorFolders)
             AddTree(Path.Combine(win64, dirName));
 
         return files.OrderBy(x => x, StringComparer.OrdinalIgnoreCase).ToList();
@@ -629,10 +666,10 @@ public sealed class ViethoaInstaller : IViethoaInstaller
     {
         var paks = PaksOf(gamePath);
         if (Directory.Exists(paks))
-            foreach (var dir in Directory.EnumerateDirectories(paks, "~*", SearchOption.TopDirectoryOnly))
+            foreach (var dir in EnumerateModFolders(paks))
                 RemoveEmptyTree(dir);
         var win64 = Win64Of(gamePath);
-        foreach (var name in new[] { "Mods", "ue4ss", "RE-UE4SS", "wuwaVietHoa" })
+        foreach (var name in LegacyInjectorFolders)
             RemoveEmptyTree(Path.Combine(win64, name));
     }
 
@@ -647,6 +684,7 @@ public sealed class ViethoaInstaller : IViethoaInstaller
 
     private static IEnumerable<string> SafeEnumerateFiles(string root)
     {
+        if (IsLinkedDirectory(root)) yield break;
         foreach (var directory in new[] { root }.Concat(SafeEnumerateDirectories(root)))
         {
             string[] files;
@@ -850,13 +888,10 @@ public sealed class ViethoaInstaller : IViethoaInstaller
             var conflicts = FindConflicts(gamePath);
             if (conflicts.Count > 0)
             {
-                var cleanup = DeleteConflictsUnderLock(
-                    gamePath,
-                    failWhenEmpty: false,
-                    reason: "trước cập nhật nhanh Việt hóa");
+                var cleanup = QuarantineConflictsUnderLock(gamePath);
                 if (!cleanup.Success)
-                    return Result.Fail("Không thể tự dọn mod xung đột trước cập nhật nhanh: " + cleanup.Error);
-                _log.Info("Viethoa", $"Cập nhật nhanh đã tự dọn {cleanup.Value} file mod xung đột.");
+                    return Result.Fail("Không thể cách ly mod xung đột trước cập nhật nhanh: " + cleanup.Error);
+                _log.Info("Viethoa", $"Cập nhật nhanh đã cách ly {cleanup.Value!.MovedFiles.Count} file mod xung đột tại {cleanup.Value.QuarantineDirectory}");
             }
 
             string? repairedFontSource = null;
@@ -988,13 +1023,10 @@ public sealed class ViethoaInstaller : IViethoaInstaller
                 // Khi cài Việt hóa, chỉ tự làm sạch mod ngoài đã được detector xác định xung đột,
                 // rồi để bản phát hành hiện tại ghi lại các file VHWuWa được quản lý.
                 // File game gốc pakchunk* không thuộc tập conflict này.
-                var cleanup = DeleteConflictsUnderLock(
-                    gamePath,
-                    failWhenEmpty: false,
-                    reason: "tự động trước khi cài Việt hóa");
+                var cleanup = QuarantineConflictsUnderLock(gamePath);
                 if (!cleanup.Success)
-                    return Result.Fail("Không thể tự dọn mod xung đột trước khi cài:\n" + cleanup.Error);
-                _log.Info("Viethoa", $"Cài đặt đã tự dọn {cleanup.Value} file mod xung đột.");
+                    return Result.Fail("Không thể cách ly mod xung đột trước khi cài:\n" + cleanup.Error);
+                _log.Info("Viethoa", $"Cài đặt đã cách ly {cleanup.Value!.MovedFiles.Count} file mod xung đột tại {cleanup.Value.QuarantineDirectory}");
             }
 
             var srcPak = variant == NameVariant.English ? EnPak : HanVietPak;

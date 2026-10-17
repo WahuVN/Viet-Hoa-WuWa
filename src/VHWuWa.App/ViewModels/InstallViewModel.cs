@@ -57,10 +57,15 @@ public partial class InstallViewModel : ObservableObject
         var content = _viet.InspectContent();
         var conflicts = valid ? _viet.FindConflicts(game) : Array.Empty<string>();
         HasConflicts = conflicts.Count > 0;
+        if (!string.IsNullOrWhiteSpace(_viet.LastQuarantineDirectory))
+        {
+            LastQuarantinePath = _viet.LastQuarantineDirectory;
+            HasQuarantine = Directory.Exists(LastQuarantinePath);
+        }
         ConflictText = HasConflicts
             ? $"⚠ Phát hiện {conflicts.Count} mục có thể xung đột:\n• " + string.Join("\n• ", conflicts.Take(8))
               + (conflicts.Count > 8 ? $"\n• … và {conflicts.Count - 8} mục khác" : "")
-              + "\nChỉ mod ngoài được liệt kê; file VHWuWa cũ được giữ lại và tự nâng cấp. Bạn có thể Cách ly hoặc chọn Xóa mod ngoài."
+              + "\nChỉ mod ngoài được liệt kê; file VHWuWa cũ được giữ lại và tự nâng cấp. Nhấn Làm sạch để cách ly an toàn trước khi cài."
             : "✔ Không phát hiện mod khác có thể xung đột.";
         FontAvailable = content.FontPak is not null;
         HasHanViet = File.Exists(HanVietPakPath);
@@ -115,7 +120,7 @@ public partial class InstallViewModel : ObservableObject
             return;
         }
         var answer = System.Windows.MessageBox.Show(
-            "VHWuWa sẽ chuyển các PAK/loader xung đột ra khỏi thư mục game vào vùng cách ly.\n\n"
+            "VHWuWa sẽ quét và chuyển các PAK/loader xung đột ra khỏi thư mục game vào vùng cách ly.\n\n"
             + "Không file nào bị xóa vĩnh viễn. Bạn có muốn tiếp tục?",
             "Cách ly mod xung đột", System.Windows.MessageBoxButton.YesNo,
             System.Windows.MessageBoxImage.Warning);

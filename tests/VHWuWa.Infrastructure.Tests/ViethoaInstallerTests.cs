@@ -131,6 +131,66 @@ public sealed class ViethoaInstallerTests : IDisposable
     }
 
     [Fact]
+    public async Task CleanMods_QuarantinesNestedAndLegacyInjectorsWithoutTouchingOriginalBackups()
+    {
+        Assert.True((await _viet.InstallAsync(_game, NameVariant.English, withFont: true)).Success);
+        var nested = Path.Combine(Mods, "OldPack", "NestedForeign_P.pak");
+        Directory.CreateDirectory(Path.GetDirectoryName(nested)!);
+        File.WriteAllText(nested, "NESTED_FOREIGN");
+
+        var legacyFolder = Path.Combine(_paks, "Mods", "Pack");
+        Directory.CreateDirectory(legacyFolder);
+        var legacyPak = Path.Combine(legacyFolder, "Other_P.pak");
+        File.WriteAllText(legacyPak, "LEGACY_FOLDER");
+
+        var legacyDll = Path.Combine(_win64, "wuwaVietHoa_SDK.dll");
+        File.WriteAllText(legacyDll, "LEGACY_DLL");
+        var originalBackup = Path.Combine(_win64, "version.dll.backup");
+        File.WriteAllText(originalBackup, "ORIGINAL_BACKUP");
+
+        var conflicts = _viet.FindConflicts(_game);
+        Assert.Contains(conflicts, x => x.Contains("NestedForeign_P.pak", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(conflicts, x => x.Contains("Other_P.pak", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(conflicts, x => x.Contains("wuwaVietHoa_SDK.dll", StringComparison.OrdinalIgnoreCase));
+
+        var clean = _viet.QuarantineConflicts(_game);
+        Assert.True(clean.Success, clean.Error);
+        Assert.NotNull(clean.Value);
+        Assert.Equal(3, clean.Value!.MovedFiles.Count);
+        Assert.False(File.Exists(nested));
+        Assert.False(File.Exists(legacyPak));
+        Assert.False(File.Exists(legacyDll));
+        Assert.Equal("ORIGINAL_BACKUP", File.ReadAllText(originalBackup));
+        Assert.Equal("NESTED_FOREIGN", File.ReadAllText(Path.Combine(
+            clean.Value.QuarantineDirectory, Path.GetRelativePath(_game, nested))));
+        Assert.Equal("LEGACY_FOLDER", File.ReadAllText(Path.Combine(
+            clean.Value.QuarantineDirectory, Path.GetRelativePath(_game, legacyPak))));
+        Assert.True(File.Exists(Path.Combine(Mods, "WuWaVH_99_P.pak")));
+        Assert.True(File.Exists(Path.Combine(_win64, "WuWaVH.dll")));
+        Assert.Empty(_viet.FindConflicts(_game));
+    }
+
+    [Fact]
+    public async Task AutoInstall_CleansForeignModsToRecoverableQuarantineNotPermanentDeletion()
+    {
+        var foreignFolder = Path.Combine(_paks, "~mods", "Sub");
+        Directory.CreateDirectory(foreignFolder);
+        var foreignPak = Path.Combine(foreignFolder, "CrashFix_P.pak");
+        File.WriteAllText(foreignPak, "OLD_MOD");
+
+        var result = await _viet.InstallAsync(_game, NameVariant.English, withFont: true);
+
+        Assert.True(result.Success, result.Error);
+        Assert.False(File.Exists(foreignPak));
+        Assert.NotNull(_viet.LastQuarantineDirectory);
+        Assert.Equal("OLD_MOD", File.ReadAllText(Path.Combine(
+            _viet.LastQuarantineDirectory!, Path.GetRelativePath(_game, foreignPak))));
+        Assert.True(File.Exists(Path.Combine(_viet.LastQuarantineDirectory!, "quarantine-manifest.json")));
+        Assert.True(File.Exists(Path.Combine(Mods, "WuWaVH_99_P.pak")));
+        Assert.Empty(_viet.FindConflicts(_game));
+    }
+
+    [Fact]
     public async Task Install_UpgradesLegacyBundleWithoutMarker_AndCreatesManagedMarker()
     {
         SeedLegacyVhwuwaInstall();
