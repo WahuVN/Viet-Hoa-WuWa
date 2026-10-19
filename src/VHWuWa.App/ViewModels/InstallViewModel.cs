@@ -74,9 +74,8 @@ public partial class InstallViewModel : ObservableObject
             HasQuarantine = Directory.Exists(LastQuarantinePath);
         }
         ConflictText = HasConflicts
-            ? $"Phát hiện {conflicts.Count} mục mod có thể xung đột. Cài Việt hóa sẽ tự xóa các mod đã xác định (không xóa bản sao lưu).\n• "
-              + string.Join("\n• ", conflicts.Take(8))
-            : "✔ Không phát hiện mod khác có thể xung đột.";
+            ? $"{conflicts.Count} file mod khác:\n• " + string.Join("\n• ", conflicts.Take(8))
+            : "";
         FontAvailable = content.FontPak is not null;
         HasHanViet = File.Exists(HanVietPakPath);
         ShowHanVietDownload = !HasHanViet;
@@ -420,10 +419,7 @@ public partial class InstallViewModel : ObservableObject
             var r = await _viet.InstallAsync(game, variant, ApplyFont && FontAvailable, progress, _cts.Token);
             if (r.Success)
             {
-                var removed = _viet.LastAutoDeletedConflictCount;
-                Summary = "✅ Cài xong!"
-                    + (removed > 0 ? $" Đã tự dọn {removed} file mod xung đột." : " Không còn mod xung đột cần dọn.")
-                    + " Vào game đặt Text Language = English. Có thể dùng DirectX 11 hoặc 12.";
+                Summary = "✅ Cài xong! Vào game đặt Text Language = English. Có thể dùng DirectX 11 hoặc 12.";
             }
             else
             {

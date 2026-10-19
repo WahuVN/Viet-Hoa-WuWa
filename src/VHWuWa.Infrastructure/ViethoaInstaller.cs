@@ -104,9 +104,12 @@ public sealed class ViethoaInstaller : IViethoaInstaller
     private static bool HasForeignWinHttpPakLoader(string gamePath)
     {
         var win64 = Win64Of(gamePath);
-        if (Directory.Exists(Path.Combine(win64, "wuwaVietHoa"))
-            || Directory.Exists(Path.Combine(win64, "wuwaIndonesia")))
-            return true;
+        foreach (var name in new[] { "wuwaVietHoa", "wuwaIndonesia" })
+        {
+            var path = Path.Combine(win64, name);
+            if (Directory.Exists(path) && (IsLinkedDirectory(path) || DirectoryHasForeignFiles(gamePath, path)))
+                return true;
+        }
 
         // A partial DangDev installation may retain only the official DLL.
         // Match the immutable SHA-256 from the publisher's Wuwa/dlls/winhttp.dll.
@@ -1254,8 +1257,8 @@ public sealed class ViethoaInstaller : IViethoaInstaller
             using var operationLock = TryAcquireOperationLock(gamePath);
             if (operationLock is null)
                 return Result.Fail("Đang có một tiến trình VHWuWa khác cài/gỡ/cập nhật. Hãy chờ tiến trình đó hoàn tất.");
-            if (HasForeignWinHttpPakLoader(gamePath))
-                return Result.Fail(ForeignWinHttpInstallWarning);
+            // The install/update path removes external loaders under the same operation
+            // lock, after validating package, permissions and managed destinations.
 
             var srcPak = variant == NameVariant.English ? EnPak : HanVietPak;
             if (!File.Exists(srcPak))
@@ -1307,9 +1310,9 @@ public sealed class ViethoaInstaller : IViethoaInstaller
                 preflightFontName = Path.GetFileName(preflightFontSource);
             }
 
-            // Chỉ nhận hủy trước khi bước vào pha destructive. Một khi bắt đầu purge
-            // thì phải hoàn tất self-heal để không để game ở trạng thái nửa cài.
+            // Only accept cancellation before modifying game files.
             ct.ThrowIfCancellationRequested();
+            RemoveEmptyModDirectories(gamePath);
 
             // Cập nhật nhanh có quyền tự chữa bản cài. Nếu mod khác đã
             // ghi đè PAK/loader hoặc chèn bundle xung đột, dọn đúng tập file
@@ -1321,12 +1324,10 @@ public sealed class ViethoaInstaller : IViethoaInstaller
                 return Result.Fail(scanError);
             if (conflicts.Count > 0)
             {
-                var cleanup = DeleteConflictsUnderLock(gamePath,
-                    failWhenEmpty: false, reason: "tự động trước cập nhật nhanh");
-                if (!cleanup.Success)
-                    return Result.Fail("Không thể xóa mod xung đột trước cập nhật nhanh: " + cleanup.Error);
-                LastAutoDeletedConflictCount = cleanup.Value;
-                _log.Info("Viethoa", $"Cập nhật nhanh tự dọn {cleanup.Value} file mod xung đột.");
+                var cleanup = QuarantineConflictsCore(gamePath, acquireLock: false);
+                if (!cleanup.Success || cleanup.Value is null)
+                    return Result.Fail("Không thể xử lý mod xung đột trước cập nhật nhanh: " + cleanup.Error);
+                LastAutoDeletedConflictCount = cleanup.Value.MovedFiles.Count;
 
                 var remaining = FindConflicts(gamePath);
                 var remainingScanError = remaining.FirstOrDefault(x =>
@@ -1338,7 +1339,9 @@ public sealed class ViethoaInstaller : IViethoaInstaller
                         + string.Join("\n- ", remaining.Take(8)));
             }
 
-            // Cleanup có thể xóa luôn thư mục ~WuWaMods nếu nó trở thành rỗng.
+            // A known foreign loader must not survive into the new installation.
+            if (HasForeignWinHttpPakLoader(gamePath))
+                return Result.Fail("Còn loader/mod không thể cách ly an toàn; chưa cập nhật.");
             Directory.CreateDirectory(mods);
 
             string? repairedFontSource = preflightFontSource;
@@ -1452,8 +1455,8 @@ public sealed class ViethoaInstaller : IViethoaInstaller
             if (operationLock is null)
                 return Result.Fail("Đang có một tiến trình VHWuWa khác cài/gỡ. Hãy chờ tiến trình đó hoàn tất.");
 
-            if (HasForeignWinHttpPakLoader(gamePath))
-                return Result.Fail(ForeignWinHttpInstallWarning);
+            // The install/update path removes external loaders under the same operation
+            // lock, after validating package, permissions and managed destinations.
 
             var content = InspectContent();
             if (!content.Ready)
@@ -1482,8 +1485,9 @@ public sealed class ViethoaInstaller : IViethoaInstaller
                 EnsureManagedTargetAvailable(Path.ChangeExtension(selectedFont, ".sig"));
             }
 
-            // Chỉ nhận hủy trước pha destructive; sau khi purge bắt đầu phải hoàn tất cài.
+            // Only accept cancellation before modifying game files.
             ct.ThrowIfCancellationRequested();
+            RemoveEmptyModDirectories(gamePath);
 
             var conflicts = FindConflicts(gamePath);
             var scanError = conflicts.FirstOrDefault(x =>
@@ -1492,12 +1496,10 @@ public sealed class ViethoaInstaller : IViethoaInstaller
                 return Result.Fail(scanError);
             if (conflicts.Count > 0)
             {
-                var cleanup = DeleteConflictsUnderLock(gamePath,
-                    failWhenEmpty: false, reason: "tự động trước cài Việt hóa");
-                if (!cleanup.Success)
-                    return Result.Fail("Không thể xóa mod xung đột trước khi cài:\n" + cleanup.Error);
-                LastAutoDeletedConflictCount = cleanup.Value;
-                _log.Info("Viethoa", $"Cài đặt đã tự dọn {cleanup.Value} file mod xung đột.");
+                var cleanup = QuarantineConflictsCore(gamePath, acquireLock: false);
+                if (!cleanup.Success || cleanup.Value is null)
+                    return Result.Fail("Không thể xử lý mod xung đột trước khi cài:\n" + cleanup.Error);
+                LastAutoDeletedConflictCount = cleanup.Value.MovedFiles.Count;
 
                 var remaining = FindConflicts(gamePath);
                 var remainingScanError = remaining.FirstOrDefault(x =>
@@ -1509,7 +1511,9 @@ public sealed class ViethoaInstaller : IViethoaInstaller
                         + string.Join("\n- ", remaining.Take(8)));
             }
 
-            // Cleanup có thể xóa luôn thư mục ~WuWaMods nếu nó trở thành rỗng.
+            // A known foreign loader must not survive into the new installation.
+            if (HasForeignWinHttpPakLoader(gamePath))
+                return Result.Fail("Còn loader/mod không thể cách ly an toàn; chưa cập nhật.");
             Directory.CreateDirectory(mods);
 
             var existingMarker = ViethoaInstallMarker.Load(Path.Combine(mods, MarkerName));
