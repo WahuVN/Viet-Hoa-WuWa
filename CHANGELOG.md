@@ -2,6 +2,13 @@
 
 Tất cả các thay đổi đáng chú ý của dự án VHWuWa được ghi lại tại đây theo chuẩn [SemVer](https://semver.org/lang/vi/).
 
+## [3.0.18] - 2026-10-20 (đang chuẩn bị phát hành)
+
+### Phông chữ Việt hóa
+- Gộp bộ vá B119 gồm chín font UI đã kiểm tra nét chữ, giữ nguyên font Lexend PC cho `LaguSansBold.ufont`.
+- Kiểm tra 278 ký tự và nét glyph cho từng font B119; PAK V12 10 asset giải nén đối chiếu SHA đạt.
+- Bộ Việt hóa EN/Hán Việt giữ nguyên; bản PC cần nghiệm thu thêm renderer GiantSubtitle trong game thực tế.
+
 ## [3.0.16] - 2026-10-04
 
 ### Khởi chạy Wuthering Waves 3.7
