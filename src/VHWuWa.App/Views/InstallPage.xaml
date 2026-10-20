@@ -59,30 +59,10 @@
                     </StackPanel>
                 </ui:Card>
 
-                <!-- Các thao tác ít dùng được thu gọn; lệnh và cơ chế xác nhận không đổi. -->
-                <Expander Header="Tùy chọn khác · Quản lý mod / Gỡ Việt hóa"
-                          IsExpanded="False" Margin="0,0,0,12" Padding="8,4">
+                <Expander Header="Tùy chọn khác" IsExpanded="False" Margin="0,0,0,12" Padding="8,4">
                     <StackPanel Margin="8,8,8,4">
-                        <TextBlock Text="{Binding ConflictText}" TextWrapping="Wrap"
-                                   FontSize="12" Opacity="0.85" Margin="0,0,0,8"
-                                   Visibility="{Binding HasConflicts, Converter={StaticResource BoolToVis}}" />
-                        <WrapPanel>
-                            <Button Content="Quét mod" Command="{Binding CheckConflictsCommand}"
-                                    Margin="0,0,8,8" Padding="12,8" FontSize="12" />
-                            <Button Content="Cách ly mod cũ" Command="{Binding QuarantineConflictsCommand}"
-                                    Visibility="{Binding HasConflicts, Converter={StaticResource BoolToVis}}"
-                                    Margin="0,0,8,8" Padding="12,8" FontSize="12" />
-                            <Button Content="Mở bản sao" Command="{Binding OpenQuarantineCommand}"
-                                    Visibility="{Binding HasQuarantine, Converter={StaticResource BoolToVis}}"
-                                    Margin="0,0,8,8" Padding="12,8" FontSize="12" />
-                            <Button Content="Gỡ Việt hóa" Command="{Binding UninstallCommand}"
-                                    Margin="0,0,8,8" Padding="12,8" FontSize="12" />
-                        </WrapPanel>
-                        <ui:Button Content="Xóa tất cả mod ngoài (vĩnh viễn)" Appearance="Danger"
-                                   Command="{Binding DeleteConflictsCommand}"
-                                   Visibility="{Binding HasConflicts, Converter={StaticResource BoolToVis}}"
-                                   Margin="0,0,8,4" Padding="12,8" FontSize="12"
-                                   HorizontalAlignment="Left" />
+                        <Button Content="Gỡ Việt hóa" Command="{Binding UninstallCommand}"
+                                HorizontalAlignment="Left" Padding="12,8" FontSize="12" />
                     </StackPanel>
                 </Expander>
             </StackPanel>
