@@ -9,6 +9,7 @@ on:
 
 permissions:
   contents: write
+  id-token: write
 
 jobs:
   build:
@@ -50,6 +51,55 @@ jobs:
         run: if (-not (Test-Path dist/VHWuWa.exe)) { throw "Thiếu VHWuWa.exe" }
         shell: pwsh
 
+      - name: Check Artifact Signing account (release tags)
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: pwsh
+        env:
+          AZURE_CLIENT: ${{ secrets.AZURE_CLIENT_ID }}
+          AZURE_TENANT: ${{ secrets.AZURE_TENANT_ID }}
+          AZURE_SUBSCRIPTION: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          SIGNING_ENDPOINT: ${{ vars.ARTIFACT_SIGNING_ENDPOINT }}
+          SIGNING_ACCOUNT: ${{ vars.ARTIFACT_SIGNING_ACCOUNT }}
+          SIGNING_PROFILE: ${{ vars.ARTIFACT_SIGNING_CERT_PROFILE }}
+        run: |
+          foreach ($name in @('AZURE_CLIENT','AZURE_TENANT','AZURE_SUBSCRIPTION',
+                              'SIGNING_ENDPOINT','SIGNING_ACCOUNT','SIGNING_PROFILE')) {
+            if ([string]::IsNullOrWhiteSpace([Environment]::GetEnvironmentVariable($name))) {
+              throw "Missing release signing configuration: $name. Refusing unsigned tag build."
+            }
+          }
+
+      - name: Azure login (release tags)
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: azure/login@v3
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Sign published Windows EXEs (release tags)
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: azure/artifact-signing-action@v2
+        with:
+          endpoint: ${{ vars.ARTIFACT_SIGNING_ENDPOINT }}
+          signing-account-name: ${{ vars.ARTIFACT_SIGNING_ACCOUNT }}
+          certificate-profile-name: ${{ vars.ARTIFACT_SIGNING_CERT_PROFILE }}
+          files-folder: ${{ github.workspace }}\dist
+          files-folder-filter: exe,dll
+          files-folder-recurse: true
+          file-digest: SHA256
+          timestamp-rfc3161: http://timestamp.acs.microsoft.com
+          timestamp-digest: SHA256
+
+      # Tag builds are release candidates. Never publish a signed-and-reputable
+      # claim unless the Windows binaries have trusted Authenticode signatures.
+      # A trusted signing account/certificate must be configured before vNext.
+      - name: Smart App Control signature gate on release tags
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: pwsh
+        run: |
+          ./scripts/Assert-ReleaseSigning.ps1 -PackageRoot dist -RequiredRelativePaths @('VHWuWa.exe','VHWuWa.Updater.exe')
+
       - name: Đóng gói ZIP
         run: |
           [xml]$props = Get-Content Directory.Build.props
@@ -62,6 +112,14 @@ jobs:
           }
           Compress-Archive -Path update-payload/* -DestinationPath $zip -Force
         shell: pwsh
+
+      - name: Verify signed EXE files inside final ZIP (release tags)
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: pwsh
+        run: |
+          $files = @(Get-ChildItem -File -Filter 'VietHoa-WuWa-v*.zip')
+          if ($files.Count -ne 1) { throw 'Release ZIP missing or ambiguous' }
+          ./scripts/Assert-ReleaseZipSigning.ps1 -ZipPath $files[0].FullName -RequiredRelativePaths @('VHWuWa.exe','VHWuWa.Updater.next.exe')
 
       - name: Upload artifact
         uses: actions/upload-artifact@v7

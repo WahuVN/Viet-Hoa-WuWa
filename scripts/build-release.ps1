@@ -3,7 +3,7 @@
   Build bản phát hành VHWuWa (win-x64) vào thư mục dist/.
   Dùng: powershell -ExecutionPolicy Bypass -File scripts/build-release.ps1 [-Version 2.1.0]
 #>
-param([string]$Version = "", [switch]$NoFonts)
+param([string]$Version = "", [switch]$NoFonts, [string]$CodeSigningThumbprint = "")
 
 $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $PSScriptRoot
@@ -47,6 +47,14 @@ Copy-Item "$root/README.md" (Join-Path $dist "README.txt") -Force -ErrorAction S
 
 if (-not (Test-Path (Join-Path $dist "VHWuWa.exe"))) { throw "Thiếu VHWuWa.exe sau publish." }
 
+# Gate even for the lightweight release: refuse unsigned Windows executables.
+if (-not [string]::IsNullOrWhiteSpace($CodeSigningThumbprint)) {
+  & (Join-Path $PSScriptRoot 'Sign-ReleaseBinaries.ps1') -PackageRoot $dist -CertificateThumbprint $CodeSigningThumbprint -RequiredRelativePaths @('VHWuWa.exe','VHWuWa.Updater.exe')
+  if (-not $?) { throw "Ký mã không thành công." }
+}
+& (Join-Path $PSScriptRoot 'Assert-ReleaseSigning.ps1') -PackageRoot $dist -RequiredRelativePaths @('VHWuWa.exe','VHWuWa.Updater.exe')
+if (-not $?) { throw "Không được phát hành bộ cài chưa ký số." }
+
 $zip = Join-Path $root "VietHoa-WuWa-v$Version.zip"
 if (Test-Path $zip) { Remove-Item $zip -Force }
 $updatePayload = Join-Path $root 'dist-update-payload'
@@ -56,6 +64,8 @@ Copy-Item (Join-Path $dist '*') $updatePayload -Recurse -Force
 $payloadUpdater = Join-Path $updatePayload 'VHWuWa.Updater.exe'
 if (-not (Test-Path $payloadUpdater)) { throw 'Update payload thiếu VHWuWa.Updater.exe.' }
 Compress-Archive -Path (Join-Path $updatePayload '*') -DestinationPath $zip -Force
+& (Join-Path $PSScriptRoot 'Assert-ReleaseZipSigning.ps1') -ZipPath $zip -RequiredRelativePaths @('VHWuWa.exe','VHWuWa.Updater.exe')
+if (-not $?) { throw 'Final lightweight ZIP has unsigned EXE/DLL.' }
 Remove-Item $updatePayload -Recurse -Force
 $sha = (Get-FileHash $zip -Algorithm SHA256).Hash.ToLower()
 
