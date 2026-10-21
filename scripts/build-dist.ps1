@@ -5,7 +5,8 @@
 #
 param(
   [string]$Version = "",
-  [string]$AppDichVersion = ""
+  [string]$AppDichVersion = "",
+  [string]$CodeSigningThumbprint = ""
 )
 
 $ErrorActionPreference = 'Stop'
@@ -256,6 +257,17 @@ if ($foreignArtifacts.Count -gt 0) {
 }
 Write-Host "   + Foreign-artifact gate: PASS" -ForegroundColor Green
 
+# Smart App Control needs trusted Authenticode signatures for EVERY executable
+# shipped in the complete bundle, not just the visible launcher.
+# A self-signed development certificate cannot make Windows trust a release.
+if (-not [string]::IsNullOrWhiteSpace($CodeSigningThumbprint)) {
+  & (Join-Path $PSScriptRoot 'Sign-ReleaseBinaries.ps1') -PackageRoot $app -CertificateThumbprint $CodeSigningThumbprint
+  if (-not $?) { throw 'Code Signing did not complete successfully.' }
+}
+& (Join-Path $PSScriptRoot 'Assert-ReleaseSigning.ps1') -PackageRoot $app
+if (-not $?) { throw 'Public release must not include untrusted EXE/DLL.' }
+Write-Host '   + Smart App Control signature gate: PASS' -ForegroundColor Green
+
 $sz = [math]::Round(((Get-ChildItem $out -Recurse -File | Measure-Object Length -Sum).Sum)/1MB,1)
 $zip = Join-Path $buildRoot 'VHWuWa_BanCai.zip'
 if (Test-Path $zip) { Remove-Item $zip -Force }
@@ -272,6 +284,8 @@ New-Item -ItemType Directory -Force $updatePayload | Out-Null
 Copy-Item (Join-Path $app '*') $updatePayload -Recurse -Force
 if (Test-Path $releaseZip) { Remove-Item $releaseZip -Force }
 Compress-Archive -Path (Join-Path $updatePayload '*') -DestinationPath $releaseZip -CompressionLevel Optimal
+& (Join-Path $PSScriptRoot 'Assert-ReleaseZipSigning.ps1') -ZipPath $releaseZip
+if (-not $?) { throw 'Final ZIP has unsigned EXE/DLL; release blocked.' }
 Remove-Item $updatePayload -Recurse -Force
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 $zipCheck = [System.IO.Compression.ZipFile]::OpenRead($releaseZip)
