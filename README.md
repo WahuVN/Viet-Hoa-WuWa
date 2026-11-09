@@ -49,9 +49,22 @@ VHWuWa được thiết kế nhằm hỗ trợ người chơi trải nghiệm tr
 | Gói tải về | Đối tượng | Mô tả |
 | :--- | :--- | :--- |
 | 🎮 [**VietHoa-WuWa-v3.0.18.zip**](https://github.com/WahuVN/Viet-Hoa-WuWa/releases/latest) | **Người chơi** | Ứng dụng cài đặt Việt hóa trên Windows (Khuyên dùng) |
-| 🛠️ [**App-Dich-WuWa-v3.0.16.zip**](https://github.com/WahuVN/Viet-Hoa-WuWa/releases/latest) | **Dịch giả / Modder** | Bộ công cụ WAHU Community hỗ trợ duyệt ngữ cảnh, QA và đóng gói PAK |
-| 📱 [**VHWuWa Mobile 0.2.0-alpha.13**](https://github.com/WahuVN/VHWuWa-Mobile/releases) | **Android** | Android 10+, cài patch qua Shizuku; game 3.7.0, content 3.7.0-R4 |
+| 🛠️ [**App-Dich-WuWa-v3.0.16.zip**](https://github.com/WahuVN/Viet-Hoa-WuWa/releases/download/v3.0.16/App-Dich-WuWa-v3.0.16.zip) | **Dịch giả / Modder** | Bộ công cụ WAHU Community hỗ trợ duyệt ngữ cảnh, QA và đóng gói PAK |
+| 📱 [**VHWuWa Mobile 0.2.0-alpha.18**](https://github.com/WahuVN/VHWuWa-Mobile/releases/tag/v0.2.0-alpha.18) | **Android** | Android 10+, cài patch qua Shizuku; game 3.7.0, content 3.7.0-R6 (bản thử nghiệm) |
 
+### App-Dịch-WuWa — bộ công cụ dịch thuật và kiểm tra chất lượng
+
+App-Dịch-WuWa dành cho người biên dịch và người kiểm thử chất lượng ngôn ngữ, tách biệt với bộ cài dành cho người chơi.
+
+- Xem ngữ cảnh và rà soát tính nhất quán của thuật ngữ, tên nhân vật, xưng hô và giọng điệu tiếng Việt.
+- Hỗ trợ phát hiện nội dung chưa dịch, dấu vết tiếng Anh/CJK, sai lệch tag và placeholder, cùng các vấn đề định dạng cần kiểm tra.
+- Hỗ trợ quy trình QA và chuẩn bị dữ liệu đóng gói; mọi kết quả tự động vẫn cần người biên dịch xác nhận.
+
+**Tải công cụ thực tế:** [App-Dich-WuWa v3.0.16](https://github.com/WahuVN/Viet-Hoa-WuWa/releases/download/v3.0.16/App-Dich-WuWa-v3.0.16.zip).
+
+> Lưu ý: App-Dịch v3.0.16 và bộ cài PC v3.0.18 có chu kỳ phiên bản riêng. Không sử dụng liên kết release mới nhất của PC để tìm công cụ App-Dịch.
+
+---
 > [!IMPORTANT]
 > Người chơi chỉ cần tải gói **`VietHoa-WuWa-v3.0.18.zip`**. Ứng dụng sẽ tự động tải các gói tài nguyên cần thiết khi cài đặt.
 >
@@ -137,7 +150,7 @@ VHWuWa là dự án cộng đồng phi thương mại. Bạn có thể hỗ tr�
 
 - **Thảo luận & Hỗ trợ kỹ thuật:** [Server Discord VHWuWa](https://discord.gg/Gy5YQ84Yc2)
 - **Báo lỗi & Đóng góp ý kiến:** [Gửi phản hồi tại GitHub Issues](https://github.com/WahuVN/Viet-Hoa-WuWa/issues)
-- **Bản Việt hóa Android:** [VHWuWa Mobile — WahuVN](https://github.com/WahuVN/VHWuWa-Mobile/releases) · Android 10+ · Shizuku · game 3.7.0 / content 3.7.0-R4
+- **Bản Việt hóa Android:** [VHWuWa Mobile — WahuVN](https://github.com/WahuVN/VHWuWa-Mobile/releases) · Android 10+ · Shizuku · game 3.7.0 / content 3.7.0-R6 (bản thử nghiệm)
 
 ---
 
