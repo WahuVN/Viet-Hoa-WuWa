@@ -287,6 +287,77 @@ public sealed class UpdateServiceTests
         Assert.Contains("/releases/tags/v3.0.9", requested, StringComparison.Ordinal);
     }
 
+    [Theory]
+    [InlineData("")]
+    [InlineData("bad")]
+    [InlineData("000000000000000000000000000000000000000000000000000000000000000x")]
+    public async Task DownloadFileAsync_RejectsMissingOrInvalidPakHashBeforeNetworkOrDisk(string invalidHash)
+    {
+        var requested = false;
+        var service = CreateService("3.0.19", _ =>
+        {
+            requested = true;
+            return new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new ByteArrayContent(Encoding.UTF8.GetBytes("untrusted"))
+            };
+        });
+        var work = Path.Combine(Path.GetTempPath(), "VHWuWa_PakShaFailClosed_" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            Directory.CreateDirectory(work);
+            var target = Path.Combine(work, "WuWaVH_EN_99_P.pak");
+            File.WriteAllText(target, "original protected PAK");
+            var result = await service.DownloadFileAsync(
+                "https://github.test/WuWaVH_EN_99_P.pak", invalidHash, target);
+
+            Assert.False(result.Success);
+            Assert.Contains("SHA-256", result.Error, StringComparison.OrdinalIgnoreCase);
+            Assert.False(requested);
+            Assert.Equal("original protected PAK", File.ReadAllText(target));
+            Assert.Single(Directory.GetFiles(work));
+        }
+        finally
+        {
+            if (Directory.Exists(work)) Directory.Delete(work, recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task DownloadFileAsync_VerifiesPakHashBeforeReplacingExistingFile()
+    {
+        var bytes = Encoding.UTF8.GetBytes("verified PAK payload");
+        var service = CreateService("3.0.19", _ => new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = new ByteArrayContent(bytes)
+        });
+        var work = Path.Combine(Path.GetTempPath(), "VHWuWa_PakDigest_" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            Directory.CreateDirectory(work);
+            var target = Path.Combine(work, "WuWaVH_EN_99_P.pak");
+            File.WriteAllText(target, "keep existing PAK");
+
+            var invalid = await service.DownloadFileAsync(
+                "https://github.test/WuWaVH_EN_99_P.pak", new string('0', 64), target);
+            Assert.False(invalid.Success);
+            Assert.Contains("SHA-256", invalid.Error, StringComparison.OrdinalIgnoreCase);
+            Assert.Equal("keep existing PAK", File.ReadAllText(target));
+            Assert.Single(Directory.GetFiles(work));
+
+            var expected = new HashService().Sha256Bytes(bytes);
+            var valid = await service.DownloadFileAsync(
+                "https://github.test/WuWaVH_EN_99_P.pak", expected, target);
+            Assert.True(valid.Success, valid.Error);
+            Assert.Equal(bytes, File.ReadAllBytes(target));
+            Assert.Single(Directory.GetFiles(work));
+        }
+        finally
+        {
+            if (Directory.Exists(work)) Directory.Delete(work, recursive: true);
+        }
+    }
+
     private static UpdateService CreateService(string currentVersion,
         Func<HttpRequestMessage, HttpResponseMessage> responder)
     {

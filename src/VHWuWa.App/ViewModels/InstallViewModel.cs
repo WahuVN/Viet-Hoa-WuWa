@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using VHWuWa.Core.Abstractions;
 using VHWuWa.Core.Models;
+using VHWuWa.Core.Services;
 using VHWuWa.Infrastructure;
 
 namespace VHWuWa.App.ViewModels;
@@ -26,6 +27,7 @@ public partial class InstallViewModel : ObservableObject
     [ObservableProperty] private string _statusText = "";
     [ObservableProperty] private string _contentText = "";
     [ObservableProperty] private string _summary = "Chọn kiểu tên nhân vật rồi bấm Cài Việt hóa.";
+    [ObservableProperty] private string _installButtonText = "Cài Việt hóa";
     [ObservableProperty] private int _progress;
     [ObservableProperty] private string _progressText = "";
     [ObservableProperty] private bool _busy;
@@ -78,12 +80,24 @@ public partial class InstallViewModel : ObservableObject
             : "";
         FontAvailable = content.FontPak is not null;
         HasHanViet = File.Exists(HanVietPakPath);
-        ShowHanVietDownload = !HasHanViet;
+        var staged = StagedPakInspector.Inspect(AppContext.BaseDirectory);
+        InstallButtonText = !valid
+            ? "Chưa có game PC"
+            : staged.Present ? "Chờ loader 3.8.1" : "Cài Việt hóa";
+        ShowHanVietDownload = !HasHanViet && !staged.Present;
         HanVietDownloadBtnText = HasHanViet ? "Đã có bản Hán Việt" : "Tải bản Hán Việt (~60 MB)";
 
-        if (!content.HasLoader)
+        if (staged.Present)
         {
-            ContentText = "❌ Thiếu bộ loader Việt hóa trong thư mục content\\loader. Không thể cài.";
+            ContentText = staged.Message;
+            CanInstall = false;
+            Summary = staged.ShaVerified
+                ? "PAK mới đã nạp vào ứng dụng. Chờ kiểm thử loader 3.8.1 trước khi cài vào game PC."
+                : "Gói R28 chưa vượt kiểm tra an toàn. Không cài vào game.";
+        }
+        else if (!content.HasLoader)
+        {
+            ContentText = "Thiếu bộ cài Việt hóa tương thích. Chưa thể cài.";
             CanInstall = false;
         }
         else

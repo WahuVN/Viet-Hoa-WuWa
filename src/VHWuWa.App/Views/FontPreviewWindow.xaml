@@ -48,7 +48,7 @@
             </Grid>
         </Grid>
 
-        <Border Grid.Row="2" Background="#282A36" BorderBrush="#3F4454" BorderThickness="1"
+        <Border Grid.Row="2" Background="#14171B" BorderBrush="#292D33" BorderThickness="1"
                 CornerRadius="10" Padding="14">
             <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
                 <Image Source="{Binding PreviewImage}" Stretch="None" HorizontalAlignment="Left" VerticalAlignment="Top"

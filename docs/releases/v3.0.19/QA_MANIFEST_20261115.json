@@ -1,0 +1,32 @@
+{
+  "schema": "WAHU_WUWA_PC_3019_GITHUB_PREP_V1",
+  "date_vn": "2026-11-15",
+  "release": "v3.0.19",
+  "status": "HOLD_NOT_PUBLISHED",
+  "source_branch": "prep/v3.0.19-20261113",
+  "pc_tests": {
+    "passed": 162,
+    "failed": 0,
+    "core_passed": 50,
+    "infrastructure_passed": 112
+  },
+  "local_qa": {
+    "zip_name": "VietHoa-WuWa-v3.0.19-LOCAL-QA.zip",
+    "zip_sha256": "27821e5ba14dc2c34ebf11753c6f5d1c1ae42cbd2fd460ae6ff8ef07359d9693",
+    "zip_entries": 82,
+    "pc_content": "3.8.10-R28",
+    "pc_pak_name": "WuWaVH_38_ENVI_R28_99_P.pak",
+    "pc_pak_sha256": "34dc39482394723fe1ad65dc48a02a5c5b88483a89cee926463963b57d15d64f",
+    "db_roundtrip_pass": 62,
+    "update_3018_to_3019_simulated": true
+  },
+  "release_gates": {
+    "game_pc_client_present": false,
+    "loader_381_verified": false,
+    "pc_game_runtime_verified": false,
+    "android_live_verified": false,
+    "production_assets_ready": false,
+    "publish_allowed": false
+  },
+  "notes": "Không đưa QA ZIP hoặc PAK thử nghiệm lên Release công khai."
+}

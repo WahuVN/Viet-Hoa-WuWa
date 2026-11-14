@@ -11,7 +11,7 @@ param(
 $ErrorActionPreference = 'Stop'
 $root   = Split-Path -Parent $PSScriptRoot            # ...\VHWuWa
 $repo   = Split-Path -Parent $root                    # ...\WuwaVH
-$wahu   = Join-Path $repo 'wuwavh_tool\Wahu'
+$wahu   = if ($env:VHWUWA_WAHU_ROOT) { $env:VHWUWA_WAHU_ROOT } else { Join-Path $repo 'wuwavh_tool\Wahu' }
 $distRoot = Join-Path $root 'dist'
 $buildRoot = Join-Path $distRoot '_build'
 $out    = Join-Path $buildRoot 'VHWuWa_BanCai'
@@ -70,7 +70,7 @@ if (-not (Test-Path $updaterExe)) {
 Copy-Item $updaterExe (Join-Path $app 'VHWuWa.Updater.exe') -Force
 $appVersion = [Diagnostics.FileVersionInfo]::GetVersionInfo((Join-Path $app 'VHWuWa.exe')).FileVersion
 $updaterVersion = [Diagnostics.FileVersionInfo]::GetVersionInfo((Join-Path $app 'VHWuWa.Updater.exe')).FileVersion
-if (-not $appVersion.StartsWith("$Version.") -or -not $updaterVersion.StartsWith("$Version.")) {
+if ($appVersion -ne "$Version.0" -or $updaterVersion -ne "$Version.0") {
   throw "Sai version executable: app=$appVersion updater=$updaterVersion expected=$Version"
 }
 Write-Host "   + Updater self-contained: VHWuWa.Updater.exe ($([math]::Round((Get-Item $updaterExe).Length/1MB, 1)) MB)"

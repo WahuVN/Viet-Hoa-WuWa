@@ -16,10 +16,10 @@
             </Grid.ColumnDefinitions>
             <StackPanel>
                 <TextBlock Text="Trợ giúp" FontSize="22" FontWeight="Bold" />
-                <TextBlock Text="Chọn việc bạn cần làm, rồi thực hiện lần lượt theo từng bước."
+                <TextBlock Text="Cài đặt, cập nhật và xử lý lỗi."
                            Opacity="0.68" FontSize="12" Margin="0,3,0,0" />
             </StackPanel>
-            <Button Grid.Column="1" Content="Mở thư mục tài liệu" Command="{Binding OpenFolderCommand}"
+            <Button Grid.Column="1" Content="Mở tài liệu" Command="{Binding OpenFolderCommand}"
                     Padding="11,6" VerticalAlignment="Center" />
         </Grid>
 
@@ -31,25 +31,25 @@
                 <ColumnDefinition Width="8" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
-            <Border Grid.Column="0" Background="#142033" BorderBrush="#263b5a" BorderThickness="1" CornerRadius="8" Padding="11,9">
+            <Border Grid.Column="0" Background="#171A1F" BorderBrush="#292D33" BorderThickness="1" CornerRadius="8" Padding="11,9">
                 <Grid>
                     <Grid.ColumnDefinitions><ColumnDefinition Width="32" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
-                    <Border Width="24" Height="24" CornerRadius="12" Background="#2563eb"><TextBlock Text="1" HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="Bold" /></Border>
-                    <StackPanel Grid.Column="1"><TextBlock Text="Chọn game" FontWeight="SemiBold" /><TextBlock Text="Tự tìm hoặc chọn thư mục Client" FontSize="11" Opacity="0.65" /></StackPanel>
+                    <Border Width="24" Height="24" CornerRadius="12" Background="#B6C2CF"><TextBlock Text="1" HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="Bold" /></Border>
+                    <StackPanel Grid.Column="1"><TextBlock Text="Chọn game" FontWeight="SemiBold" /><TextBlock Text="Tự tìm hoặc chọn thư mục game" FontSize="11" Opacity="0.65" /></StackPanel>
                 </Grid>
             </Border>
-            <Border Grid.Column="2" Background="#142033" BorderBrush="#263b5a" BorderThickness="1" CornerRadius="8" Padding="11,9">
+            <Border Grid.Column="2" Background="#171A1F" BorderBrush="#292D33" BorderThickness="1" CornerRadius="8" Padding="11,9">
                 <Grid>
                     <Grid.ColumnDefinitions><ColumnDefinition Width="32" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
-                    <Border Width="24" Height="24" CornerRadius="12" Background="#2563eb"><TextBlock Text="2" HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="Bold" /></Border>
-                    <StackPanel Grid.Column="1"><TextBlock Text="Cài Việt hóa" FontWeight="SemiBold" /><TextBlock Text="Chọn kiểu tên rồi bấm cài" FontSize="11" Opacity="0.65" /></StackPanel>
+                    <Border Width="24" Height="24" CornerRadius="12" Background="#B6C2CF"><TextBlock Text="2" HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="Bold" /></Border>
+                    <StackPanel Grid.Column="1"><TextBlock Text="Cài Việt hóa" FontWeight="SemiBold" /><TextBlock Text="Chọn bản dịch và cài" FontSize="11" Opacity="0.65" /></StackPanel>
                 </Grid>
             </Border>
-            <Border Grid.Column="4" Background="#142033" BorderBrush="#263b5a" BorderThickness="1" CornerRadius="8" Padding="11,9">
+            <Border Grid.Column="4" Background="#171A1F" BorderBrush="#292D33" BorderThickness="1" CornerRadius="8" Padding="11,9">
                 <Grid>
                     <Grid.ColumnDefinitions><ColumnDefinition Width="32" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
-                    <Border Width="24" Height="24" CornerRadius="12" Background="#16a34a"><TextBlock Text="3" HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="Bold" /></Border>
-                    <StackPanel Grid.Column="1"><TextBlock Text="Mở game" FontWeight="SemiBold" /><TextBlock Text="Đặt ngôn ngữ chữ là English" FontSize="11" Opacity="0.65" /></StackPanel>
+                    <Border Width="24" Height="24" CornerRadius="12" Background="#B6C2CF"><TextBlock Text="3" HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="Bold" /></Border>
+                    <StackPanel Grid.Column="1"><TextBlock Text="Mở game" FontWeight="SemiBold" /><TextBlock Text="Chọn ngôn ngữ English" FontSize="11" Opacity="0.65" /></StackPanel>
                 </Grid>
             </Border>
         </Grid>
@@ -63,7 +63,7 @@
 
             <DockPanel Grid.Column="0">
                 <ui:TextBox DockPanel.Dock="Top" Text="{Binding Search, UpdateSourceTrigger=PropertyChanged}"
-                            PlaceholderText="Tìm chủ đề…" Margin="0,0,0,8" />
+                            PlaceholderText="Tìm hướng dẫn" Margin="0,0,0,8" />
                 <ListBox ItemsSource="{Binding Guides}" SelectedItem="{Binding Selected}"
                          BorderThickness="0" Background="Transparent" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                     <ListBox.ItemContainerStyle>
@@ -100,7 +100,7 @@
                     </Grid.RowDefinitions>
                     <Grid Margin="0,0,0,10">
                         <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
-                        <Border Width="40" Height="40" CornerRadius="9" Background="#172a46" Margin="0,0,11,0">
+                        <Border Width="40" Height="40" CornerRadius="9" Background="#171A1F" Margin="0,0,11,0">
                             <TextBlock Text="{Binding Selected.Icon}" FontSize="20" HorizontalAlignment="Center" VerticalAlignment="Center" />
                         </Border>
                         <StackPanel Grid.Column="1" VerticalAlignment="Center">
@@ -131,14 +131,14 @@
                                                         <Setter Property="Margin" Value="0,3,0,3" />
                                                     </DataTrigger>
                                                     <DataTrigger Binding="{Binding Kind}" Value="note">
-                                                        <Setter Property="Background" Value="#12263a" />
-                                                        <Setter Property="BorderBrush" Value="#28557c" />
+                                                        <Setter Property="Background" Value="#171A1F" />
+                                                        <Setter Property="BorderBrush" Value="#3A434D" />
                                                         <Setter Property="BorderThickness" Value="1,0,0,0" />
                                                         <Setter Property="Padding" Value="10,8" />
                                                         <Setter Property="Margin" Value="0,6,0,6" />
                                                     </DataTrigger>
                                                     <DataTrigger Binding="{Binding Kind}" Value="code">
-                                                        <Setter Property="Background" Value="#111318" />
+                                                        <Setter Property="Background" Value="#14171B" />
                                                         <Setter Property="Padding" Value="9,5" />
                                                     </DataTrigger>
                                                     <DataTrigger Binding="{Binding Kind}" Value="space"><Setter Property="MinHeight" Value="5" /></DataTrigger>
@@ -151,12 +151,12 @@
                                                     <Setter Property="FontSize" Value="12.5" />
                                                     <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
                                                     <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding Kind}" Value="h2"><Setter Property="FontSize" Value="16" /><Setter Property="FontWeight" Value="Bold" /><Setter Property="Foreground" Value="#60a5fa" /></DataTrigger>
+                                                        <DataTrigger Binding="{Binding Kind}" Value="h2"><Setter Property="FontSize" Value="16" /><Setter Property="FontWeight" Value="Bold" /><Setter Property="Foreground" Value="#B6C2CF" /></DataTrigger>
                                                         <DataTrigger Binding="{Binding Kind}" Value="h3"><Setter Property="FontSize" Value="13.5" /><Setter Property="FontWeight" Value="SemiBold" /></DataTrigger>
                                                         <DataTrigger Binding="{Binding Kind}" Value="step"><Setter Property="FontWeight" Value="SemiBold" /></DataTrigger>
                                                         <DataTrigger Binding="{Binding Kind}" Value="li"><Setter Property="Margin" Value="8,0,0,0" /></DataTrigger>
-                                                        <DataTrigger Binding="{Binding Kind}" Value="note"><Setter Property="Foreground" Value="#bfdbfe" /></DataTrigger>
-                                                        <DataTrigger Binding="{Binding Kind}" Value="code"><Setter Property="FontFamily" Value="Consolas" /><Setter Property="Foreground" Value="#d1d5db" /></DataTrigger>
+                                                        <DataTrigger Binding="{Binding Kind}" Value="note"><Setter Property="Foreground" Value="#B6C2CF" /></DataTrigger>
+                                                        <DataTrigger Binding="{Binding Kind}" Value="code"><Setter Property="FontFamily" Value="Consolas" /><Setter Property="Foreground" Value="#D8DCE1" /></DataTrigger>
                                                     </Style.Triggers>
                                                 </Style>
                                             </TextBlock.Style>

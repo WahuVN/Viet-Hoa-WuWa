@@ -9,9 +9,11 @@
                 <ui:ThemesDictionary Theme="Dark" />
             </ResourceDictionary.MergedDictionaries>
             <BooleanToVisibilityConverter x:Key="BoolToVis" />
+            <FontFamily x:Key="WahuAppFontFamily">pack://application:,,,/Fonts/#Lexend</FontFamily>
 
             <!-- Chữ luôn sáng, đọc rõ trên nền tối -->
             <Style TargetType="TextBlock">
+                <Setter Property="FontFamily" Value="{StaticResource WahuAppFontFamily}" />
                 <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
                 <Setter Property="TextOptions.TextFormattingMode" Value="Ideal" />
                 <Setter Property="TextOptions.TextRenderingMode" Value="ClearType" />

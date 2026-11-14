@@ -16,12 +16,12 @@
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
             <StackPanel>
-                <TextBlock Text="Đặt tên nhân vật" FontSize="22" FontWeight="Bold" />
-                <TextBlock Text="Sửa riêng tên dùng trong bản Việt hóa và bản Hán Việt. Icon giúp nhận đúng nhân vật trước khi lưu."
+                <TextBlock Text="Tên nhân vật" FontSize="22" FontWeight="Bold" />
+                <TextBlock Text="Chỉnh cách hiển thị tên từng nhân vật."
                            Margin="0,3,0,0" Opacity="0.72" TextWrapping="Wrap" FontSize="12" />
             </StackPanel>
-            <Border Grid.Column="1" Background="#15233a" CornerRadius="12" Padding="10,5" VerticalAlignment="Top">
-                <TextBlock Text="{Binding DirtyCount, StringFormat='Đã sửa: {0}'}" Foreground="#60a5fa" FontWeight="SemiBold" />
+            <Border Grid.Column="1" Background="#171A1F" CornerRadius="12" Padding="10,5" VerticalAlignment="Top">
+                <TextBlock Text="{Binding DirtyCount, StringFormat='Đã sửa: {0}'}" Foreground="#B6C2CF" FontWeight="SemiBold" />
             </Border>
         </Grid>
 
@@ -31,12 +31,20 @@
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
-                <TextBlock Text="{Binding Status}" TextWrapping="Wrap" VerticalAlignment="Center" FontSize="12" />
-                <WrapPanel Grid.Column="1" Margin="12,0,0,0">
-                    <Button Content="Đặt lại tên" Command="{Binding ResetBuildCommand}" Margin="0,0,8,0" Padding="10,6" />
-                    <Button Content="Tải PAK gốc" Command="{Binding RestorePaksCommand}" Margin="0,0,8,0" Padding="10,6" />
-                    <ui:Button Content="Lưu thay đổi" Appearance="Primary"
-                               Command="{Binding SaveBuildCommand}" Padding="12,6" FontWeight="SemiBold" />
+                <TextBlock Text="{Binding StatusSummary}" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"
+                           ToolTip="{Binding Status}" VerticalAlignment="Center" FontSize="12" />
+                <WrapPanel Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center">
+                    <Expander Header="Khôi phục" IsExpanded="False" Margin="0,0,10,0">
+                        <StackPanel Margin="8,6">
+                            <Button Content="Đặt lại tên" Command="{Binding ResetBuildCommand}" IsEnabled="{Binding CanEditBuild}"
+                                    Padding="10,7" Margin="0,0,0,6"/>
+                            <Button Content="Tải PAK gốc" Command="{Binding RestorePaksCommand}" IsEnabled="{Binding CanEditBuild}"
+                                    Padding="10,7"/>
+                        </StackPanel>
+                    </Expander>
+                    <ui:Button Content="Lưu &amp; tạo PAK" Appearance="Secondary"
+                               Command="{Binding SaveBuildCommand}" IsEnabled="{Binding CanEditBuild}"
+                               Padding="12,8" FontWeight="SemiBold"/>
                 </WrapPanel>
             </Grid>
         </ui:Card>
@@ -51,9 +59,9 @@
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <Grid Width="44" Height="44" Margin="5">
-                                    <Border CornerRadius="22" Background="#1e293b" BorderBrush="#334155" BorderThickness="1">
+                                    <Border CornerRadius="22" Background="#171A1F" BorderBrush="#292D33" BorderThickness="1">
                                         <TextBlock Text="{Binding Initial}" HorizontalAlignment="Center" VerticalAlignment="Center"
-                                                   FontWeight="Bold" Foreground="#94a3b8" />
+                                                   FontWeight="Bold" Foreground="#969DA6" />
                                     </Border>
                                     <Image Source="{Binding AvatarPath}" Stretch="UniformToFill" RenderOptions.BitmapScalingMode="HighQuality" />
                                 </Grid>
@@ -61,7 +69,7 @@
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
                     <DataGridTextColumn Header="Tên mặc định" Binding="{Binding DefaultName}" Width="150" IsReadOnly="True" />
-                    <DataGridTemplateColumn Header="Tên Tiếng Việt" Width="*">
+                    <DataGridTemplateColumn Header="Tiếng Việt" Width="*">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <TextBox Text="{Binding Vi, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
@@ -72,7 +80,7 @@
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
-                    <DataGridTemplateColumn Header="Tên Hán Việt" Width="*">
+                    <DataGridTemplateColumn Header="Hán Việt" Width="*">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <TextBox Text="{Binding Hv, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
@@ -89,20 +97,20 @@
 
         <Grid Grid.Row="3" Margin="0,10,0,0">
             <!-- Khung trạng thái và tiến độ xử lý nổi bật -->
-            <Border Background="#15233a" BorderBrush="#3b82f6" BorderThickness="1" CornerRadius="7" Padding="12,9"
+            <Border Background="#171A1F" BorderBrush="#B6C2CF" BorderThickness="1" CornerRadius="7" Padding="12,9"
                     Visibility="{Binding Busy, Converter={StaticResource BoolToVis}}" Margin="0,0,0,7">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
-                    <TextBlock Grid.Row="0" Text="{Binding Status, StringFormat='⏳ {0}'}" Foreground="#93c5fd"
+                    <TextBlock Grid.Row="0" Text="{Binding Status}" Foreground="#B6C2CF"
                                FontWeight="SemiBold" FontSize="12" Margin="0,0,0,6" TextWrapping="Wrap" />
-                    <ProgressBar Grid.Row="1" IsIndeterminate="True" Height="5" Foreground="#3b82f6" />
+                    <ProgressBar Grid.Row="1" IsIndeterminate="True" Height="5" Foreground="#B6C2CF" />
                 </Grid>
             </Border>
 
-            <Border Background="#0d231a" BorderBrush="#15803d" BorderThickness="1" CornerRadius="8" Padding="14,10"
+            <Border Background="#171A1F" BorderBrush="#3A434D" BorderThickness="1" CornerRadius="12" Padding="14,10"
                     Visibility="{Binding CanInstall, Converter={StaticResource BoolToVis}}" Margin="0,7,0,0">
                 <Grid>
                     <Grid.RowDefinitions>
@@ -110,17 +118,17 @@
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
                     <TextBlock Grid.Row="0" Text="{Binding InstallPromptMessage}"
-                               Foreground="#86efac" FontWeight="SemiBold" FontSize="12.5" Margin="0,0,0,8" TextWrapping="Wrap" />
+                               Foreground="#B6C2CF" FontWeight="SemiBold" FontSize="12.5" Margin="0,0,0,8" TextWrapping="Wrap" />
                     <WrapPanel Grid.Row="1" VerticalAlignment="Center">
-                        <ui:Button Content="🎮 Cài bản Việt hóa vào Game"
+                        <ui:Button Content="Cài Việt hóa"
                                    Appearance="{Binding ViAppearance}"
                                    Command="{Binding InstallViCommand}"
-                                   ToolTip="Ghi đè file PAK bản Việt hóa vào: &lt;Game&gt;\Client\Content\Paks\~WuWaMods\WuWaVH_99_P.pak"
+                                   ToolTip="Cài bản Việt hóa đã lưu"
                                    Margin="0,0,10,0" Padding="14,6" FontWeight="SemiBold" />
-                        <ui:Button Content="🀄 Cài bản Hán Việt vào Game"
+                        <ui:Button Content="Cài Hán Việt"
                                    Appearance="{Binding HvAppearance}"
                                    Command="{Binding InstallHvCommand}"
-                                   ToolTip="Ghi đè file PAK bản Hán Việt vào: &lt;Game&gt;\Client\Content\Paks\~WuWaMods\WuWaVH_99_P.pak"
+                                   ToolTip="Cài bản Hán Việt đã lưu"
                                    Padding="14,6" FontWeight="SemiBold" />
                     </WrapPanel>
                 </Grid>

@@ -50,12 +50,14 @@ VHWuWa được thiết kế nhằm hỗ trợ người chơi trải nghiệm tr
 | :--- | :--- | :--- |
 | 🎮 [**VietHoa-WuWa-v3.0.18.zip**](https://github.com/WahuVN/Viet-Hoa-WuWa/releases/latest) | **Người chơi** | Ứng dụng cài đặt Việt hóa trên Windows (Khuyên dùng) |
 | 🛠️ [**App-Dich-WuWa-v3.0.16.zip**](https://github.com/WahuVN/Viet-Hoa-WuWa/releases/latest) | **Dịch giả / Modder** | Bộ công cụ WAHU Community hỗ trợ duyệt ngữ cảnh, QA và đóng gói PAK |
-| 📱 [**VHWuWa Mobile 0.2.0-alpha.13**](https://github.com/WahuVN/VHWuWa-Mobile/releases) | **Android** | Android 10+, cài patch qua Shizuku; game 3.7.0, content 3.7.0-R4 |
+| 📱 [**VHWuWa Mobile 0.2.0-alpha.18**](https://github.com/WahuVN/VHWuWa-Mobile/releases) | **Android** | Android 10+, cài patch qua Shizuku; game 3.7.0, content 3.7.0-R6 |
 
 > [!IMPORTANT]
 > Người chơi chỉ cần tải gói **`VietHoa-WuWa-v3.0.18.zip`**. Ứng dụng sẽ tự động tải các gói tài nguyên cần thiết khi cài đặt.
 >
 > **Lưu ý version:** `VietHoa-WuWa` (Player) và `App-Dich-WuWa` (WAHU Community) có version độc lập. Không đổi tên App-Dịch theo Player nếu WAHU Community chưa được rebuild + QA.
+>
+> **Nhánh v3.0.19 đang kiểm thử nội bộ:** GitHub `releases/latest` hiện vẫn là v3.0.18. Chỉ phát hành gói v3.0.19 sau khi kiểm thử updater, đủ PAK EN/Hán Việt tương thích nguồn game xác minh và QA font/runtime đạt. Không dùng gói ứng dụng preview để cài Việt hóa 3.8.
 
 ---
 
@@ -137,7 +139,7 @@ VHWuWa là dự án cộng đồng phi thương mại. Bạn có thể hỗ tr�
 
 - **Thảo luận & Hỗ trợ kỹ thuật:** [Server Discord VHWuWa](https://discord.gg/Gy5YQ84Yc2)
 - **Báo lỗi & Đóng góp ý kiến:** [Gửi phản hồi tại GitHub Issues](https://github.com/WahuVN/Viet-Hoa-WuWa/issues)
-- **Bản Việt hóa Android:** [VHWuWa Mobile — WahuVN](https://github.com/WahuVN/VHWuWa-Mobile/releases) · Android 10+ · Shizuku · game 3.7.0 / content 3.7.0-R4
+- **Bản Việt hóa Android:** [VHWuWa Mobile — WahuVN](https://github.com/WahuVN/VHWuWa-Mobile/releases) · Android 10+ · Shizuku · game 3.7.0 / content 3.7.0-R6
 
 ---
 

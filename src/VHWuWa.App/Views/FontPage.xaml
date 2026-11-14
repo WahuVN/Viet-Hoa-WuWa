@@ -10,13 +10,13 @@
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
                 <StackPanel>
-                    <TextBlock Text="Font chữ" FontSize="22" FontWeight="Bold" />
-                    <TextBlock Text="Chọn, xem thử và cài font tiếng Việt cho game."
-                               Opacity="0.68" FontSize="12" Margin="0,3,0,0" />
+                    <TextBlock Text="Font game" FontSize="24" FontWeight="SemiBold" />
+                    <TextBlock Text="Chọn font cho game và xem trước tiếng Việt."
+                               Opacity="0.86" FontSize="13" Margin="0,3,0,0" />
                 </StackPanel>
-                <Border Grid.Column="1" Background="#15233a" CornerRadius="12" Padding="10,5" VerticalAlignment="Top">
+                <Border Grid.Column="1" Background="#171A1F" CornerRadius="9" Padding="10,5" VerticalAlignment="Top">
                     <TextBlock Text="{Binding CurrentFont, StringFormat='Đang dùng: {0}'}"
-                               Foreground="#60a5fa" FontWeight="SemiBold" FontSize="12" />
+                               Foreground="#B6C2CF" FontWeight="SemiBold" FontSize="12" />
                 </Border>
             </Grid>
 
@@ -30,13 +30,14 @@
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
                     <StackPanel VerticalAlignment="Center">
-                        <TextBlock Text="Font trong game" FontWeight="SemiBold" FontSize="14" />
-                        <TextBlock Text="{Binding Message}" TextWrapping="Wrap" Opacity="0.72" FontSize="12"
-                                   Margin="0,3,12,0" MaxHeight="34" TextTrimming="CharacterEllipsis" />
+                        <TextBlock Text="Font đang dùng" FontWeight="SemiBold" FontSize="15" />
+                        <TextBlock Text="{Binding Message}" TextWrapping="NoWrap" Opacity="0.84" FontSize="13"
+                                   Margin="0,3,12,0" TextTrimming="CharacterEllipsis"
+                                   ToolTip="{Binding Message}" />
                     </StackPanel>
                     <WrapPanel Grid.Column="1" VerticalAlignment="Center">
-                        <Button Content="Cài gói .vhwpack" Command="{Binding ApplyCommand}" Margin="0,0,8,0" Padding="10,6" />
-                        <Button Content="Khôi phục mặc định" Command="{Binding RestoreCommand}" Padding="10,6" />
+                        <Button Content="Áp dụng" Command="{Binding ApplyCommand}" IsEnabled="{Binding CanApplyToGame}" Margin="0,0,8,0" Padding="10,6" />
+                        <Button Content="Khôi phục" Command="{Binding RestoreCommand}" IsEnabled="{Binding CanApplyToGame}" Padding="10,6" />
                     </WrapPanel>
                 </Grid>
             </ui:Card>
@@ -49,11 +50,11 @@
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                         <StackPanel>
-                            <TextBlock Text="Thư viện font" FontWeight="SemiBold" FontSize="14" />
-                            <TextBlock Text="{Binding LibraryMessage}" Opacity="0.68" FontSize="12" Margin="0,2,0,0" />
+                            <TextBlock Text="Thư viện font" FontWeight="SemiBold" FontSize="15" />
+                            <TextBlock Text="{Binding LibraryMessage}" Opacity="0.86" FontSize="13" Margin="0,2,0,0" />
                         </StackPanel>
-                        <TextBlock Grid.Column="1" Text="Chọn font → xem trước → áp dụng"
-                                   Opacity="0.55" FontSize="11" VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="1" Text="Chọn font muốn xem / áp dụng"
+                                   Opacity="0.72" FontSize="12" VerticalAlignment="Center" />
                     </Grid>
 
                     <Grid>
@@ -67,12 +68,12 @@
                         <ComboBox Grid.Column="1" ItemsSource="{Binding Library}" SelectedItem="{Binding SelectedLibraryFont}"
                                   DisplayMemberPath="Display" Margin="0,0,8,0" Padding="8,5" />
                         <WrapPanel Grid.Column="2">
-                            <ui:Button Content="{Binding ApplyButtonText}" Appearance="Primary"
-                                       Command="{Binding ApplyLibraryFontCommand}" Margin="0,0,7,0" Padding="12,6" />
+                            <ui:Button Content="{Binding ApplyButtonText}" Appearance="Secondary"
+                                       Command="{Binding ApplyLibraryFontCommand}" IsEnabled="{Binding CanApplyToGame}" Margin="0,0,7,0" Padding="12,6" />
                             <Button Content="{Binding DownloadButtonText}" Command="{Binding DownloadFontOnlyCommand}"
                                     Visibility="{Binding ShowDownloadButton, Converter={StaticResource BoolToVis}}"
                                     Margin="0,0,7,0" Padding="10,6" />
-                            <Button Content="Gỡ font" Command="{Binding RemoveFontCommand}" Padding="10,6" />
+                            <Button Content="Gỡ" Command="{Binding RemoveFontCommand}" IsEnabled="{Binding CanApplyToGame}" Padding="10,6" />
                         </WrapPanel>
                     </Grid>
                 </StackPanel>
@@ -85,16 +86,21 @@
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
-                        <TextBlock Text="Độ đậm chữ (Font Weight)" FontWeight="SemiBold" FontSize="14" />
-                        <TextBlock Grid.Column="1" Text="{Binding WeightLabel}" Foreground="#f4ce90"
-                                   FontWeight="SemiBold" FontSize="14" />
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="Độ đậm font game" FontWeight="SemiBold" FontSize="15"
+                                       VerticalAlignment="Center" />
+                            <Button Content="Chọn font chỉnh được" Command="{Binding SelectVariableFontCommand}"
+                                    Margin="12,0,0,0" Padding="9,4" FontSize="12" />
+                        </StackPanel>
+                        <TextBlock Grid.Column="1" Text="{Binding WeightLabel}" Foreground="#D7E0E8"
+                                   FontWeight="SemiBold" FontSize="15" />
                     </Grid>
                     <Slider Minimum="{Binding MinimumFontWeight}" Maximum="{Binding MaximumFontWeight}"
                             Value="{Binding FontWeight, Mode=TwoWay}" TickFrequency="25"
                             IsSnapToTickEnabled="True" IsEnabled="{Binding CanAdjustFontWeight}"
                             VerticalAlignment="Center" Margin="2,0,2,8"
-                            ToolTip="Chỉ font biến thiên (variable font) có thể chỉnh liên tục" />
-                    <TextBlock Text="{Binding WeightHelp}" FontSize="11" Opacity="0.72" TextWrapping="Wrap" />
+                            ToolTip="Chỉnh 100–900 với font biến thiên; chọn Lexend để sử dụng" />
+                    <TextBlock Text="{Binding WeightHelp}" FontSize="12" Opacity="0.84" TextWrapping="Wrap" />
                 </StackPanel>
             </ui:Card>
 
@@ -106,14 +112,14 @@
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                         <StackPanel>
-                            <TextBlock Text="Xem trước" FontWeight="SemiBold" FontSize="14" />
-                            <TextBlock Text="Kiểm tra kiểu chữ và dấu tiếng Việt trước khi cài."
-                                       Opacity="0.68" FontSize="12" Margin="0,2,0,0" />
+                            <TextBlock Text="Xem trước font game" FontWeight="SemiBold" FontSize="15" />
+                            <TextBlock Text="Mẫu hiển thị trong game · kiểm tra đủ dấu tiếng Việt."
+                                       Opacity="0.86" FontSize="13" Margin="0,2,0,0" />
                         </StackPanel>
                         <WrapPanel Grid.Column="1" VerticalAlignment="Center">
-                            <Button Content="Chọn font ngoài" Command="{Binding PreviewFontCommand}" Margin="0,0,7,0" Padding="10,6" />
-                            <Button Content="⛶ Xem lớn" Click="OpenLargePreview_Click" Margin="0,0,7,0" Padding="10,6" />
-                            <ui:Button Content="Cài font ngoài" Appearance="Primary" Command="{Binding ApplyCustomFontCommand}"
+                            <Button Content="Chọn từ máy" Command="{Binding PreviewFontCommand}" Margin="0,0,7,0" Padding="10,6" />
+                            <Button Content="Xem lớn" Click="OpenLargePreview_Click" Margin="0,0,7,0" Padding="10,6" />
+                            <ui:Button Content="Áp dụng font" Appearance="Secondary" Command="{Binding ApplyCustomFontCommand}" IsEnabled="{Binding CanApplyToGame}"
                                        Visibility="{Binding HasCustomFontSelected, Converter={StaticResource BoolToVis}}" Padding="10,6" />
                         </WrapPanel>
                     </Grid>
@@ -125,7 +131,7 @@
                             <ColumnDefinition Width="280" />
                         </Grid.ColumnDefinitions>
                         <ui:TextBox Text="{Binding SampleText, UpdateSourceTrigger=PropertyChanged}"
-                                    PlaceholderText="Nhập chữ mẫu…" />
+                                    PlaceholderText="Nhập nội dung muốn thử…" />
                         <Grid Grid.Column="2">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto" />
@@ -143,8 +149,8 @@
                         </Grid>
                     </Grid>
 
-                    <Border Background="#282A36" BorderBrush="#3F4454" BorderThickness="1"
-                            CornerRadius="10" Padding="12" MinHeight="360" Height="380">
+                    <Border Background="#14171B" BorderBrush="#292D33" BorderThickness="1"
+                            CornerRadius="9" Padding="12" MinHeight="230" Height="270">
                         <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
                             <Image Source="{Binding PreviewImage}" Stretch="None"
                                    RenderOptions.BitmapScalingMode="HighQuality" SnapsToDevicePixels="True"
@@ -152,7 +158,7 @@
                         </ScrollViewer>
                     </Border>
                     <TextBlock Text="{Binding PreviewMessage}" TextWrapping="Wrap"
-                               Opacity="0.65" FontSize="11" Margin="2,7,0,0" />
+                               Opacity="0.82" FontSize="12" Margin="2,7,0,0" />
                 </StackPanel>
             </ui:Card>
         </StackPanel>

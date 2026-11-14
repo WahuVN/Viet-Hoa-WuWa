@@ -1248,6 +1248,11 @@ public sealed class ViethoaInstaller : IViethoaInstaller
         LastAutoDeletedConflictCount = 0;
         try
         {
+            var staged = StagedPakInspector.Inspect(AppContext.BaseDirectory);
+            if (staged.Present && !staged.CanInstallToGame)
+                return Result.Fail(staged.ShaVerified
+                    ? "PAK R28 đã có nhưng loader 3.8.1 chưa được xác minh. Không ghi vào game."
+                    : staged.Message);
             var status = GetStatus(gamePath);
             if (!status.Installed)
                 return Result.Fail("Chưa phát hiện bản Việt hóa do VHWuWa cài trong thư mục game này.");
@@ -1440,6 +1445,11 @@ public sealed class ViethoaInstaller : IViethoaInstaller
         LastAutoDeletedConflictCount = 0;
         try
         {
+            var staged = StagedPakInspector.Inspect(AppContext.BaseDirectory);
+            if (staged.Present && !staged.CanInstallToGame)
+                return Result.Fail(staged.ShaVerified
+                    ? "PAK R28 đã có nhưng loader 3.8.1 chưa được xác minh. Không ghi vào game."
+                    : staged.Message);
             var win64 = Win64Of(gamePath);
             if (!File.Exists(Path.Combine(win64, "Client-Win64-Shipping.exe")))
                 return Result.Fail("Không thấy Client-Win64-Shipping.exe — hãy chọn đúng thư mục game (chứa Client\\).");

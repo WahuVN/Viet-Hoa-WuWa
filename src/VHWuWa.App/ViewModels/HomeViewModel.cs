@@ -6,6 +6,7 @@ using CommunityToolkit.Mvvm.Input;
 using Microsoft.Win32;
 using VHWuWa.Core.Abstractions;
 using VHWuWa.Core.Models;
+using VHWuWa.Core.Services;
 
 namespace VHWuWa.App.ViewModels;
 
@@ -24,6 +25,8 @@ public partial class HomeViewModel : ObservableObject
     [ObservableProperty] private string _gameName = "";
     [ObservableProperty] private string _detectedVersion = "Chưa xác định";
     [ObservableProperty] private string _translationStatus = "Chưa cài";
+    [ObservableProperty] private bool _hasStagedContent;
+    [ObservableProperty] private string _stagedContentText = "";
     [ObservableProperty] private string _translationVersion = "-";
     [ObservableProperty] private string _currentVariant = "-";
     [ObservableProperty] private string _currentFont = "-";
@@ -75,8 +78,7 @@ public partial class HomeViewModel : ObservableObject
             : v.IsValid ? "Hợp lệ" : v.Message;
         DetectedVersion = v.DetectedVersion ?? "Chưa xác định";
 
-        var state = _settings.LoadState();
-        var tr = state.InstalledPackages.FirstOrDefault(p => p.PackageType == PackageType.Translation);
+        // A stale package record cannot confirm an installation in a missing game folder.
         var vst = PathOk ? _viet.GetStatus(GamePath) : null;
         if (vst is { Installed: true })
         {
@@ -92,10 +94,8 @@ public partial class HomeViewModel : ObservableObject
         else
         {
             IsInstalled = false;
-            TranslationStatus = tr is null ? "Chưa cài" : "Đã cài";
-            TranslationVersion = tr is null || string.IsNullOrWhiteSpace(tr.Version)
-                ? "-"
-                : "v" + tr.Version.TrimStart('v', 'V');
+            TranslationStatus = PathOk ? "Chưa cài" : "Chưa tìm thấy game";
+            TranslationVersion = "-";
             CurrentVariant = "-";
             CurrentFont = "-";
             CanOneClickInstall = PathOk;
@@ -110,12 +110,32 @@ public partial class HomeViewModel : ObservableObject
             Message = "✅ Đã cài Việt hóa. Sẵn sàng vào game!";
         }
 
+        var staged = StagedPakInspector.Inspect(AppContext.BaseDirectory);
+        HasStagedContent = staged.Present;
+        StagedContentText = staged.ShaVerified
+            ? "PAK R28 · 62 DB · SHA-256 hợp lệ. Chờ loader 3.8.1."
+            : staged.Message;
+        if (staged.Present)
+        {
+            CanOneClickInstall = false;
+            Message = !PathOk
+                ? "Chưa tìm thấy game PC. Chọn thư mục chứa Client để cài."
+                : staged.ShaVerified
+                    ? "PAK R28 đã có. Chờ loader 3.8.1 tương thích trước khi cài."
+                    : staged.Message;
+        }
+
         _main.RefreshStatus();
     }
 
     [RelayCommand]
     private async Task OneClickInstallAsync()
     {
+        if (StagedPakInspector.Inspect(AppContext.BaseDirectory).Present)
+        {
+            Message = "R28 đang ở chế độ xem trước. Chưa có loader PC 3.8.1 đã xác minh; không cài vào game.";
+            return;
+        }
         if (!PathOk)
         {
             Message = "Đường dẫn game chưa hợp lệ. Hãy dùng Tự tìm hoặc chọn thư mục game.";
@@ -167,6 +187,11 @@ public partial class HomeViewModel : ObservableObject
     [RelayCommand]
     private async Task OneClickInstallHvAsync()
     {
+        if (StagedPakInspector.Inspect(AppContext.BaseDirectory).Present)
+        {
+            Message = "R28 chưa có bản Hán Việt và loader PC 3.8.1 đã nghiệm thu.";
+            return;
+        }
         if (!PathOk) return;
         var res = MessageBox.Show(
             $"Bạn có muốn tự động cài đặt bản Hán Việt vào thư mục game:\n{GamePath}?",
@@ -233,7 +258,27 @@ public partial class HomeViewModel : ObservableObject
     {
         if (!PathOk)
         {
-            Message = "Đường dẫn game chưa hợp lệ. Hãy dùng Tự tìm game hoặc chọn lại thư mục.";
+            var launcher = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles),
+                "Wuthering Waves", "launcher.exe");
+            if (!File.Exists(launcher))
+            {
+                Message = "Chưa tìm thấy game PC hoặc launcher. Cài game rồi chọn thư mục chứa Client.";
+                return;
+            }
+            try
+            {
+                Process.Start(new ProcessStartInfo(launcher)
+                {
+                    WorkingDirectory = Path.GetDirectoryName(launcher) ?? "",
+                    UseShellExecute = true
+                });
+                Message = "Đã mở launcher. Cài game xong hãy bấm Tự tìm game.";
+            }
+            catch (Exception ex)
+            {
+                Message = "Không thể mở launcher: " + ex.Message;
+            }
             return;
         }
 

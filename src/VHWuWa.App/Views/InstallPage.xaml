@@ -13,7 +13,9 @@
         <StackPanel Grid.Row="0" Margin="0,0,0,14">
             <TextBlock Text="Cài đặt Việt hóa" FontSize="22" FontWeight="Bold" />
             <TextBlock Text="{Binding GamePathText}" Margin="0,4,0,0" TextWrapping="Wrap" Opacity="0.85" FontSize="12" />
-            <TextBlock Text="{Binding StatusText}" Margin="0,2,0,0" TextWrapping="Wrap" FontWeight="SemiBold" FontSize="12" Foreground="#4ade80" />
+            <TextBlock Text="{Binding StatusText}" Margin="0,2,0,0" TextWrapping="Wrap" FontWeight="SemiBold" FontSize="12" Foreground="#B6C2CF" />
+            <TextBlock Text="{Binding ContentText}" Margin="0,7,0,0" TextWrapping="Wrap"
+                       FontSize="13" Foreground="#D7E0E8" />
         </StackPanel>
 
         <ui:Card Grid.Row="1" Padding="16" Margin="0,0,0,12">
@@ -45,7 +47,7 @@
                     <StackPanel>
                         <TextBlock Text="2 · Cài Việt hóa" FontWeight="SemiBold" FontSize="14" Margin="0,0,0,10" />
                         <WrapPanel>
-                            <ui:Button Content="Cài Việt hóa" Appearance="Primary"
+                            <ui:Button Content="Cài Việt hóa" Appearance="Secondary"
                                        Command="{Binding InstallCommand}" Margin="0,0,8,8"
                                        MinWidth="180" Padding="16,9" FontSize="14" FontWeight="SemiBold" />
                             <Button Content="Hủy" Command="{Binding CancelCommand}"

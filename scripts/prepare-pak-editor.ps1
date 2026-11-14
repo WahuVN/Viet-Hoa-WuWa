@@ -5,8 +5,13 @@ param(
 
 $ErrorActionPreference = 'Stop'
 $launcherRoot = Split-Path -Parent $PSScriptRoot
-$repoRoot = Split-Path -Parent $launcherRoot
-$wahuRoot = Join-Path $repoRoot 'wuwavh_tool\Wahu'
+if ($env:VHWUWA_WAHU_ROOT) {
+    $wahuRoot = [IO.Path]::GetFullPath($env:VHWUWA_WAHU_ROOT)
+    $repoRoot = Split-Path -Parent (Split-Path -Parent $wahuRoot)
+} else {
+    $repoRoot = Split-Path -Parent $launcherRoot
+    $wahuRoot = Join-Path $repoRoot 'wuwavh_tool\Wahu'
+}
 $workRoot = Join-Path $wahuRoot '.pak_editor_build'
 $source = Join-Path $wahuRoot 'wahu_editor_cli.py'
 $database = Join-Path $wahuRoot 'project.db'

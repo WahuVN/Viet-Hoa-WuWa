@@ -215,6 +215,9 @@ public sealed class UpdateService : IUpdateService
         }
     }
 
+    private static bool IsValidSha256(string? value) =>
+        !string.IsNullOrWhiteSpace(value) && value.Length == 64 && value.All(Uri.IsHexDigit);
+
     private static string ReadGitHubSha256(JsonElement asset)
     {
         if (!asset.TryGetProperty("digest", out var d)) return "";
@@ -255,6 +258,8 @@ public sealed class UpdateService : IUpdateService
         {
             if (string.IsNullOrWhiteSpace(fileUrl))
                 return Result<string>.Fail("Không có đường dẫn tải tệp.");
+            if (!IsValidSha256(expectedSha256))
+                return Result<string>.Fail("Tệp cập nhật thiếu SHA-256 hợp lệ; đã từ chối tải.");
             var dir = Path.GetDirectoryName(destinationPath);
             if (!string.IsNullOrWhiteSpace(dir)) Directory.CreateDirectory(dir);
 
@@ -272,6 +277,8 @@ public sealed class UpdateService : IUpdateService
         if (!Uri.TryCreate(url, UriKind.Absolute, out var downloadUri)
             || downloadUri.Scheme != Uri.UriSchemeHttps)
             return Result<string>.Fail("Đường dẫn tải phải là HTTPS hợp lệ.");
+        if (!IsValidSha256(expectedSha256))
+            return Result<string>.Fail("Tệp cập nhật thiếu SHA-256 hợp lệ; đã từ chối tải.");
 
         var partial = dest + ".part-" + Guid.NewGuid().ToString("N");
         try
@@ -293,21 +300,8 @@ public sealed class UpdateService : IUpdateService
                 }
             }
 
-            if (!string.IsNullOrWhiteSpace(expectedSha256))
-            {
-                if (!_hash.Verify(partial, expectedSha256))
-                    return Result<string>.Fail("SHA-256 bản tải không khớp — đã hủy.");
-            }
-            else if (isZip)
-            {
-                return Result<string>.Fail("Gói ZIP cập nhật thiếu SHA-256 hợp lệ.");
-            }
-            else
-            {
-                var fi = new FileInfo(partial);
-                if (fi.Length == 0)
-                    return Result<string>.Fail("Tệp tải về rỗng.");
-            }
+            if (!_hash.Verify(partial, expectedSha256))
+                return Result<string>.Fail("SHA-256 bản tải không khớp — đã hủy.");
 
             File.Move(partial, dest, overwrite: true);
             progress?.Report(100);

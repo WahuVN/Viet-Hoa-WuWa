@@ -37,8 +37,8 @@ public partial class App : Application
             _singleInstanceMutex.Dispose();
             _singleInstanceMutex = null;
             MessageBox.Show(
-                "VHWuWa đang mở ở một cửa sổ khác. Hãy dùng cửa sổ đang chạy để cài/gỡ Việt hóa.",
-                "VHWuWa", MessageBoxButton.OK, MessageBoxImage.Information);
+                "WuWa Việt Hóa đang mở ở cửa sổ khác. Hãy dùng cửa sổ đó để cài hoặc gỡ bản dịch.",
+                "WuWa Việt Hóa", MessageBoxButton.OK, MessageBoxImage.Information);
             Shutdown(0);
             return;
         }
@@ -79,9 +79,12 @@ public partial class App : Application
         ApplyTheme(Services.GetRequiredService<ISettingsService>().Settings.Theme);
         var mainWindow = Services.GetRequiredService<MainWindow>();
         ApplyWindowIcon(mainWindow);
+        // Signal health only after WPF has rendered main window content, not merely after Show().
+        mainWindow.ContentRendered += (_, _) => CompleteUpdateStartup(e.Args);
         mainWindow.Show();
-        CompleteUpdateStartup(e.Args);
-        EnsureDesktopShortcut();
+        // UI preview keeps the user's current desktop shortcut untouched.
+        if (!e.Args.Contains("--ui-qa-preview", StringComparer.OrdinalIgnoreCase))
+            EnsureDesktopShortcut();
     }
 
     protected override void OnExit(ExitEventArgs e)
@@ -103,7 +106,7 @@ public partial class App : Application
     private void OnUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
     {
         MessageBox.Show("Đã xảy ra lỗi không mong muốn:\n" + e.Exception.Message,
-            "VHWuWa", MessageBoxButton.OK, MessageBoxImage.Error);
+            "WuWa Việt Hóa", MessageBoxButton.OK, MessageBoxImage.Error);
         try { Services.GetService<ILogService>()?.Error("UI", e.Exception.Message, e.Exception); } catch { }
         e.Handled = true;
     }

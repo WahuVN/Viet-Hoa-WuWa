@@ -21,16 +21,17 @@ public partial class FontViewModel : ObservableObject
     [ObservableProperty] private string _message = "Sẵn sàng.";
     [ObservableProperty] private string _currentFont = "Mặc định";
     [ObservableProperty] private bool _busy;
-    [ObservableProperty] private string _sampleText = "Người Lữ Hành đã thức tỉnh sức mạnh. Phần thưởng quý giá sẽ được trao sau trận chiến. ắ ằ ẳ ẵ ặ · ấ ầ ẩ ẫ ậ · ữ ự ỡ ợ";
+    [ObservableProperty] private string _sampleText = "Gió lướt qua Hoàng Long, ánh trăng phủ lên hành trình phía trước.";
     [ObservableProperty] private ImageSource? _previewImage;
     [ObservableProperty] private string _previewMessage = "Chọn một font để xem trước.";
     [ObservableProperty] private int _previewFontSize = 30;
-    [ObservableProperty] private int _fontWeight = 650;
+    [ObservableProperty] private int _fontWeight = 400;
     [ObservableProperty] private int _minimumFontWeight = 100;
     [ObservableProperty] private int _maximumFontWeight = 900;
     [ObservableProperty] private bool _canAdjustFontWeight;
-    [ObservableProperty] private string _weightHelp = "Font tĩnh: hãy chọn bản Regular / SemiBold / Bold trong thư viện.";
-    public string WeightLabel => $"Weight {FontWeight}";
+    [ObservableProperty] private string _weightHelp = "Để chỉnh độ đậm liên tục, chọn Lexend Variable.";
+    public string WeightLabel => $"Độ đậm {FontWeight}";
+    public bool CanApplyToGame { get; private set; }
     public string PreviewFontSizeLabel => $"{PreviewFontSize} px";
 
     private readonly List<FontLibraryItem> _allFonts = new();
@@ -71,7 +72,9 @@ public partial class FontViewModel : ObservableObject
                 _allFonts.Add(item);
                 Library.Add(item);
             }
-            SelectedLibraryFont = Library.FirstOrDefault(f => f.Name == "Lexend Variable") ?? Library.FirstOrDefault();
+            SelectedLibraryFont = Library.FirstOrDefault(f => f.Name == "Lexend Variable" && File.Exists(ResolveSource(f.Src)))
+                ?? Library.FirstOrDefault(f => f.Name == "Verdana")
+                ?? Library.FirstOrDefault();
             LibraryMessage = $"{Library.Count} font có sẵn";
         }
         catch (Exception ex) { LibraryMessage = "Không đọc được thư viện: " + VHWuWa.Core.Services.ErrorFormatter.Humanize(null, ex); }
@@ -105,15 +108,26 @@ public partial class FontViewModel : ObservableObject
     public void OnActivated()
     {
         var path = _settings.Settings.GamePath;
-        var pak = string.IsNullOrWhiteSpace(path) ? null : _fonts.CurrentFontPak(path);
+        CanApplyToGame = !string.IsNullOrWhiteSpace(path)
+            && File.Exists(Path.Combine(path, "Client", "Binaries", "Win64", "Client-Win64-Shipping.exe"));
+        OnPropertyChanged(nameof(CanApplyToGame));
+        if (!CanApplyToGame)
+        {
+            CurrentFont = "Chưa có game PC";
+            Message = "Chưa tìm thấy game PC; vẫn có thể xem trước và chọn font.";
+            return;
+        }
+        var pak = _fonts.CurrentFontPak(path);
         CurrentFont = pak ?? "Mặc định";
+        if (Message.StartsWith("Chưa tìm thấy game PC", StringComparison.Ordinal))
+            Message = "Sẵn sàng.";
     }
 
     [RelayCommand]
     private async Task ApplyAsync()
     {
         var path = _settings.Settings.GamePath;
-        if (string.IsNullOrWhiteSpace(path)) { Message = "Chưa chọn thư mục game."; return; }
+        if (!CanApplyToGame) { Message = "Chưa tìm thấy game PC. Chọn đúng thư mục game trước khi áp dụng font."; return; }
         var dlg = new OpenFileDialog { Title = "Chọn font", Filter = "Gói VHWuWa (*.vhwpack)|*.vhwpack" };
         if (dlg.ShowDialog() != true) return;
         Busy = true;
@@ -165,9 +179,9 @@ public partial class FontViewModel : ObservableObject
         MinimumFontWeight = info.IsVariable ? info.Minimum : info.Default;
         MaximumFontWeight = info.IsVariable ? info.Maximum : info.Default;
         WeightHelp = info.IsVariable
-            ? $"Variable Font: chỉnh được từ {info.Minimum} đến {info.Maximum}; xuất font thật trước khi cài."
-            : $"Font tĩnh (weight {info.Default}): chọn phiên bản đậm khác trong thư viện.";
-        FontWeight = info.IsVariable ? Math.Clamp(650, info.Minimum, info.Maximum) : info.Default;
+            ? $"Font biến thiên · điều chỉnh từ {info.Minimum} đến {info.Maximum}."
+            : $"Font tĩnh · độ đậm {info.Default}. Chọn Lexend Variable để kéo từ 100 đến 900.";
+        FontWeight = info.IsVariable ? Math.Clamp(550, info.Minimum, info.Maximum) : info.Default;
         RequestPreviewRefresh();
     }
 
@@ -237,6 +251,24 @@ public partial class FontViewModel : ObservableObject
     }
 
     [RelayCommand]
+    private void SelectVariableFont()
+    {
+        var match = _allFonts.FirstOrDefault(f => f.Name == "Lexend Variable"
+            && File.Exists(ResolveSource(f.Src))
+            && FontWeightTools.Inspect(ResolveSource(f.Src)).IsVariable);
+        if (match is null)
+        {
+            WeightHelp = "Không tìm thấy Lexend Variable. Hãy kiểm tra thư mục Fonts.";
+            return;
+        }
+        if (!Library.Contains(match)) SearchText = "";
+        if (SelectedLibraryFont == match)
+            RenderPreview(ResolveSource(match.Src));
+        else
+            SelectedLibraryFont = match;
+    }
+
+    [RelayCommand]
     private void IncreasePreviewSize() => PreviewFontSize = Math.Min(72, PreviewFontSize + 2);
 
     [RelayCommand]
@@ -249,7 +281,7 @@ public partial class FontViewModel : ObservableObject
     private async Task ApplyCustomFontAsync()
     {
         var path = _settings.Settings.GamePath;
-        if (string.IsNullOrWhiteSpace(path)) { Message = "Chưa chọn thư mục game."; return; }
+        if (!CanApplyToGame) { Message = "Chưa tìm thấy game PC. Chọn đúng thư mục game trước khi áp dụng font."; return; }
         if (string.IsNullOrWhiteSpace(_lastFontPath) || !File.Exists(_lastFontPath))
         {
             Message = "Hãy bấm 'Chọn font ngoài' để chọn file font (.ttf/.otf) trước.";
