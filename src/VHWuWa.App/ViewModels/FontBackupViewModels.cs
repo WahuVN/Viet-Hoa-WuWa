@@ -9,6 +9,7 @@ using Microsoft.Win32;
 using VHWuWa.App.Services;
 using VHWuWa.Core.Abstractions;
 using VHWuWa.Core.Models;
+using VHWuWa.Infrastructure;
 
 namespace VHWuWa.App.ViewModels;
 
@@ -108,9 +109,19 @@ public partial class FontViewModel : ObservableObject
     public void OnActivated()
     {
         var path = _settings.Settings.GamePath;
-        CanApplyToGame = !string.IsNullOrWhiteSpace(path)
+        var gameFound = !string.IsNullOrWhiteSpace(path)
             && File.Exists(Path.Combine(path, "Client", "Binaries", "Win64", "Client-Win64-Shipping.exe"));
+        var r29Mode = R29MountedPak.ReleaseRequired(AppContext.BaseDirectory)
+            || R29MountedPak.PackagePresent(AppContext.BaseDirectory);
+        CanApplyToGame = gameFound && !r29Mode;
         OnPropertyChanged(nameof(CanApplyToGame));
+        if (gameFound && r29Mode)
+        {
+            CurrentFont = R29MountedPak.IsInstalled(path) ? "Font game mặc định · R29" : "Chưa cài R29";
+            Message = "R29 đang dùng Mount mới. Font game đã hiển thị dấu tiếng Việt ở những màn hình được kiểm thử. "
+                + "Thay font bằng PAK cũ chưa được nghiệm thu; vẫn có thể chọn và xem trước font.";
+            return;
+        }
         if (!CanApplyToGame)
         {
             CurrentFont = "Chưa có game PC";

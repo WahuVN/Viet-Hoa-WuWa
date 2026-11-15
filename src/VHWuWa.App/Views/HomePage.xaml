@@ -184,12 +184,11 @@
                             <StackPanel Grid.Column="0">
                                 <TextBlock Text="Kiểu tên" Style="{StaticResource WuwaCardTitle}"
                                            FontSize="14" Margin="0,0,0,9" />
-                                <RadioButton GroupName="variant" Content="Tên Anh"
+                                <RadioButton GroupName="home-name-variant" Content="Tên Anh"
                                              IsChecked="{Binding VariantEnglish, Mode=TwoWay}"
                                              FontSize="13" Margin="0,4,0,7" />
-                                <RadioButton GroupName="variant" Content="Tên Hán Việt"
-                                             IsEnabled="{Binding IsHanVietAvailable}"
-                                             ToolTip="R29 hiện chưa có gói Hán Việt."
+                                <RadioButton GroupName="home-name-variant" Content="Tên Hán Việt"
+                                             ToolTip="{Binding OptionHelpText}"
                                              IsChecked="{Binding VariantHanViet, Mode=TwoWay}"
                                              FontSize="13" Margin="0,3,0,7" />
                                 <Button Style="{StaticResource WahuStandardButtonStyle}" Content="{Binding HanVietDownloadBtnText}"
@@ -198,9 +197,10 @@
                                         HorizontalAlignment="Left" Margin="20,0,0,8"
                                         Padding="10,6" FontSize="11" />
                                 <CheckBox IsChecked="{Binding ApplyFont, Mode=TwoWay}"
-                                          IsEnabled="{Binding FontAvailable}"
-                                          ToolTip="R29 đang dùng Mount không hỗ trợ cài PAK font riêng; chỉ bật khi có gói font tương thích."
+                                          ToolTip="{Binding OptionHelpText}"
                                           Content="Cài font tiếng Việt" FontSize="12" Margin="0,8,0,0" />
+                                <TextBlock Text="{Binding OptionHelpText}" TextWrapping="Wrap" FontSize="11.5"
+                                           Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,6,0,3" />
                             </StackPanel>
                             <Border Grid.Column="1" Width="1" Background="#292D33"
                                     HorizontalAlignment="Center" Margin="0,2,0,0" />

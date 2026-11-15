@@ -21,9 +21,9 @@
         <ui:Card Grid.Row="1" Padding="16" Margin="0,0,0,12">
             <StackPanel>
                 <TextBlock Text="1 · Chọn kiểu tên nhân vật trong game" FontWeight="SemiBold" FontSize="14" Margin="0,0,0,10" />
-                <RadioButton GroupName="variant" IsChecked="{Binding VariantEnglish, Mode=TwoWay}"
+                <RadioButton GroupName="install-name-variant" IsChecked="{Binding VariantEnglish, Mode=TwoWay}"
                              Content="🔤  Tên tiếng Anh chuẩn — giữ nguyên tên quốc tế" Margin="0,4" FontSize="13" />
-                <RadioButton GroupName="variant" IsChecked="{Binding VariantHanViet, Mode=TwoWay}"
+                <RadioButton GroupName="install-name-variant" IsChecked="{Binding VariantHanViet, Mode=TwoWay}"
                              Content="🇻🇳  Tên Hán Việt chuẩn — chỉ đổi các tên đã có quy ước" Margin="0,4" FontSize="13" />
                 <Button Style="{StaticResource WahuStandardButtonStyle}" Content="{Binding HanVietDownloadBtnText}" Command="{Binding DownloadHanVietCommand}"
                         Visibility="{Binding ShowHanVietDownload, Converter={StaticResource BoolToVis}}"
@@ -35,8 +35,10 @@
                     <Run FontWeight="SemiBold" Text="Tên giữ nguyên: " />
                     <Run Text="Aemeath, Shorekeeper, Aalto, Encore, Ciaccona, Mornye và các tên chưa có quy ước Hán Việt." />
                 </TextBlock>
-                <CheckBox IsChecked="{Binding ApplyFont, Mode=TwoWay}" IsEnabled="{Binding FontAvailable}"
-                          Content="Cài kèm Font chữ tiếng Việt sắc nét (Khuyến nghị)" Margin="0,10,0,0" FontSize="12" />
+                <CheckBox IsChecked="{Binding ApplyFont, Mode=TwoWay}"
+                          Content="Cài kèm font chữ tiếng Việt" Margin="0,10,0,0" FontSize="12" />
+                <TextBlock Text="{Binding OptionHelpText}" TextWrapping="Wrap" Margin="0,5,0,0"
+                           Foreground="{DynamicResource TextFillColorSecondaryBrush}" FontSize="12" />
             </StackPanel>
         </ui:Card>
 
