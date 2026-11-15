@@ -24,6 +24,8 @@ Bản cập nhật tập trung vào giao diện, quản lý font và độ an to
 - Thêm khối an toàn chống rơi ngược về PAK/loader 3.7 khi gói R29 thiếu hoặc hỏng; sao lưu 6 tệp cũ theo SHA sau nâng cấp.
 - Cải tiến giữ `editor/project.db` của người dùng khi cập nhật; máy cài mới dùng `editor/project.default.db` để khởi tạo dữ liệu làm việc.
 - Gói QA nội bộ đã thử nâng cấp 3.0.18 → 3.0.19 và giữ cấu hình thử nghiệm.
-- **Chưa phát hành v3.0.19**; bản PAK R29 đã được kiểm tra cảnh báo/đăng nhập, nhưng cần QA Hán Việt, font và nội dung gameplay trước khi công bố.
+- **Chưa phát hành v3.0.19**; PAK R29 đã kiểm tra đăng nhập/cảnh báo trên MAY-007. Hán Việt và font PAK rời **không nằm trong phạm vi hỗ trợ của R29**, nên không quảng bá các tính năng đó. Nội dung gameplay đầy đủ vẫn cần kiểm thử trước khi công bố.
 
-*Nhật ký này được chuyển thành nội dung công khai chỉ sau khi các điều kiện phát hành đạt.*
+- Đã chuẩn bị nội dung thông báo trong app (qua GitHub Release notes), bản nháp GitHub và 7 kênh BotDis/Discord. Đợt này **không phát hành bản Android mới**; bot production vẫn giữ phiên bản cũ cho tới khi GitHub public.
+
+*Nhật ký này chỉ được đưa vào nội dung công khai sau khi các điều kiện phát hành đạt.*
