@@ -10,7 +10,8 @@ Bản cập nhật tập trung vào giao diện, quản lý font và độ an to
 - Thêm hướng dẫn sử dụng ZIP portable, xem thư mục ứng dụng đang chạy trong Cài đặt; cập nhật hướng dẫn cài lần đầu cho đúng cấu trúc ZIP hiện tại.
 - Sửa workflow tạo ZIP trên GitHub: giữ đúng `VHWuWa.Updater.exe` và kiểm tra tên tệp bắt buộc trước khi đóng artifact.
 - Phân biệt launcher với client game thực; không báo đã cài Việt hóa dựa trên đường dẫn game cũ không còn tồn tại.
-- Cải thiện xem trước font và điều chỉnh độ đậm; ngăn áp dụng/gỡ font khi chưa nhận diện được client hợp lệ.
+- Cải thiện xem trước font và điều chỉnh độ đậm; Lexend Variable được chọn mặc định với **weight 650**. Font chưa được áp dụng thì chỉ thay đổi khung xem trước.
+- Cập nhật 10 mục Trợ giúp theo bản PC 3.0.19, bổ sung nút **Hỗ trợ Discord**, cách lấy nhật ký và bỏ hướng dẫn xung đột 3.0.16 lỗi thời.
 - Bổ sung xử lý trạng thái PAK và kiểm tra bản cập nhật, giữ cơ chế xác minh SHA-256, sao lưu và khôi phục khi có lỗi.
 
 ## Dữ liệu Việt hóa
@@ -20,7 +21,7 @@ Bản cập nhật tập trung vào giao diện, quản lý font và độ an to
 
 ## Kiểm thử
 - Unit test Release trên WIN3: **172/172 PASS** (56 Core, 116 Infrastructure).
-- ZIP ứng viên v3.0.19 + R29 kiểm tra đầy đủ file bắt buộc, đúng tên updater; updater công khai 3.0.18 đã nâng sandbox thành công, không ảnh hưởng máy thật.
+- ZIP ứng viên v3.0.19 + R29 hiện có **84 tệp**, đóng 10 mục Trợ giúp mới; updater công khai 3.0.18 đã nâng sandbox thành công, không ảnh hưởng máy thật.
 - Thêm khối an toàn chống rơi ngược về PAK/loader 3.7 khi gói R29 thiếu hoặc hỏng; sao lưu 6 tệp cũ theo SHA sau nâng cấp.
 - Cải tiến giữ `editor/project.db` của người dùng khi cập nhật; máy cài mới dùng `editor/project.default.db` để khởi tạo dữ liệu làm việc.
 - Gói QA nội bộ đã thử nâng cấp 3.0.18 → 3.0.19 và giữ cấu hình thử nghiệm.

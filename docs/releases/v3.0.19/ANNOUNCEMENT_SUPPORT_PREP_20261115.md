@@ -4,7 +4,7 @@
 - **Ứng dụng:** WuWa Việt Hóa PC v3.0.19, hình thức ZIP portable, tự cập nhật khi người dùng đồng ý.
 - **PAK:** R29, resource 3.8.11, SHA-256 `38527e34ffeb8ef7538206d3d4dbd5cbac54a1e6cd9d0957501035ff41a8e598`; chỉ cài khi fingerprint game tương thích.
 - **Giới hạn:** R29 chỉ Tên Anh; không hỗ trợ Hán Việt/font PAK rời. Không có Android mới trong đợt PC này.
-- **GitHub ZIP Draft:** 176.081.320 byte, SHA-256 `e4023c657bc60894c1965846dbb53394d0f3477062d6b38c3316ddc8060c94bc`.
+- **GitHub ZIP Draft:** 176.083.507 byte, SHA-256 `e97b213cd4be04b390d7bdb403d8b1a8547a3be84d75cd9a02c8d4e428b98b2d`.
 - **Public/latest:** còn là v3.0.18; vì vậy máy người dùng 3.0.18 chưa nhận thông báo v3.0.19.
 
 ## Ứng dụng

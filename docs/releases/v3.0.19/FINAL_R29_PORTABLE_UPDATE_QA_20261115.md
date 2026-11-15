@@ -1,5 +1,7 @@
 # VHWuWa PC v3.0.19 + R29 — kết quả QA chuẩn bị phát hành (15/11/2026)
 
+> **Lưu ý:** Báo cáo bên dưới ghi lại gói QA đầu ngày 15/11 (83 file). Gói Draft hiện hành đã được thay bằng bản **84 file**, Lexend mặc định **650** và 10 mục Trợ giúp mới; SHA-256 hiện hành: `e97b213cd4be04b390d7bdb403d8b1a8547a3be84d75cd9a02c8d4e428b98b2d`. Xem `FONT650_HELP_QA_20261115.md`.
+
 **Trạng thái:** Ứng viên release ZIP portable đã build và kiểm thử nâng cấp sandbox; **CHƯA** công bố GitHub Release v3.0.19.
 
 ## Phiên bản và dữ liệu

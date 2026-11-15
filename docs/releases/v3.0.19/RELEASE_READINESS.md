@@ -14,10 +14,11 @@
 - [x] Đã thay luồng loader DLL bằng Mount phụ và thử gỡ/cài lại R29 trên game thật.
 - [ ] Kiểm tra đầy đủ PAK R29 trong gameplay: hội thoại, nhiệm vụ, font, dấu tiếng Việt và các lựa chọn tên.
 - [ ] Chuẩn bị bản Hán Việt có nghiệm thu và manifest phù hợp (không tái dùng PAK 3.7).
-- [x] Tạo ZIP **ứng viên portable** v3.0.19 + R29 từ hai EXE self-contained, nội dung R29/ảnh/font/tools/guide; cấu trúc ZIP round-trip và updater v3.0.18 thật đạt sandbox QA. SHA ZIP `e4023c657bc60894c1965846dbb53394d0f3477062d6b38c3316ddc8060c94bc`. 83 tệp.
+- [x] Tạo ZIP **ứng viên portable** v3.0.19 + R29 từ hai EXE self-contained, nội dung R29/ảnh/font/tools/guide; cấu trúc ZIP round-trip và updater v3.0.18 thật đạt sandbox QA. SHA ZIP `e97b213cd4be04b390d7bdb403d8b1a8547a3be84d75cd9a02c8d4e428b98b2d`. 84 tệp, gồm 10 mục Trợ giúp mới và Lexend Variable mặc định 650.
 - [x] Bản cài mới bảo đảm không ghi đè `editor/project.db`: seed riêng từ `project.default.db`, bộ legacy content 3.7 không được đóng kèm.
 - [ ] Kiểm tra đầy đủ vòng cài mới trên Windows sạch, vòng chấp thuận cập nhật GUI từ GitHub khi release đã được tạo, và QA ứng viên trên máy game thật trước khi công bố.
-- [ ] Xác minh SHA-256 của các asset trên GitHub và cập nhật README/changelog theo release đã công bố.
+- [x] ZIP Draft GitHub có SHA-256 khớp ứng viên v3.0.19 mới (**e97b213c…b98b2d**); file SHA256SUMS cũng được kiểm tra. BotDis staging đã đồng bộ SHA mới và 7/7 thẻ PASS.
+- [ ] Sau khi công bố Release: xác minh lại `releases/latest`, link tải và cập nhật README/changelog chính thức.
 - [ ] Sau khi hoàn tất: tạo/cập nhật draft GitHub, duyệt lại notes, mới publish và đăng thông báo.
 
 Gói `VietHoa-WuWa-v3.0.19-LOCAL-QA.zip` không phải asset chính thức và không được đổi tên để phát hành.
