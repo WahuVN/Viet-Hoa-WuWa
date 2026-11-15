@@ -18,14 +18,15 @@ public partial class GuideViewModel : ObservableObject
         new(StringComparer.OrdinalIgnoreCase)
         {
             ["01-bat-dau.md"] = ("Bắt đầu nhanh", "🚀", "Cài và mở game trong vài bước"),
-            ["02-chon-thu-muc-game.md"] = ("Chọn thư mục game", "📁", "Tự dò hoặc chọn đúng thư mục Client"),
+            ["02-chon-thu-muc-game.md"] = ("Chọn thư mục game", "📁", "Tự tìm hoặc chọn thư mục game"),
             ["03-cai-viet-hoa.md"] = ("Cài Việt hóa", "🌐", "Chọn bản tên và cài an toàn"),
             ["04-go-viet-hoa.md"] = ("Gỡ Việt hóa", "🧹", "Trả game về trạng thái sạch"),
-            ["05-cai-go-mod.md"] = ("Xử lý xung đột", "🛡", "Kiểm tra và dọn mod cũ"),
-            ["06-doi-font.md"] = ("Font chữ", "🔤", "Chọn, xem thử và khôi phục font"),
+            ["05-cai-go-mod.md"] = ("Xử lý xung đột", "🛡", "Nhận diện và xử lý mod khác"),
+            ["06-doi-font.md"] = ("Font chữ", "🔤", "Lexend Variable 650 và xem thử font"),
             ["07-do-hoa.md"] = ("Đồ họa", "🎮", "Preset, tùy chỉnh và sao lưu"),
             ["08-loi-thuong-gap.md"] = ("Khắc phục lỗi", "🧰", "Các bước kiểm tra nhanh"),
             ["09-dong-gop-ban-dich.md"] = ("Đóng góp bản dịch", "✍", "Quy trình sửa và gửi nội dung"),
+            ["10-ho-tro.md"] = ("Liên hệ hỗ trợ", "💬", "Discord, cập nhật và gửi nhật ký lỗi"),
         };
 
     [ObservableProperty] private string _search = "";
@@ -125,6 +126,20 @@ public partial class GuideViewModel : ObservableObject
     private void OpenFolder()
     {
         if (Directory.Exists(_guidesDir)) Process.Start(new ProcessStartInfo(_guidesDir) { UseShellExecute = true });
+    }
+
+    [RelayCommand]
+    private void OpenSupport()
+    {
+        // Official community help; no Discord bot tokens or private endpoints.
+        try
+        {
+            Process.Start(new ProcessStartInfo("https://discord.gg/Gy5YQ84Yc2") { UseShellExecute = true });
+        }
+        catch (Exception ex)
+        {
+            Blocks.Add(new GuideBlock("note", "Không mở được Discord: " + ex.Message));
+        }
     }
 }
 

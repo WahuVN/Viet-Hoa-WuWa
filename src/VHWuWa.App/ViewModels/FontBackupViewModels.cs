@@ -25,7 +25,7 @@ public partial class FontViewModel : ObservableObject
     [ObservableProperty] private ImageSource? _previewImage;
     [ObservableProperty] private string _previewMessage = "Chọn một font để xem trước.";
     [ObservableProperty] private int _previewFontSize = 30;
-    [ObservableProperty] private int _fontWeight = 400;
+    [ObservableProperty] private int _fontWeight = 650;
     [ObservableProperty] private int _minimumFontWeight = 100;
     [ObservableProperty] private int _maximumFontWeight = 900;
     [ObservableProperty] private bool _canAdjustFontWeight;
@@ -181,7 +181,7 @@ public partial class FontViewModel : ObservableObject
         WeightHelp = info.IsVariable
             ? $"Font biến thiên · điều chỉnh từ {info.Minimum} đến {info.Maximum}."
             : $"Font tĩnh · độ đậm {info.Default}. Chọn Lexend Variable để kéo từ 100 đến 900.";
-        FontWeight = info.IsVariable ? Math.Clamp(550, info.Minimum, info.Maximum) : info.Default;
+        FontWeight = info.IsVariable ? Math.Clamp(650, info.Minimum, info.Maximum) : info.Default;
         RequestPreviewRefresh();
     }
 

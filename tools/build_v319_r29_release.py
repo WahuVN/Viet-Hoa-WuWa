@@ -111,6 +111,20 @@ def prepare(args: argparse.Namespace) -> int:
     qa_files = extract_qa_archive(qa_zip, stage)
     avatars_validated, obsolete_support_excluded = inspect_legacy_editor(public_zip, stage)
 
+    # The old R29 QA ZIP may contain v3.0.16 help pages. Always package the
+    # current, reviewed guides from this source checkout with the new EXE.
+    guides_source = Path(__file__).resolve().parents[1] / "Guides" / "vi-VN"
+    if not guides_source.is_dir():
+        raise FileNotFoundError("Missing source Guides/vi-VN")
+    for guide in sorted(guides_source.glob("*.md")):
+        shutil.copy2(guide, stage / "Guides" / "vi-VN" / guide.name)
+    guides = sorted((stage / "Guides" / "vi-VN").glob("*.md"))
+    if len(guides) < 10:
+        raise ValueError(f"Expected ten up-to-date in-app help topics; only {len(guides)} found")
+    if any("Bản 3.0.16 xử lý tự động" in guide.read_text(encoding="utf-8-sig")
+           for guide in guides):
+        raise ValueError("Stale v3.0.16 help content would be shipped")
+
     # Always replace the QA EXEs with the two freshly built v3.0.19 binaries.
     shutil.copy2(app, stage / "VHWuWa.exe")
     shutil.copy2(updater, stage / "VHWuWa.Updater.exe")
@@ -156,7 +170,7 @@ def prepare(args: argparse.Namespace) -> int:
         "VHWuWa.exe", "VHWuWa.Updater.exe", R29_PAK_REL,
         "content/r29-release.json", "editor/WahuPakEditor.exe",
         "editor/project.default.db", "Fonts/Lexend-Variable.ttf", "tools/font-weight-instance.exe",
-        "Guides/vi-VN/01-bat-dau.md",
+        "Guides/vi-VN/01-bat-dau.md", "Guides/vi-VN/10-ho-tro.md",
     }
     missing = required - rel_names
     if missing:
@@ -192,6 +206,8 @@ def prepare(args: argparse.Namespace) -> int:
         "archiveBytes": package.stat().st_size,
         "totalFiles": len(rel_names),
         "newQaFiles": qa_files,
+        "currentHelpTopicsBundled": len(guides),
+        "legacyHelp316Rejected": True,
         "publicV318AvatarsValidatedPresent": avatars_validated,
         "totalEditorAvatars": len(avatars),
         "obsoleteEditorBuildSupportFilesIntentionallyExcluded": obsolete_support_excluded,

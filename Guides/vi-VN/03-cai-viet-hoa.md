@@ -1,22 +1,18 @@
 # Cài Việt hóa
 
-## Thực hiện
+## Cài bản dịch Wuthering Waves 3.8
 
-1. Tắt hoàn toàn game và launcher.
-2. Ở **Trang chủ**, kiểm tra đường dẫn game bằng nút **Kiểm tra**.
-3. Chọn **Tên Anh** hoặc **Tên Hán Việt**.
-4. Có thể bật **Cài font tiếng Việt** nếu cần.
-5. Nhấn nút **Cài Việt hóa** khi ứng dụng xác nhận game và gói dữ liệu tương thích. Chờ thông báo hoàn tất.
+1. Đóng game.
+2. Vào **Trang chủ**, bấm **Tự tìm game** hoặc **Chọn thư mục**, rồi **Kiểm tra**.
+3. Chọn bản dịch có sẵn và bấm **Cài Việt hóa**.
+4. Mở game, đặt **Text Language = English**.
 
-## Chọn kiểu tên
+Với bản PC v3.0.19 đi kèm R29, ứng dụng tự sử dụng gói Việt hóa trong ZIP; không cần chép PAK thủ công. Một số tùy chọn tên/font có thể chưa khả dụng với gói hiện tại.
 
-- **Tên Anh:** giữ các tên quốc tế như Jinhsi, Changli, Shorekeeper.
-- **Tên Hán Việt:** dùng tên đã chốt quy ước, ví dụ Kim Tịch, Trường Ly, khi gói tương ứng có sẵn.
+## Nếu không thể cài
 
-## Sau khi cài
+- **Chưa có game PC:** chọn thư mục game thực có `Client`, không chỉ chọn launcher.
+- **Nút Cài bị khóa:** xem thông báo trạng thái ngay trên Trang chủ và kiểm tra lại game.
+- **Cài xong vẫn tiếng Anh:** kiểm tra ngôn ngữ game, đóng game rồi kiểm tra trạng thái Việt hóa.
 
-- Trong game chọn **Text Language = English**.
-- Khi muốn đổi kiểu tên, đóng game rồi chọn lại biến thể phù hợp.
-- Muốn gỡ, mở **Tùy chọn nâng cao → Gỡ Việt hóa** trên Trang chủ.
-
-> Nếu nút bị khóa hoặc ứng dụng báo loader/PAK không tương thích với phiên bản game, **không cài ép**. Cần bản Việt hóa đã nghiệm thu tương ứng với game.
+> Cập nhật **ứng dụng PC** và cài **bản dịch vào game** là hai thao tác riêng. Tự cập nhật ZIP không tự sửa file game đang mở.

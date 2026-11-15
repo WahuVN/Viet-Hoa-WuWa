@@ -1,25 +1,22 @@
-# Xử lý xung đột mod
+# Xử lý xung đột
 
-## Bản 3.0.16 xử lý tự động
+## Khi có mod khác
 
-- Khi bấm **Cài Việt hóa** hoặc khi chạy cập nhật nhanh, VHWuWa tự quét các file/mod ngoài có khả năng xung đột.
-- Các file ngoài đã được detector xác định sẽ được dọn khỏi thư mục game trước khi chèn lại bộ VHWuWa chuẩn.
-- Không cần bấm **Cách ly** hoặc **Xóa mod ngoài** thủ công trong luồng cài bình thường.
-- File official của game được bảo vệ bằng `OriginResource.json`; `pakchunk*` và file official không nằm trong tập dọn.
-- Bộ VHWuWa legacy của chính dự án được nhận diện riêng và nâng cấp/migrate, không bị coi là mod ngoài.
+Một số mod hoặc bản Việt hóa cũ có thể sử dụng cùng vị trí tệp. Nếu app thông báo có xung đột:
 
-## Lineage VHWuWa được bảo vệ
+1. Đóng game.
+2. Mở **Trang chủ → Tùy chọn nâng cao** để xem trạng thái và thông tin mod.
+3. Nếu cần, gỡ mod cũ bằng đúng công cụ đã cài mod đó.
+4. Quay lại app, bấm **Kiểm tra** rồi cài bản dịch.
 
-Các bản VHWuWa cũ dùng họ file:
+## Bản PC 3.0.19
 
-- `~WuWaMods\WuWaVH_99_P.pak`
-- `WahuFont_100_P.pak` ở các bản cũ
-- `Win64\version.dll`
-- `Win64\verorg.dll`
-- `Win64\WuWaVH.dll`
-- `vhwuwa_install.json`
-- `version_goc.dll` khi đó thực sự là backup do installer quản lý
+Bản R29 dùng tệp Mount phụ và gói Việt hóa riêng. Ứng dụng không cần thay DLL loader của bản Việt hóa cũ. Không tự xóa tệp game chính thức hay tệp của công cụ khác chỉ để cài bản dịch.
 
-Các tên `wuwaVietHoa*`, WWMI/3DMigoto, UE4SS, proxy DLL ngoài và các thư mục mod tương tự không phải lineage managed của VHWuWa và được xử lý như mod ngoài.
+Nếu được hỏi cách ly mod, hãy đọc tên tệp trước khi đồng ý. Tệp đã chỉnh sửa hoặc không nhận diện được cần kiểm tra thủ công; không coi mọi PAK khác là lỗi.
 
-> Luôn tắt hoàn toàn game và launcher trước khi cài, cập nhật hoặc gỡ Việt hóa.
+## Cần hỗ trợ
+
+Vào **Trợ giúp → Liên hệ hỗ trợ**, gửi ảnh thông báo và phiên bản game. Che thông tin tài khoản/UID trước khi gửi.
+
+> Không tự xóa `pakchunk*`, tệp Resource hoặc DLL hệ thống nếu không xác định rõ nguồn gốc.
