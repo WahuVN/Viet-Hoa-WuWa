@@ -5,6 +5,7 @@ Bản cập nhật tập trung vào giao diện, quản lý font và độ an to
 ## Ứng dụng PC
 - Tinh gọn Trang chủ, thanh điều hướng và các nhãn trạng thái để dễ đọc hơn.
 - Đồng bộ sidebar sang màu xám trung tính, sử dụng bảng màu theo vai trò và logo PNG nguồn lớn; bỏ khung xanh thừa, giữ trạng thái chọn dễ nhận biết.
+- Đồng bộ accent mặc định của slider, radio và các điều khiển WPF UI sang xám/trắng, tránh màu xanh hệ thống lẫn trong tab Font; đổi theme cũng giữ cùng bảng màu.
 - Phân biệt launcher với client game thực; không báo đã cài Việt hóa dựa trên đường dẫn game cũ không còn tồn tại.
 - Cải thiện xem trước font và điều chỉnh độ đậm; ngăn áp dụng/gỡ font khi chưa nhận diện được client hợp lệ.
 - Bổ sung xử lý trạng thái PAK và kiểm tra bản cập nhật, giữ cơ chế xác minh SHA-256, sao lưu và khôi phục khi có lỗi.

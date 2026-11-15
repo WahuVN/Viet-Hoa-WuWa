@@ -70,6 +70,8 @@ VHWuWa được thiết kế nhằm hỗ trợ người chơi trải nghiệm tr
 ### Các bước thực hiện
 1. Tải file **`VietHoa-WuWa-v3.0.18.zip`** mới nhất và giải nén ra một thư mục riêng.
 2. Mở file **`VHWuWa.exe`**.
+
+   **Vị trí ứng dụng:** đây là bản portable, không phải Setup/MSI. Ứng dụng chạy ngay trong thư mục bạn đã giải nén; lần mở đầu tạo shortcut Desktop `WuWa` trỏ đến EXE đó. Khi cập nhật, updater tải gói mới, đối chiếu SHA-256 rồi cập nhật ngay tại thư mục đang chạy (có sao lưu/rollback). Cấu hình và log ở `%LOCALAPPDATA%\VHWuWa\`. Không xóa hoặc di chuyển thư mục ứng dụng sau khi tạo shortcut.
 3. Chọn **"Tự tìm game"** (nếu chưa tìm thấy, hãy chọn thủ công thư mục game có chứa thư mục `Client`).
 4. Chọn kiểu tên nhân vật mong muốn (**Tiếng Anh** hoặc **Hán Việt**) và chọn phông chữ yêu thích.
 5. Bấm **"Cài Việt Hóa"** và đợi thông báo hoàn tất.

@@ -91,7 +91,7 @@ public partial class MainViewModel : ObservableObject
         var theme = IsDark ? "Dark" : "Light";
         _settings.Settings.Theme = theme;
         _settings.Save();
-        ApplicationThemeManager.Apply(IsDark ? ApplicationTheme.Dark : ApplicationTheme.Light);
+        VHWuWa.App.App.ApplyTheme(theme);
     }
 
     [RelayCommand]

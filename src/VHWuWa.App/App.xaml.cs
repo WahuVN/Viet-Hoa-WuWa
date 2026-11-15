@@ -3,6 +3,7 @@ using System.IO;
 using System.Reflection;
 using System.Windows;
 using System.Windows.Threading;
+using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using Microsoft.Extensions.DependencyInjection;
 using VHWuWa.App.Services;
@@ -101,6 +102,14 @@ public partial class App : Application
             ? ApplicationTheme.Light
             : ApplicationTheme.Dark;
         ApplicationThemeManager.Apply(t);
+
+        // Fluent controls use the Windows system accent by default (often bright blue).
+        // Keep radio buttons, sliders, focus and progress in the same neutral palette
+        // as the PC interface. This changes only presentation, not control behavior.
+        var neutralAccent = t == ApplicationTheme.Dark
+            ? Color.FromRgb(0xB8, 0xBF, 0xC7)
+            : Color.FromRgb(0x5C, 0x63, 0x6B);
+        ApplicationAccentColorManager.Apply(neutralAccent, t, false);
     }
 
     private void OnUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
