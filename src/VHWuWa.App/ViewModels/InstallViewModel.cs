@@ -112,7 +112,7 @@ public partial class InstallViewModel : ObservableObject
         var r29Compatible = valid && R29MountedPak.GameCompatible(game);
         var r29Installed = valid && R29MountedPak.IsInstalled(game);
         _r29Mode = r29Present;
-        _r29InstallReady = valid && r29Verified && r29Compatible;
+        _r29InstallReady = valid; // Only the actual game path gates the button.
         _r29Installed = r29Installed;
         if (!r29Present) OptionHelpText = "";
         InstallButtonText = !valid ? "Chưa có game PC"
@@ -126,7 +126,7 @@ public partial class InstallViewModel : ObservableObject
             ContentText = r29Verified
                 ? "Gói Việt hóa R29 đã sẵn sàng."
                 : "Gói Việt hóa R29 bị thiếu hoặc lỗi dữ liệu.";
-            CanInstall = valid && r29Verified && r29Compatible;
+            CanInstall = valid;
             Summary = r29Installed ? "Đã cài Việt hóa. Có thể cài lại hoặc gỡ."
                 : !valid ? "Hãy chọn đúng thư mục game."
                 : !r29Verified ? "Gói Việt hóa R29 bị thiếu hoặc lỗi dữ liệu."
@@ -179,18 +179,12 @@ public partial class InstallViewModel : ObservableObject
 
         var missingHanViet = VariantHanViet;
         var missingFont = ApplyFont;
-        OptionHelpText = missingHanViet && missingFont
-            ? "R29 chưa có PAK Hán Việt và PAK font riêng tương thích 3.8.11. Bỏ hai lựa chọn này để cài bản tên Anh."
-            : missingHanViet
-                ? "Đã chọn Hán Việt, nhưng chưa có PAK Hán Việt R29 tương thích 3.8.11. Chưa thể cài lựa chọn này."
-                : missingFont
-                    ? "Đã chọn cài font riêng, nhưng PAK font cho R29 chưa được nghiệm thu. Chưa thể cài lựa chọn này."
-                    : "R29 dùng font mặc định của game, hiện đã hiển thị dấu tiếng Việt ở các màn hình được kiểm thử. Font riêng/Hán Việt cần gói tương thích.";
-        CanInstall = _r29InstallReady && !missingHanViet && !missingFont;
-        if (missingHanViet || missingFont)
-            Summary = OptionHelpText;
-        else if (_r29InstallReady)
-            Summary = _r29Installed ? "Đã cài R29. Có thể cài lại hoặc gỡ." : "Sẵn sàng cài R29 giữ tên quốc tế.";
+        OptionHelpText = missingHanViet || missingFont
+            ? "R29 hiện chỉ có bản tên Anh, dùng font game. Bấm Cài Việt hóa vẫn cài ngay bản có sẵn; ứng dụng tự chuyển về lựa chọn hỗ trợ."
+            : "Bấm Cài Việt hóa: ứng dụng tự sao lưu và dọn mod cũ/xung đột.";
+        CanInstall = _r29InstallReady;
+        if (_r29InstallReady)
+            Summary = _r29Installed ? "Đã cài R29. Có thể cài lại hoặc gỡ." : "Sẵn sàng cài Việt hóa; không cần kiểm tra thủ công.";
     }
 
     partial void OnVariantHanVietChanged(bool value)
@@ -484,20 +478,17 @@ public partial class InstallViewModel : ObservableObject
     {
         var game = _settings.Settings.GamePath;
         if (string.IsNullOrWhiteSpace(game)) { Summary = "Chưa chọn thư mục game (ở Trang chủ)."; return; }
+        var r29 = R29MountedPak.ReleaseRequired(AppContext.BaseDirectory)
+            || R29MountedPak.PackagePresent(AppContext.BaseDirectory);
+        // Never block Install because an optional R29 variant/font is missing.
+        // Make the selected UI match the variant actually being installed.
+        var optionsAdjusted = r29 && (VariantHanViet || ApplyFont);
+        if (r29)
+        {
+            VariantEnglish = true;
+            ApplyFont = false;
+        }
         var variant = VariantEnglish ? NameVariant.English : NameVariant.HanViet;
-        if ((R29MountedPak.ReleaseRequired(AppContext.BaseDirectory)
-            || R29MountedPak.PackagePresent(AppContext.BaseDirectory))
-            && variant == NameVariant.HanViet)
-        {
-            Summary = "R29 chưa có PAK Hán Việt. Hãy chọn tên Anh để cài bản Việt hóa này.";
-            return;
-        }
-        if ((R29MountedPak.ReleaseRequired(AppContext.BaseDirectory)
-             || R29MountedPak.PackagePresent(AppContext.BaseDirectory)) && ApplyFont)
-        {
-            Summary = "Chưa có PAK font riêng được xác minh cho R29. Bỏ tick font để cài Việt hóa giữ tên Anh.";
-            return;
-        }
         _cts = new CancellationTokenSource();
         Busy = true; Progress = 0; ProgressText = "Bắt đầu...";
         Summary = "⚠ HÃY TẮT GAME trước khi cài.";
@@ -522,7 +513,9 @@ public partial class InstallViewModel : ObservableObject
             var r = await _viet.InstallAsync(game, variant, ApplyFont && FontAvailable, progress, _cts.Token);
             if (r.Success)
             {
-                Summary = "✅ Cài xong! Vào game đặt Text Language = English. Có thể dùng DirectX 11 hoặc 12.";
+                Summary = optionsAdjusted
+                    ? "✅ Đã cài R29 tên Anh. Tự bỏ Hán Việt/font riêng vì gói R29 chưa hỗ trợ hai lựa chọn đó."
+                    : "✅ Cài xong! Vào game đặt Text Language = English. Có thể dùng DirectX 11 hoặc 12.";
             }
             else
             {

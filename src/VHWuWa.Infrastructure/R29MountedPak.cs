@@ -144,8 +144,6 @@ public static class R29MountedPak
             if (!File.Exists(exe)) return "Không tìm thấy Client/Binaries/Win64/Client-Win64-Shipping.exe.";
             if (!Directory.Exists(GameResourceDir(gameRoot)))
                 return "Không tìm thấy Client/Saved/Resources/3.8.0. R29 cần dữ liệu game 3.8.0.";
-            if (!Directory.Exists(MountDir(gameRoot)))
-                return "Thiếu thư mục Resources/3.8.0/Mount của game.";
             if (StockSig(gameRoot) is null)
                 return "Thiếu SIG tiếng Anh tại Lang_en/Base hoặc Lang_en/<phiên bản>. Hãy tải dữ liệu ngôn ngữ English trong game.";
             return null;
@@ -212,7 +210,9 @@ public static class R29MountedPak
             var originalMount = OfficialMount(gameRoot);
             var sourceSig = StockSig(gameRoot);
             if (string.IsNullOrWhiteSpace(sourceSig) || !File.Exists(sourceSig))
-                return Result.Fail("Không tìm thấy tệp SIG ngôn ngữ của game.");
+                return Result.Fail("Không tìm thấy SIG tiếng Anh của game. Hãy tải dữ liệu English trong launcher.");
+            // Mount is only a destination for our own sidecar, so create it
+            // rather than asking users to inspect or repair an optional folder.
             if (File.Exists(pak) || File.Exists(sig) || File.Exists(sidecar)
                 || (Directory.Exists(modDir) && HasReparsePoint(modDir)))
                 return Result.Fail("Đã có dữ liệu Mount tên WAHU nhưng chưa xác minh là R29. Không ghi đè.");
@@ -221,6 +221,8 @@ public static class R29MountedPak
             var mountHashBefore = File.Exists(originalMount)
                 ? Sha(originalMount, HashAlgorithmName.SHA256) : null;
             var sourceSigHash = Sha(sourceSig, HashAlgorithmName.SHA256);
+            var createdMountDir = !Directory.Exists(mountDir);
+            if (createdMountDir) Directory.CreateDirectory(mountDir);
             Directory.CreateDirectory(modDir);
             var createdPak = false;
             var createdSig = false;
@@ -252,6 +254,9 @@ public static class R29MountedPak
                 if (createdPak && File.Exists(pak)) File.Delete(pak);
                 if (Directory.Exists(modDir) && !Directory.EnumerateFileSystemEntries(modDir).Any())
                     Directory.Delete(modDir);
+                if (createdMountDir && Directory.Exists(mountDir)
+                    && !Directory.EnumerateFileSystemEntries(mountDir).Any())
+                    Directory.Delete(mountDir);
                 throw;
             }
         }

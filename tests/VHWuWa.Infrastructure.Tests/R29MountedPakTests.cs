@@ -74,8 +74,8 @@ public sealed class R29MountedPakTests : IDisposable
         // MountLang_en.txt is not modified by this installer and can be absent.
         Assert.True(R29MountedPak.GameCompatible(game));
         Directory.Delete(Path.GetDirectoryName(officialMount)!);
-        Assert.False(R29MountedPak.GameCompatible(game));
-        Assert.Contains("Mount", R29MountedPak.CompatibilityIssue(game));
+        // Missing destination Mount directory is now created automatically.
+        Assert.True(R29MountedPak.GameCompatible(game));
     }
 
     [Fact]
@@ -128,7 +128,7 @@ public sealed class R29MountedPakTests : IDisposable
         Assert.Contains("3.8.0", R29MountedPak.CompatibilityIssue(game));
 
         Directory.CreateDirectory(resource);
-        Assert.Contains("Mount", R29MountedPak.CompatibilityIssue(game));
+        Assert.Contains("SIG", R29MountedPak.CompatibilityIssue(game));
     }
 
     private (string Game, string Signature, string OfficialMount) CreateMountReadyGame()

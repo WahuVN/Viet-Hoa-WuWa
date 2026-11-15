@@ -135,7 +135,9 @@ public partial class HomeViewModel : ObservableObject
             : staged.Message;
         if (r29Present)
         {
-            CanOneClickInstall = PathOk && r29Verified && r29Compatible;
+            // Always allow the user to press Install once the game client is found.
+            // The installer will self-repair optional folders and handle conflicts.
+            CanOneClickInstall = PathOk;
             Message = IsInstalled ? "Đã cài Việt hóa R29 qua Mount." : StagedContentText;
         }
         else if (staged.Present)

@@ -556,8 +556,8 @@ public sealed class ViethoaInstaller : IViethoaInstaller
 
             if (Directory.Exists(paks))
             {
-                // Một số mod được thả trực tiếp vào Paks thay vì thư mục ~mods.
-                // Chỉ nhận mẫu *_P.* và loại pakchunk chính thức để tránh báo giả hàng nghìn file game.
+                // Mods may also be placed directly in Paks with names lacking _P.
+                // Ignore pakchunk stock files and files listed in the official manifest.
                 foreach (var file in Directory.EnumerateFiles(paks, "*", SearchOption.TopDirectoryOnly))
                 {
                     var name = Path.GetFileName(file);
@@ -565,7 +565,6 @@ public sealed class ViethoaInstaller : IViethoaInstaller
                     if (!ModExtensions.Contains(extension)
                         || IsProtectedBackupFile(file)
                         || name.StartsWith("pakchunk", StringComparison.OrdinalIgnoreCase)
-                        || !Path.GetFileNameWithoutExtension(name).EndsWith("_P", StringComparison.OrdinalIgnoreCase)
                         || IsOfficialGameFile(gamePath, file))
                         continue;
                     if (extension.Equals(".sig", StringComparison.OrdinalIgnoreCase)
@@ -987,8 +986,7 @@ public sealed class ViethoaInstaller : IViethoaInstaller
             {
                 var name = Path.GetFileName(file);
                 if (name.StartsWith("pakchunk", StringComparison.OrdinalIgnoreCase)
-                    || !ModExtensions.Contains(Path.GetExtension(file))
-                    || !Path.GetFileNameWithoutExtension(name).EndsWith("_P", StringComparison.OrdinalIgnoreCase))
+                    || !ModExtensions.Contains(Path.GetExtension(file)))
                     continue;
                 AddFile(file);
             }
