@@ -135,7 +135,7 @@ public partial class HomeViewModel : ObservableObject
             : staged.Message;
         if (r29Present)
         {
-            CanOneClickInstall = PathOk && !IsInstalled && r29Verified && r29Compatible;
+            CanOneClickInstall = PathOk && r29Verified && r29Compatible;
             Message = IsInstalled ? "Đã cài Việt hóa R29 qua Mount." : StagedContentText;
         }
         else if (staged.Present)
@@ -167,17 +167,20 @@ public partial class HomeViewModel : ObservableObject
             return;
         }
 
-        var installDescription = R29MountedPak.ReleaseRequired(AppContext.BaseDirectory)
-            || R29MountedPak.PackagePresent(AppContext.BaseDirectory)
-            ? "Ứng dụng chỉ thêm PAK R29, SIG và file Mount phụ; không sửa file game gốc hoặc chép DLL loader."
-            : "Ứng dụng sẽ cài PAK, font và loader từ bộ cài tương thích.";
-        var res = MessageBox.Show(
-            $"Bạn muốn cài Việt hóa vào thư mục game:\n{GamePath}\n\n{installDescription}",
-            "Cài đặt Việt Hóa tự động",
-            MessageBoxButton.OKCancel,
-            MessageBoxImage.Information);
-
-        if (res != MessageBoxResult.OK && res != MessageBoxResult.Yes) return;
+        // R29 is one-click: the installer automatically removes old/conflicting
+        // mods from the active game folders after backing them up. Don't ask
+        // for an additional confirmation dialog on each reinstall.
+        var isR29 = R29MountedPak.ReleaseRequired(AppContext.BaseDirectory)
+            || R29MountedPak.PackagePresent(AppContext.BaseDirectory);
+        if (!isR29)
+        {
+            var res = MessageBox.Show(
+                $"Bạn muốn cài Việt hóa vào thư mục game:\n{GamePath}?",
+                "Cài đặt Việt hóa",
+                MessageBoxButton.OKCancel,
+                MessageBoxImage.Information);
+            if (res != MessageBoxResult.OK && res != MessageBoxResult.Yes) return;
+        }
 
         Busy = true;
         Message = "Đang tự động cài đặt Việt hóa vào game…";

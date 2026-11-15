@@ -1,5 +1,7 @@
 # PC v3.0.19 R29 — bỏ khóa sai phiên bản EXE game (15/11/2026)
 
+> Biên bản này lưu lại ZIP ứng viên cũ sau sửa phiên bản. **ZIP Draft hiện hành** đã thêm tự dọn mod một chạm; SHA-256: `f38648f4d836413d2560b5bcc2ce36d2cd0ecfb8cfd393f4c947bbc116a5fe9e`. Xem `R29_ONE_CLICK_MOD_CLEANUP_QA_20261115.md`.
+
 ## Nguyên nhân
 Trong `R29MountedPak.GameCompatible()`, app trước đây chặn cài nếu EXE của game không có SHA-256 đúng bản MAY-007 hoặc nếu thiếu manifest resource chính xác 3.8.11. Vì vậy một EXE thay đổi vẫn có layout Mount hợp lệ bị báo **"phiên bản game chưa khớp bản đã thử nghiệm"** và nút Cài bị khóa. Đây là lỗi logic của công cụ, không có bằng chứng PAK R29 bị lỗi.
 

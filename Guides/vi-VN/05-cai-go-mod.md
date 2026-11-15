@@ -1,22 +1,28 @@
-# Xử lý xung đột
+# Xử lý mod cũ và xung đột
 
-## Khi có mod khác
+## Cài Việt hóa R29
 
-Một số mod hoặc bản Việt hóa cũ có thể sử dụng cùng vị trí tệp. Nếu app thông báo có xung đột:
+Bạn chỉ cần **đóng game → chọn thư mục game → bấm Cài Việt hóa**.
 
-1. Đóng game.
-2. Mở **Trang chủ → Tùy chọn nâng cao** để xem trạng thái và thông tin mod.
-3. Nếu cần, gỡ mod cũ bằng đúng công cụ đã cài mod đó.
-4. Quay lại app, bấm **Kiểm tra** rồi cài bản dịch.
+Ứng dụng tự tìm và dọn các tệp mod cũ có thể cản bản dịch, bao gồm bản Việt hóa WAHU cũ, loader của mod khác, PAK từ thư mục mod và Mount phụ còn sót. Sau đó ứng dụng cài R29 và kiểm tra đã cài.
 
-## Bản PC 3.0.19
+**Không cần tự xóa mod, xác nhận từng tệp hay cài lại thủ công.**
 
-Bản R29 dùng tệp Mount phụ và gói Việt hóa riêng. Ứng dụng không cần thay DLL loader của bản Việt hóa cũ. Không tự xóa tệp game chính thức hay tệp của công cụ khác chỉ để cài bản dịch.
+## Mod cũ được xử lý như thế nào?
 
-Nếu được hỏi cách ly mod, hãy đọc tên tệp trước khi đồng ý. Tệp đã chỉnh sửa hoặc không nhận diện được cần kiểm tra thủ công; không coi mọi PAK khác là lỗi.
+- Mod được dời ra khỏi các thư mục game đang hoạt động, nên không còn chèn vào bản dịch mới.
+- Một bản sao của từng tệp được lưu tại thư mục **Quarantine** trong dữ liệu ứng dụng để khôi phục nếu cần.
+- Tệp game gốc, dữ liệu chính thức và bản sao lưu của người dùng không bị xóa.
+- Nếu không đủ gói Việt hóa, app sẽ báo lỗi trước khi đụng vào mod cũ.
 
-## Cần hỗ trợ
+## Cài lại và cập nhật
 
-Vào **Trợ giúp → Liên hệ hỗ trợ**, gửi ảnh thông báo và phiên bản game. Che thông tin tài khoản/UID trước khi gửi.
+Khi muốn cài lại R29, chỉ cần bấm **Cài lại Việt hóa**. Nếu có mod khác mới chèn vào, ứng dụng cũng tự dọn trong lần cài lại.
 
-> Không tự xóa `pakchunk*`, tệp Resource hoặc DLL hệ thống nếu không xác định rõ nguồn gốc.
+Để cập nhật ứng dụng từ 3.0.18 lên 3.0.19, mở app, chọn **Có** khi có thông báo rồi để updater thay ZIP tại chỗ.
+
+## Khi không thể cài
+
+Hãy kiểm tra đã chọn đúng thư mục chứa `Client`, đóng game và đủ tệp Mount/SIG. Nếu Windows khóa tệp đang sử dụng, thoát chương trình giữ tệp rồi thử lại. Không nên tự xóa tệp game gốc.
+
+Cần hỗ trợ? Nhấn **Hỗ trợ Discord** trong trang Trợ giúp, gửi ảnh lỗi và phiên bản app/game.

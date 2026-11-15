@@ -163,6 +163,18 @@ public static class R29MountedPak
         }
     }
 
+    /// <summary>
+    /// Files from an incomplete or foreign mount using our exact R29 names may
+    /// be backed up automatically before installing. Never touch the official
+    /// game mount or SIG, and never remove an already healthy R29 install.
+    /// </summary>
+    public static IReadOnlyList<string> StaleActivationFiles(string gameRoot)
+    {
+        if (IsInstalled(gameRoot)) return Array.Empty<string>();
+        return new[] { DestinationPak(gameRoot), DestinationSig(gameRoot), DestinationMount(gameRoot) }
+            .Where(File.Exists).ToArray();
+    }
+
     private static bool IsGameRunning() =>
         Process.GetProcessesByName("Client-Win64-Shipping").Length > 0;
 

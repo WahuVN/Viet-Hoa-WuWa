@@ -89,6 +89,10 @@ public partial class InstallViewModel : ObservableObject
         IsHanVietAvailable = !r29Present;
         if (r29Present)
         {
+            // R29 automatically backs up and removes old/foreign mod files on
+            // Install, so their presence is informational and never a blocker.
+            if (HasConflicts || HasOldTranslationConflicts)
+                ConflictText = "Có mod cũ. Bấm Cài Việt hóa, ứng dụng sẽ tự dọn và lưu bản sao.";
             VariantEnglish = true;
             ApplyFont = false;
             FontAvailable = false;
@@ -98,7 +102,7 @@ public partial class InstallViewModel : ObservableObject
         var r29Compatible = valid && R29MountedPak.GameCompatible(game);
         var r29Installed = valid && R29MountedPak.IsInstalled(game);
         InstallButtonText = !valid ? "Chưa có game PC"
-            : r29Present ? (r29Installed ? "Đã cài R29" : "Cài Việt hóa R29")
+            : r29Present ? (r29Installed ? "Cài lại Việt hóa" : "Cài Việt hóa")
             : staged.Present ? "PAK R28 chưa tương thích" : "Cài Việt hóa";
         ShowHanVietDownload = !HasHanViet && !staged.Present && !r29Present;
         HanVietDownloadBtnText = HasHanViet ? "Đã có bản Hán Việt" : "Tải bản Hán Việt (~60 MB)";
@@ -108,8 +112,8 @@ public partial class InstallViewModel : ObservableObject
             ContentText = r29Verified
                 ? "Gói Việt hóa R29 đã sẵn sàng."
                 : "Gói Việt hóa R29 bị thiếu hoặc lỗi dữ liệu.";
-            CanInstall = valid && r29Verified && r29Compatible && !r29Installed;
-            Summary = r29Installed ? "Đã cài R29. Có thể gỡ ở trang này."
+            CanInstall = valid && r29Verified && r29Compatible;
+            Summary = r29Installed ? "Đã cài Việt hóa. Có thể cài lại hoặc gỡ."
                 : !valid ? "Hãy chọn đúng thư mục game."
                 : !r29Verified ? "Gói Việt hóa R29 bị thiếu hoặc lỗi dữ liệu."
                 : !r29Compatible ? "Thiếu tệp Mount/SIG cần thiết để cài."

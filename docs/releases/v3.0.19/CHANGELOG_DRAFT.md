@@ -24,6 +24,7 @@ Bản cập nhật tập trung vào giao diện, quản lý font và độ an to
 - ZIP ứng viên v3.0.19 + R29 hiện có **84 tệp**, đóng 10 mục Trợ giúp mới; updater công khai 3.0.18 đã nâng sandbox thành công, không ảnh hưởng máy thật.
 - Thêm khối an toàn chống rơi ngược về PAK/loader 3.7 khi gói R29 thiếu hoặc hỏng; sao lưu 6 tệp cũ theo SHA sau nâng cấp.
 - Bỏ điều kiện khóa theo SHA EXE và manifest resource 3.8.11 khi cài R29; chỉ kiểm tra game có các tệp Mount/SIG cần thiết, tìm SIG ngôn ngữ mới nhất. Rút gọn cảnh báo gây hiểu nhầm trên Trang chủ và Cài đặt.
+- Bấm **Cài Việt hóa** hoặc **Cài lại**: tự dọn các mod cũ đang xung đột (PAK, loader, Mount phụ), lưu bản sao có SHA-256 rồi ghi R29. Cập nhật nhanh dùng cùng luồng; không hỏi xóa từng mod.
 - Cải tiến giữ `editor/project.db` của người dùng khi cập nhật; máy cài mới dùng `editor/project.default.db` để khởi tạo dữ liệu làm việc.
 - Gói QA nội bộ đã thử nâng cấp 3.0.18 → 3.0.19 và giữ cấu hình thử nghiệm.
 - **Chưa phát hành v3.0.19**; PAK R29 đã kiểm tra đăng nhập/cảnh báo trên MAY-007. Hán Việt và font PAK rời **không nằm trong phạm vi hỗ trợ của R29**, nên không quảng bá các tính năng đó. Nội dung gameplay đầy đủ vẫn cần kiểm thử trước khi công bố.
