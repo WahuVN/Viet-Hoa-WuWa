@@ -12,6 +12,16 @@
                   FontFamily="{StaticResource WahuAppFontFamily}" FontSize="14"
                   UseLayoutRounding="True" SnapsToDevicePixels="True">
     <ui:FluentWindow.Resources>
+        <!-- Sidebar semantic palette. Reuse neutral surfaces from the content pages. -->
+        <SolidColorBrush x:Key="WahuSideBackground" Color="#171A1F" />
+        <SolidColorBrush x:Key="WahuSideHover" Color="#24272C" />
+        <SolidColorBrush x:Key="WahuSideSelected" Color="#2D3036" />
+        <SolidColorBrush x:Key="WahuSideBorder" Color="#373B42" />
+        <SolidColorBrush x:Key="WahuSideFocus" Color="#737A84" />
+        <SolidColorBrush x:Key="WahuSideRail" Color="#C8CDD3" />
+        <SolidColorBrush x:Key="WahuSidePrimary" Color="#F1F3F5" />
+        <SolidColorBrush x:Key="WahuSideSecondary" Color="#C3C7CD" />
+        <SolidColorBrush x:Key="WahuSideMuted" Color="#969DA6" />
         <!-- Compact, accessible desktop navigation: restrained slate palette, vector icons,
              clear grouping, hover/focus feedback and a persistent selection rail. -->
         <Style x:Key="WahuNavGlyphStyle" TargetType="{x:Type Path}">
@@ -43,7 +53,7 @@
                 <Setter.Value>
                     <ControlTemplate TargetType="{x:Type ListBoxItem}">
                         <TextBlock Text="{TemplateBinding Content}" Margin="12,2,0,0"
-                                   Foreground="#83919F" FontFamily="{StaticResource WahuAppFontFamily}"
+                                   Foreground="{StaticResource WahuSideMuted}" FontFamily="{StaticResource WahuAppFontFamily}"
                                    FontSize="10" FontWeight="SemiBold" VerticalAlignment="Center" />
                     </ControlTemplate>
                 </Setter.Value>
@@ -54,7 +64,7 @@
             <Setter Property="MinHeight" Value="43" />
             <Setter Property="Margin" Value="6,2" />
             <Setter Property="Padding" Value="14,9" />
-            <Setter Property="Foreground" Value="#B9C3CE" />
+            <Setter Property="Foreground" Value="{StaticResource WahuSideSecondary}" />
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="HorizontalContentAlignment" Value="Stretch" />
             <Setter Property="Template">
@@ -71,21 +81,59 @@
                             </Border>
                             <Border x:Name="ActiveRail" Width="3" CornerRadius="2"
                                     Margin="0,10,0,10" HorizontalAlignment="Left"
-                                    Background="#A2B9CC" Visibility="Collapsed" />
+                                    Background="{StaticResource WahuSideRail}" Visibility="Collapsed" />
                         </Grid>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="NavSurface" Property="Background" Value="#222A33" />
-                                <Setter Property="Foreground" Value="#E1E8EF" />
+                                <Setter TargetName="NavSurface" Property="Background" Value="{StaticResource WahuSideHover}" />
+                                <Setter Property="Foreground" Value="{StaticResource WahuSidePrimary}" />
                             </Trigger>
                             <Trigger Property="IsSelected" Value="True">
-                                <Setter TargetName="NavSurface" Property="Background" Value="#283442" />
-                                <Setter TargetName="NavSurface" Property="BorderBrush" Value="#455567" />
+                                <Setter TargetName="NavSurface" Property="Background" Value="{StaticResource WahuSideSelected}" />
                                 <Setter TargetName="ActiveRail" Property="Visibility" Value="Visible" />
-                                <Setter Property="Foreground" Value="#F6F8FA" />
+                                <Setter Property="Foreground" Value="{StaticResource WahuSidePrimary}" />
                             </Trigger>
                             <Trigger Property="IsKeyboardFocusWithin" Value="True">
-                                <Setter TargetName="NavSurface" Property="BorderBrush" Value="#A5BACE" />
+                                <Setter TargetName="NavSurface" Property="BorderBrush" Value="{StaticResource WahuSideFocus}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <!-- Footer actions share the navigation surface instead of separate blue-gray buttons. -->
+        <Style x:Key="WahuSideFooterButton" TargetType="{x:Type Button}">
+            <Setter Property="FontFamily" Value="{StaticResource WahuAppFontFamily}" />
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="Foreground" Value="{StaticResource WahuSideSecondary}" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Padding" Value="8,7" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type Button}">
+                        <Border x:Name="FooterSurface" Background="{TemplateBinding Background}"
+                                BorderThickness="1" BorderBrush="Transparent" CornerRadius="7"
+                                Padding="{TemplateBinding Padding}" SnapsToDevicePixels="True">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"
+                                              RecognizesAccessKey="True" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="FooterSurface" Property="Background"
+                                        Value="{StaticResource WahuSideHover}" />
+                                <Setter Property="Foreground" Value="{StaticResource WahuSidePrimary}" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="FooterSurface" Property="Background"
+                                        Value="{StaticResource WahuSideSelected}" />
+                            </Trigger>
+                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                <Setter TargetName="FooterSurface" Property="BorderBrush"
+                                        Value="{StaticResource WahuSideFocus}" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.45" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -109,18 +157,18 @@
             </Grid.ColumnDefinitions>
 
             <Border Grid.Column="0" BorderThickness="0,0,1,0"
-                    Background="#151A20" BorderBrush="#303842">
+                    Background="{StaticResource WahuSideBackground}" BorderBrush="{StaticResource WahuSideBorder}">
                 <DockPanel Margin="6,0,6,6">
                     <StackPanel DockPanel.Dock="Bottom" Margin="4,6,4,4">
-                        <Separator Margin="0,4" Opacity="0.4" />
+                        <Border Height="1" Background="{StaticResource WahuSideBorder}" Margin="2,3,2,5" />
 
                         <!-- Banner thông báo khi có bản mới ở sidebar -->
                         <Border Visibility="{Binding HasUpdate, Converter={StaticResource BoolToVis}}"
-                                Background="#171A1F" BorderBrush="#3A434D" BorderThickness="1"
+                                Background="{StaticResource WahuSideHover}" BorderBrush="{StaticResource WahuSideBorder}" BorderThickness="1"
                                 CornerRadius="10" Padding="11,9" Margin="0,0,0,9">
                             <StackPanel>
-                                <TextBlock Text="{Binding LatestVersion, StringFormat='🎉 Có bản mới v{0}'}"
-                                           FontWeight="SemiBold" FontSize="11" Foreground="#B6C2CF" />
+                                <TextBlock Text="{Binding LatestVersion, StringFormat='Có bản mới v{0}'}"
+                                           FontWeight="SemiBold" FontSize="11" Foreground="{StaticResource WahuSidePrimary}" />
                                 <Grid Margin="0,4,0,0">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*" />
@@ -142,23 +190,22 @@
                             </StackPanel>
                         </Border>
 
-                        <Border Background="#1D252E" BorderBrush="#303D49" BorderThickness="1"
-                                CornerRadius="9" Margin="2,1,2,9" Padding="10,9">
-                            <StackPanel>
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="16" />
-                                        <ColumnDefinition Width="*" />
-                                    </Grid.ColumnDefinitions>
-                                    <Ellipse Width="7" Height="7" Fill="#9BB4CA"
-                                             HorizontalAlignment="Left" VerticalAlignment="Center" Margin="2,0,0,0" />
-                                    <TextBlock Grid.Column="1" Text="{Binding AppVersion}"
-                                               Foreground="#E1E7ED" FontWeight="SemiBold" FontSize="11" />
-                                </Grid>
-                                <TextBlock Text="{Binding GameStatus}" Foreground="#A2ADB7"
-                                           FontSize="10.5" Margin="16,5,0,0" TextWrapping="Wrap" />
-                            </StackPanel>
-                        </Border>
+                        <!-- Version and state: informational text, not another decorated card. -->
+                        <StackPanel Margin="9,5,9,9">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="14" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Ellipse Width="5" Height="5" Fill="{StaticResource WahuSideSecondary}"
+                                         HorizontalAlignment="Left" VerticalAlignment="Center" Margin="3,0,0,0" />
+                                <TextBlock Grid.Column="1" Text="{Binding AppVersion}"
+                                           Foreground="{StaticResource WahuSideSecondary}"
+                                           FontSize="11" FontWeight="Medium" />
+                            </Grid>
+                            <TextBlock Text="{Binding GameStatus}" Foreground="{StaticResource WahuSideMuted}"
+                                       FontSize="10.5" Margin="14,4,0,0" TextWrapping="Wrap" />
+                        </StackPanel>
 
                         <Grid Margin="0,0,0,6">
                             <Grid.ColumnDefinitions>
@@ -167,21 +214,23 @@
                                 <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
                             <Button Grid.Column="0" Command="{Binding OpenDiscordCommand}" ToolTip="Discord"
-                                    HorizontalAlignment="Stretch" Padding="5,4">
+                                    Style="{StaticResource WahuSideFooterButton}" HorizontalAlignment="Stretch">
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                                     <Viewbox Width="15" Height="15" Margin="0,0,5,0">
-                                        <Path Fill="#969DA6" Data="M19.5,5.34 A16.3,16.3 0 0 0 15.44,4 L14.94,5.02 A15.4,15.4 0 0 0 9.06,5.02 L8.55,4 A16.3,16.3 0 0 0 4.5,5.34 C1.94,9.14 1.25,12.85 1.6,16.5 A16.6,16.6 0 0 0 6.55,19 L7.75,17.35 C7.09,17.12 6.47,16.82 5.9,16.45 C9.65,19.22 14.35,19.22 18.16,16.45 C17.57,16.83 16.94,17.13 16.28,17.36 L17.48,19 A16.6,16.6 0 0 0 22.42,16.51 C22.84,12.28 21.7,8.6 19.5,5.34 Z M8.6,14.25 C7.52,14.25 6.64,13.26 6.64,12.04 C6.64,10.82 7.5,9.83 8.6,9.83 C9.7,9.83 10.58,10.82 10.56,12.04 C10.56,13.26 9.7,14.25 8.6,14.25 Z M15.4,14.25 C14.32,14.25 13.44,13.26 13.44,12.04 C13.44,10.82 14.3,9.83 15.4,9.83 C16.5,9.83 17.38,10.82 17.36,12.04 C17.36,13.26 16.5,14.25 15.4,14.25 Z" />
+                                        <Path Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" Data="M19.5,5.34 A16.3,16.3 0 0 0 15.44,4 L14.94,5.02 A15.4,15.4 0 0 0 9.06,5.02 L8.55,4 A16.3,16.3 0 0 0 4.5,5.34 C1.94,9.14 1.25,12.85 1.6,16.5 A16.6,16.6 0 0 0 6.55,19 L7.75,17.35 C7.09,17.12 6.47,16.82 5.9,16.45 C9.65,19.22 14.35,19.22 18.16,16.45 C17.57,16.83 16.94,17.13 16.28,17.36 L17.48,19 A16.6,16.6 0 0 0 22.42,16.51 C22.84,12.28 21.7,8.6 19.5,5.34 Z M8.6,14.25 C7.52,14.25 6.64,13.26 6.64,12.04 C6.64,10.82 7.5,9.83 8.6,9.83 C9.7,9.83 10.58,10.82 10.56,12.04 C10.56,13.26 9.7,14.25 8.6,14.25 Z M15.4,14.25 C14.32,14.25 13.44,13.26 13.44,12.04 C13.44,10.82 14.3,9.83 15.4,9.83 C16.5,9.83 17.38,10.82 17.36,12.04 C17.36,13.26 16.5,14.25 15.4,14.25 Z" />
                                     </Viewbox>
-                                    <TextBlock Text="Discord" FontSize="11" VerticalAlignment="Center" />
+                                    <TextBlock Text="Discord" FontSize="11" VerticalAlignment="Center"
+                                               Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" />
                                 </StackPanel>
                             </Button>
                             <Button Grid.Column="2" Command="{Binding OpenGitHubCommand}" ToolTip="GitHub"
-                                    HorizontalAlignment="Stretch" Padding="5,4">
+                                    Style="{StaticResource WahuSideFooterButton}" HorizontalAlignment="Stretch">
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                                     <Viewbox Width="15" Height="15" Margin="0,0,5,0">
                                         <Path Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" Data="M12,1 C5.923,1 1,5.923 1,12 C1,16.867 4.149,20.979 8.521,22.436 C9.071,22.532 9.277,22.203 9.277,21.914 C9.277,21.652 9.264,20.786 9.264,19.865 C6.5,20.374 5.785,19.191 5.565,18.573 C5.441,18.256 4.905,17.28 4.438,17.019 C4.053,16.812 3.502,16.304 4.424,16.29 C5.29,16.276 5.909,17.087 6.115,17.418 C7.105,19.081 8.686,18.614 9.319,18.325 C9.415,17.61 9.704,17.129 10.02,16.854 C7.613,16.579 5.097,15.658 5.097,11.491 C5.097,10.308 5.509,9.332 6.183,8.576 C6.073,8.301 5.702,7.188 6.286,5.689 C6.286,5.689 7.18,5.401 9.311,6.803 A10.2,10.2 0 0 1 12.061,6.432 C12.996,6.432 13.931,6.555 14.811,6.803 C16.943,5.387 17.836,5.689 17.836,5.689 C18.42,7.188 18.049,8.301 17.939,8.576 C18.613,9.332 19.025,10.295 19.025,11.491 C19.025,15.672 16.495,16.579 14.088,16.854 C14.473,17.184 14.817,17.83 14.817,18.834 C14.817,20.264 14.803,21.419 14.803,21.79 C14.803,22.079 15.009,22.422 15.559,22.312 A11.02,11.02 0 0 0 23,12 C23,5.923 18.078,1 12,1 Z" />
                                     </Viewbox>
-                                    <TextBlock Text="GitHub" FontSize="11" VerticalAlignment="Center" />
+                                    <TextBlock Text="GitHub" FontSize="11" VerticalAlignment="Center"
+                                               Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" />
                                 </StackPanel>
                             </Button>
                         </Grid>
@@ -189,23 +238,24 @@
 
                     </StackPanel>
                     <Border DockPanel.Dock="Top" BorderThickness="0,0,0,1"
-                            BorderBrush="#2E3843" Margin="12,10,12,10" Padding="0,9,0,17">
+                            BorderBrush="{StaticResource WahuSideBorder}" Margin="12,9,12,10" Padding="0,9,0,15">
                         <Grid>
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="43" />
+                                <ColumnDefinition Width="56" />
                                 <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
-                            <Border Width="38" Height="38" CornerRadius="10" HorizontalAlignment="Left"
-                                    Background="#273240" BorderBrush="#394958" BorderThickness="1">
-                                <Image Source="/Assets/app-logo-transparent.ico"
-                                       Width="28" Height="28" Stretch="Uniform"
-                                       HorizontalAlignment="Center" VerticalAlignment="Center" />
-                            </Border>
+                            <!-- Use the original high-resolution PNG instead of a 28px ICO thumbnail. -->
+                            <Image Source="/Assets/logo-app-transparent.png" Width="48" Height="48"
+                                   Stretch="Uniform" SnapsToDevicePixels="True"
+                                   RenderOptions.BitmapScalingMode="HighQuality"
+                                   AutomationProperties.Name="Biểu trưng WuWa Việt Hóa"
+                                   HorizontalAlignment="Left" VerticalAlignment="Center" />
                             <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                <TextBlock Text="Công cụ Việt hóa" Foreground="#F4F6F8"
-                                           FontSize="15" FontWeight="SemiBold" />
-                                <TextBlock Text="WUTHERING WAVES  ·  PC" Foreground="#91A1B0"
-                                           FontSize="9.5" Margin="0,5,0,0" />
+                                <TextBlock Text="WuWa Việt Hóa" Foreground="{StaticResource WahuSidePrimary}"
+                                           FontSize="14.5" FontWeight="SemiBold" />
+                                <TextBlock Text="Wuthering Waves · PC"
+                                           Foreground="{StaticResource WahuSideMuted}"
+                                           FontSize="10.5" Margin="0,4,0,0" />
                             </StackPanel>
                         </Grid>
                     </Border>

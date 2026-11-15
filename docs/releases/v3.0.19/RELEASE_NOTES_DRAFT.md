@@ -1,6 +1,7 @@
 Bản cập nhật 3.0.19 cải thiện giao diện, chọn font và độ ổn định khi quản lý bản Việt hóa trên PC.
 
 ### Điểm thay đổi
+- Sidebar thống nhất màu xám tối, logo rõ hơn, điều hướng và trạng thái phiên bản gọn hơn.
 - Giao diện gọn hơn, trạng thái game và bản cài hiển thị rõ ràng.
 - Cải thiện chọn kiểu tên nhân vật, xem trước font và chỉnh độ đậm.
 - Cải thiện kiểm tra bản cập nhật và khôi phục khi cập nhật gặp lỗi.

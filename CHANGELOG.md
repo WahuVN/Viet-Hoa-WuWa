@@ -8,6 +8,7 @@ Tất cả các thay đổi đáng chú ý của dự án VHWuWa được ghi l�
 - Nâng metadata của ứng dụng Player và Updater lên 3.0.19 từ bản phát hành v3.0.18; App-Dịch v3.0.16 có lịch phiên bản riêng.
 - Giữ các cổng bảo vệ: digest SHA-256, asset chuẩn, ready handshake, transaction swap, startup health-check và rollback.
 - Giao diện Trang chủ, trạng thái game/PAK và trình xem trước font được chỉnh gọn; phân biệt launcher với client game thực.
+- Đồng bộ màu sidebar PC với giao diện chính, thay logo thumbnail ICO bằng PNG nguồn lớn, bỏ khung phụ rườm rà. Kiểm tra độ tương phản, cửa sổ nhỏ và điều hướng thực tế.
 - Gói PC R28 tài nguyên 3.8.10 mới đạt QA tĩnh 62/62 mục; loader, font và hiển thị trong game 3.8.1 chưa được nghiệm thu, nên giữ khóa cài PAK.
 - Kiểm thử lại trên WIN3 ngày 15/11/2026: 162/162 bài test Release đạt; bản nâng cấp 3.0.18 → 3.0.19 đã được QA nội bộ.
 - Chưa xuất bản Release, chưa tạo tag chính thức hoặc đổi latest; chỉ chuẩn bị bản ứng dụng và nội dung công bố.
