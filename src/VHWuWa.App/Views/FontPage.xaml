@@ -36,8 +36,8 @@
                                    ToolTip="{Binding Message}" />
                     </StackPanel>
                     <WrapPanel Grid.Column="1" VerticalAlignment="Center">
-                        <Button Content="Áp dụng" Command="{Binding ApplyCommand}" IsEnabled="{Binding CanApplyToGame}" Margin="0,0,8,0" Padding="10,6" />
-                        <Button Content="Khôi phục" Command="{Binding RestoreCommand}" IsEnabled="{Binding CanApplyToGame}" Padding="10,6" />
+                        <Button Style="{StaticResource WahuStandardButtonStyle}" Content="Áp dụng" Command="{Binding ApplyCommand}" IsEnabled="{Binding CanApplyToGame}" Margin="0,0,8,0" Padding="10,6" />
+                        <Button Style="{StaticResource WahuStandardButtonStyle}" Content="Khôi phục" Command="{Binding RestoreCommand}" IsEnabled="{Binding CanApplyToGame}" Padding="10,6" />
                     </WrapPanel>
                 </Grid>
             </ui:Card>
@@ -68,12 +68,12 @@
                         <ComboBox Grid.Column="1" ItemsSource="{Binding Library}" SelectedItem="{Binding SelectedLibraryFont}"
                                   DisplayMemberPath="Display" Margin="0,0,8,0" Padding="8,5" />
                         <WrapPanel Grid.Column="2">
-                            <ui:Button Content="{Binding ApplyButtonText}" Appearance="Secondary"
+                            <ui:Button Content="{Binding ApplyButtonText}" Appearance="Primary"
                                        Command="{Binding ApplyLibraryFontCommand}" IsEnabled="{Binding CanApplyToGame}" Margin="0,0,7,0" Padding="12,6" />
-                            <Button Content="{Binding DownloadButtonText}" Command="{Binding DownloadFontOnlyCommand}"
+                            <Button Style="{StaticResource WahuStandardButtonStyle}" Content="{Binding DownloadButtonText}" Command="{Binding DownloadFontOnlyCommand}"
                                     Visibility="{Binding ShowDownloadButton, Converter={StaticResource BoolToVis}}"
                                     Margin="0,0,7,0" Padding="10,6" />
-                            <Button Content="Gỡ" Command="{Binding RemoveFontCommand}" IsEnabled="{Binding CanApplyToGame}" Padding="10,6" />
+                            <Button Style="{StaticResource WahuStandardButtonStyle}" Content="Gỡ" Command="{Binding RemoveFontCommand}" IsEnabled="{Binding CanApplyToGame}" Padding="10,6" />
                         </WrapPanel>
                     </Grid>
                 </StackPanel>
@@ -89,7 +89,7 @@
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                             <TextBlock Text="Độ đậm font game" FontWeight="SemiBold" FontSize="15"
                                        VerticalAlignment="Center" />
-                            <Button Content="Chọn font chỉnh được" Command="{Binding SelectVariableFontCommand}"
+                            <Button Style="{StaticResource WahuStandardButtonStyle}" Content="Chọn font chỉnh được" Command="{Binding SelectVariableFontCommand}"
                                     Margin="12,0,0,0" Padding="9,4" FontSize="12" />
                         </StackPanel>
                         <TextBlock Grid.Column="1" Text="{Binding WeightLabel}" Foreground="#D7E0E8"
@@ -117,9 +117,9 @@
                                        Opacity="0.86" FontSize="13" Margin="0,2,0,0" />
                         </StackPanel>
                         <WrapPanel Grid.Column="1" VerticalAlignment="Center">
-                            <Button Content="Chọn từ máy" Command="{Binding PreviewFontCommand}" Margin="0,0,7,0" Padding="10,6" />
-                            <Button Content="Xem lớn" Click="OpenLargePreview_Click" Margin="0,0,7,0" Padding="10,6" />
-                            <ui:Button Content="Áp dụng font" Appearance="Secondary" Command="{Binding ApplyCustomFontCommand}" IsEnabled="{Binding CanApplyToGame}"
+                            <Button Style="{StaticResource WahuStandardButtonStyle}" Content="Chọn từ máy" Command="{Binding PreviewFontCommand}" Margin="0,0,7,0" Padding="10,6" />
+                            <Button Style="{StaticResource WahuStandardButtonStyle}" Content="Xem lớn" Click="OpenLargePreview_Click" Margin="0,0,7,0" Padding="10,6" />
+                            <ui:Button Content="Áp dụng font" Appearance="Primary" Command="{Binding ApplyCustomFontCommand}" IsEnabled="{Binding CanApplyToGame}"
                                        Visibility="{Binding HasCustomFontSelected, Converter={StaticResource BoolToVis}}" Padding="10,6" />
                         </WrapPanel>
                     </Grid>
@@ -139,12 +139,12 @@
                                 <ColumnDefinition Width="Auto" />
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
-                            <Button Content="−" Command="{Binding DecreasePreviewSizeCommand}" Width="30" Padding="0,4" />
+                            <Button Style="{StaticResource WahuStandardButtonStyle}" Content="−" Command="{Binding DecreasePreviewSizeCommand}" Width="30" Padding="0,4" />
                             <Slider Grid.Column="1" Minimum="12" Maximum="72" TickFrequency="2"
                                     IsSnapToTickEnabled="True" Value="{Binding PreviewFontSize, Mode=TwoWay}"
                                     Margin="8,0" VerticalAlignment="Center" ToolTip="Cỡ chữ xem trước" />
-                            <Button Grid.Column="2" Content="+" Command="{Binding IncreasePreviewSizeCommand}" Width="30" Padding="0,4" />
-                            <Button Grid.Column="3" Content="{Binding PreviewFontSizeLabel}" Command="{Binding ResetPreviewSizeCommand}"
+                            <Button Style="{StaticResource WahuStandardButtonStyle}" Grid.Column="2" Content="+" Command="{Binding IncreasePreviewSizeCommand}" Width="30" Padding="0,4" />
+                            <Button Style="{StaticResource WahuStandardButtonStyle}" Grid.Column="3" Content="{Binding PreviewFontSizeLabel}" Command="{Binding ResetPreviewSizeCommand}"
                                     ToolTip="Đặt lại 30 px" MinWidth="54" Margin="7,0,0,0" Padding="6,4" />
                         </Grid>
                     </Grid>

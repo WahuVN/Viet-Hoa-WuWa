@@ -197,6 +197,16 @@ public partial class SettingsViewModel : ObservableObject
     }
 
     [RelayCommand]
+    private void OpenAppFolder()
+    {
+        // Portable app: the executable stays where the user extracted the ZIP.
+        // Open that exact directory instead of assuming Program Files or AppData.
+        var appDirectory = AppContext.BaseDirectory;
+        if (Directory.Exists(appDirectory))
+            Process.Start(new ProcessStartInfo(appDirectory) { UseShellExecute = true });
+    }
+
+    [RelayCommand]
     private void OpenLogFolder()
     {
         if (Directory.Exists(_log.LogDirectory))

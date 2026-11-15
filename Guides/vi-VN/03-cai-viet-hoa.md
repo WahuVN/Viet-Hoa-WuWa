@@ -2,20 +2,21 @@
 
 ## Thực hiện
 
-1. Tắt game hoàn toàn.
-2. Chọn **Tên tiếng Anh** hoặc **Tên Hán Việt**.
-3. Giữ tùy chọn font nếu bạn chưa có font tiếng Việt khác.
-4. Bấm **Cài Việt hóa ngay** và chờ thông báo hoàn tất.
+1. Tắt hoàn toàn game và launcher.
+2. Ở **Trang chủ**, kiểm tra đường dẫn game bằng nút **Kiểm tra**.
+3. Chọn **Tên Anh** hoặc **Tên Hán Việt**.
+4. Có thể bật **Cài font tiếng Việt** nếu cần.
+5. Nhấn nút **Cài Việt hóa** khi ứng dụng xác nhận game và gói dữ liệu tương thích. Chờ thông báo hoàn tất.
 
 ## Chọn kiểu tên
 
-- **Tên tiếng Anh:** giữ tên quốc tế như Jinhsi, Changli, Shorekeeper.
-- **Tên Hán Việt:** chỉ đổi các tên đã được chốt quy ước như Kim Tịch, Trường Ly.
+- **Tên Anh:** giữ các tên quốc tế như Jinhsi, Changli, Shorekeeper.
+- **Tên Hán Việt:** dùng tên đã chốt quy ước, ví dụ Kim Tịch, Trường Ly, khi gói tương ứng có sẵn.
 
 ## Sau khi cài
 
-- Trong game đặt **Text Language = English**.
-- DirectX 11 và 12 đều dùng được; chỉ đổi sang DX11 khi DX12 gặp lỗi trên máy của bạn.
-- Muốn đổi kiểu tên, chọn lại rồi cài lần nữa.
+- Trong game chọn **Text Language = English**.
+- Khi muốn đổi kiểu tên, đóng game rồi chọn lại biến thể phù hợp.
+- Muốn gỡ, mở **Tùy chọn nâng cao → Gỡ Việt hóa** trên Trang chủ.
 
-> Nếu app báo xung đột, xử lý các file được nêu rồi bấm **Quét lại mod** trước khi cài.
+> Nếu nút bị khóa hoặc ứng dụng báo loader/PAK không tương thích với phiên bản game, **không cài ép**. Cần bản Việt hóa đã nghiệm thu tương ứng với game.

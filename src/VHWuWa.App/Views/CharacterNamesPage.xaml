@@ -36,9 +36,9 @@
                 <WrapPanel Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center">
                     <Expander Header="Khôi phục" IsExpanded="False" Margin="0,0,10,0">
                         <StackPanel Margin="8,6">
-                            <Button Content="Đặt lại tên" Command="{Binding ResetBuildCommand}" IsEnabled="{Binding CanEditBuild}"
+                            <Button Style="{StaticResource WahuStandardButtonStyle}" Content="Đặt lại tên" Command="{Binding ResetBuildCommand}" IsEnabled="{Binding CanEditBuild}"
                                     Padding="10,7" Margin="0,0,0,6"/>
-                            <Button Content="Tải PAK gốc" Command="{Binding RestorePaksCommand}" IsEnabled="{Binding CanEditBuild}"
+                            <Button Style="{StaticResource WahuStandardButtonStyle}" Content="Tải PAK gốc" Command="{Binding RestorePaksCommand}" IsEnabled="{Binding CanEditBuild}"
                                     Padding="10,7"/>
                         </StackPanel>
                     </Expander>

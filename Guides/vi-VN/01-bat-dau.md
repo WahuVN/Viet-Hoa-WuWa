@@ -1,19 +1,24 @@
 # Bắt đầu nhanh
 
-## Trước khi cài
+## Tải và mở ứng dụng
 
-- Tải `VietHoa-WuWa-vX.Y.Z.zip` từ GitHub Releases, rồi giải nén toàn bộ ra một thư mục riêng; không chạy trực tiếp trong ZIP.
-- Tắt game và launcher nếu launcher đang cập nhật file.
-- Mở `Chay VHWuWa.bat` hoặc `app\VHWuWa.exe`.
+1. Tải `VietHoa-WuWa-vX.Y.Z.zip` từ mục **Releases** trên GitHub chính thức.
+2. Giải nén toàn bộ ZIP vào một thư mục cố định, chẳng hạn `D:\Apps\WuWa-Viet-Hoa`. **Không mở EXE ngay trong ZIP.**
+3. Chạy `VHWuWa.exe` ở thư mục vừa giải nén. Ứng dụng tạo lối tắt **WuWa** trên Desktop.
 
-## Cài trong ba bước
+Ứng dụng là bản **portable**, không có bước Setup.exe và không tự chuyển sang `Program Files`. Có thể xem đúng nơi đang chạy qua **Cài đặt → Mở thư mục ứng dụng**. Không xóa hoặc di chuyển thư mục sau khi tạo lối tắt.
 
-1. Vào **Trang chủ** và bấm **Tự tìm game**.
-2. Mở **Cài Việt hóa**, chọn kiểu tên rồi bấm **Cài Việt hóa ngay**.
+## Cài Việt hóa trong ba bước
+
+1. Tắt game, vào **Trang chủ** rồi chọn **Tự tìm game**; nếu không được, dùng **Chọn thư mục** và **Kiểm tra**.
+2. Chọn **Tên Anh** hoặc **Tên Hán Việt**, chọn tùy chọn font rồi bấm **Cài Việt hóa** khi nút cho phép.
 3. Mở game và đặt **Text Language = English**.
 
-## Khi muốn hoàn tác
+Nếu nút hiện **Chưa có game PC**, hoặc thông báo phiên bản/loader chưa tương thích, cần kiểm tra game và chờ bản Việt hóa phù hợp; không cố ghi PAK vào thư mục game.
 
-Vào **Cài Việt hóa** → **Gỡ Việt hóa**. App chỉ gỡ các file do VHWuWa quản lý.
+## Cập nhật và gỡ
 
-> Đây là dự án cộng đồng, không thuộc Kuro Games. Hãy đọc cảnh báo trong app và tự cân nhắc trước khi sử dụng.
+- Ứng dụng có thể tự kiểm tra bản mới khi khởi động. Nếu bạn đồng ý cập nhật, updater xác minh ZIP rồi cập nhật trong **chính thư mục hiện tại**, giữ cấu hình và có cơ chế khôi phục khi lỗi.
+- Muốn gỡ bản dịch: **Trang chủ → Tùy chọn nâng cao → Gỡ Việt hóa**.
+
+> Chỉ tải ứng dụng từ nguồn chính thức. Một số máy có thể cảnh báo SmartScreen vì EXE chưa ký số; không tắt Defender để cài phần mềm. Đây là dự án cộng đồng, không thuộc Kuro Games.

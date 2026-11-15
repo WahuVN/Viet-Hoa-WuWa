@@ -20,7 +20,7 @@
                             </ItemsControl.ItemsPanel>
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
-                                    <Button Content="{Binding}" Margin="0,0,8,8" Padding="13,8"
+                                    <Button Style="{StaticResource WahuStandardButtonStyle}" Content="{Binding}" Margin="0,0,8,8" Padding="13,8"
                                             Command="{Binding DataContext.ApplyPresetCommand,
                                                       RelativeSource={RelativeSource AncestorType=UserControl}}"
                                             CommandParameter="{Binding}"/>
@@ -52,7 +52,7 @@
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
-                            <ui:Button Content="Áp dụng tùy chỉnh" Appearance="Secondary"
+                            <ui:Button Content="Áp dụng tùy chỉnh" Appearance="Primary"
                                        Command="{Binding ApplyCustomCommand}"
                                        HorizontalAlignment="Left" Padding="15,9"
                                        Margin="0,12,0,0"/>
@@ -66,9 +66,9 @@
                             <ui:Button Content="Khôi phục mặc định" Appearance="Secondary"
                                        Command="{Binding RestoreDefaultCommand}"
                                        Padding="12,8" Margin="0,0,8,8"/>
-                            <Button Content="Đọc cấu hình" Command="{Binding ReadCurrentCommand}"
+                            <Button Style="{StaticResource WahuStandardButtonStyle}" Content="Đọc cấu hình" Command="{Binding ReadCurrentCommand}"
                                     Padding="12,8" Margin="0,0,8,8"/>
-                            <Button Content="Mở tệp" Command="{Binding OpenConfigCommand}"
+                            <Button Style="{StaticResource WahuStandardButtonStyle}" Content="Mở tệp" Command="{Binding OpenConfigCommand}"
                                     Padding="12,8" Margin="0,0,0,8"/>
                         </WrapPanel>
                     </Expander>
@@ -85,7 +85,7 @@
                                        Command="{Binding LockCommand}" Padding="14,8"
                                        ToolTip="Giữ thiết lập khi mở game"
                                        Margin="0,0,8,0"/>
-                            <Button Content="Mở khóa" Command="{Binding UnlockCommand}"
+                            <Button Style="{StaticResource WahuStandardButtonStyle}" Content="Mở khóa" Command="{Binding UnlockCommand}"
                                     Padding="14,8" ToolTip="Cho phép game ghi lại cấu hình"/>
                         </WrapPanel>
                     </StackPanel>

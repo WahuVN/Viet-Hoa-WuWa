@@ -90,7 +90,7 @@
                                    Appearance="Secondary" Command="{Binding CheckUpdateCommand}"
                                    Padding="15,9" Margin="0,0,8,6" />
                         <ui:Button Content="Cài bản mới"
-                                   Appearance="Secondary"
+                                   Appearance="Primary" ToolTip="Tải ZIP từ GitHub, kiểm tra SHA-256 rồi cập nhật và mở lại ứng dụng."
                                    Command="{Binding Main.ApplyUpdateCommand}"
                                    Visibility="{Binding Main.HasUpdate, Converter={StaticResource BoolToVis}}"
                                    Padding="15,9" Margin="0,0,0,6" />
@@ -117,9 +117,32 @@
                 </StackPanel>
             </ui:Card>
 
-            <Button Content="Mở thư mục nhật ký"
-                    Command="{Binding OpenLogFolderCommand}"
-                    HorizontalAlignment="Left" Padding="14,8" />
+            <!-- Portable is intentional: let users see where the actual EXE lives. -->
+            <ui:Card Padding="18" Margin="0,0,0,14">
+                <StackPanel>
+                    <TextBlock Text="04  /  ỨNG DỤNG PORTABLE"
+                               FontSize="11" FontWeight="SemiBold"
+                               Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                               Margin="0,0,0,7" />
+                    <TextBlock Text="Không cần bộ cài Setup.exe"
+                               FontSize="17" FontWeight="SemiBold" />
+                    <TextBlock Text="Tải ZIP từ GitHub, giải nén vào một thư mục cố định rồi mở VHWuWa.exe. Ứng dụng sẽ tạo lối tắt WuWa trên Desktop."
+                               FontSize="12.5" TextWrapping="Wrap" Margin="0,7,0,7"
+                               Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                    <TextBlock Text="Khi có bản mới, ứng dụng sẽ hỏi trước khi tải và cập nhật ngay trong thư mục đó. Cấu hình được lưu riêng, không cần giải nén lại."
+                               FontSize="12.5" TextWrapping="Wrap" Margin="0,0,0,12"
+                               Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                    <WrapPanel>
+                        <Button Style="{StaticResource WahuStandardButtonStyle}"
+                                Content="Mở thư mục ứng dụng" Command="{Binding OpenAppFolderCommand}"
+                                ToolTip="Xem thư mục chứa VHWuWa.exe đang chạy"
+                                Margin="0,0,8,6" Padding="14,8" />
+                        <Button Style="{StaticResource WahuStandardButtonStyle}"
+                                Content="Mở thư mục nhật ký" Command="{Binding OpenLogFolderCommand}"
+                                Margin="0,0,0,6" Padding="14,8" />
+                    </WrapPanel>
+                </StackPanel>
+            </ui:Card>
         </StackPanel>
     </ScrollViewer>
 </UserControl>

@@ -16,10 +16,10 @@
             </Grid.ColumnDefinitions>
             <StackPanel>
                 <TextBlock Text="Trợ giúp" FontSize="22" FontWeight="Bold" />
-                <TextBlock Text="Cài đặt, cập nhật và xử lý lỗi."
+                <TextBlock Text="Lần đầu: tải ZIP, giải nén vào thư mục cố định, mở VHWuWa.exe; sau đó chọn game và cài bản dịch."
                            Opacity="0.68" FontSize="12" Margin="0,3,0,0" />
             </StackPanel>
-            <Button Grid.Column="1" Content="Mở tài liệu" Command="{Binding OpenFolderCommand}"
+            <Button Style="{StaticResource WahuStandardButtonStyle}" Grid.Column="1" Content="Mở tài liệu" Command="{Binding OpenFolderCommand}"
                     Padding="11,6" VerticalAlignment="Center" />
         </Grid>
 

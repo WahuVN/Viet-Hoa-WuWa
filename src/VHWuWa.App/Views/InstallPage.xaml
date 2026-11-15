@@ -25,7 +25,7 @@
                              Content="🔤  Tên tiếng Anh chuẩn — giữ nguyên tên quốc tế" Margin="0,4" FontSize="13" />
                 <RadioButton GroupName="variant" IsChecked="{Binding VariantHanViet, Mode=TwoWay}"
                              Content="🇻🇳  Tên Hán Việt chuẩn — chỉ đổi các tên đã có quy ước" Margin="0,4" FontSize="13" />
-                <Button Content="{Binding HanVietDownloadBtnText}" Command="{Binding DownloadHanVietCommand}"
+                <Button Style="{StaticResource WahuStandardButtonStyle}" Content="{Binding HanVietDownloadBtnText}" Command="{Binding DownloadHanVietCommand}"
                         Visibility="{Binding ShowHanVietDownload, Converter={StaticResource BoolToVis}}"
                         HorizontalAlignment="Left" Margin="28,4,0,2" Padding="10,5" FontSize="11" />
                 <TextBlock Margin="28,4,0,2" FontSize="11" Opacity="0.78" TextWrapping="Wrap">
@@ -50,7 +50,7 @@
                             <ui:Button Content="Cài Việt hóa" Appearance="Secondary"
                                        Command="{Binding InstallCommand}" Margin="0,0,8,8"
                                        MinWidth="180" Padding="16,9" FontSize="14" FontWeight="SemiBold" />
-                            <Button Content="Hủy" Command="{Binding CancelCommand}"
+                            <Button Style="{StaticResource WahuStandardButtonStyle}" Content="Hủy" Command="{Binding CancelCommand}"
                                     Visibility="{Binding Busy, Converter={StaticResource BoolToVis}}"
                                     Margin="0,0,8,8" Padding="12,8" FontSize="12" />
                         </WrapPanel>
@@ -63,7 +63,7 @@
 
                 <Expander Header="Tùy chọn khác" IsExpanded="False" Margin="0,0,0,12" Padding="8,4">
                     <StackPanel Margin="8,8,8,4">
-                        <Button Content="Gỡ Việt hóa" Command="{Binding UninstallCommand}"
+                        <Button Style="{StaticResource WahuStandardButtonStyle}" Content="Gỡ Việt hóa" Command="{Binding UninstallCommand}"
                                 HorizontalAlignment="Left" Padding="12,8" FontSize="12" />
                     </StackPanel>
                 </Expander>

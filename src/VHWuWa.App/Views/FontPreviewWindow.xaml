@@ -20,7 +20,7 @@
                 <TextBlock Text="Xem trước kích thước lớn" FontSize="20" FontWeight="Bold" />
                 <TextBlock Text="{Binding PreviewMessage}" Opacity="0.68" Margin="0,2,0,0" />
             </StackPanel>
-            <Button Grid.Column="1" Content="Đóng" Click="Close_Click" Padding="14,6" VerticalAlignment="Center" />
+            <Button Style="{StaticResource WahuStandardButtonStyle}" Grid.Column="1" Content="Đóng" Click="Close_Click" Padding="14,6" VerticalAlignment="Center" />
         </Grid>
 
         <Grid Grid.Row="1" Margin="0,14,0,12">
@@ -39,11 +39,11 @@
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
-                <Button Content="−" Command="{Binding DecreasePreviewSizeCommand}" Width="34" />
+                <Button Style="{StaticResource WahuStandardButtonStyle}" Content="−" Command="{Binding DecreasePreviewSizeCommand}" Width="34" />
                 <Slider Grid.Column="1" Minimum="12" Maximum="72" TickFrequency="2" IsSnapToTickEnabled="True"
                         Value="{Binding PreviewFontSize, Mode=TwoWay}" Margin="9,0" VerticalAlignment="Center" />
-                <Button Grid.Column="2" Content="+" Command="{Binding IncreasePreviewSizeCommand}" Width="34" />
-                <Button Grid.Column="3" Content="{Binding PreviewFontSizeLabel}" Command="{Binding ResetPreviewSizeCommand}"
+                <Button Style="{StaticResource WahuStandardButtonStyle}" Grid.Column="2" Content="+" Command="{Binding IncreasePreviewSizeCommand}" Width="34" />
+                <Button Style="{StaticResource WahuStandardButtonStyle}" Grid.Column="3" Content="{Binding PreviewFontSizeLabel}" Command="{Binding ResetPreviewSizeCommand}"
                         MinWidth="58" Margin="8,0,0,0" />
             </Grid>
         </Grid>

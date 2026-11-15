@@ -27,7 +27,7 @@
                         <ui:Button Grid.Column="2" Content="Lưu &amp; tạo PAK" Appearance="Secondary"
                                    Command="{Binding SaveUidCommand}" IsEnabled="{Binding CanEditBuild}" Padding="14,9"
                                    FontWeight="SemiBold" VerticalAlignment="Center"/>
-                        <Button Grid.Column="4" Content="Ẩn UID" Command="{Binding ResetUidCommand}" IsEnabled="{Binding CanEditBuild}"
+                        <Button Style="{StaticResource WahuStandardButtonStyle}" Grid.Column="4" Content="Ẩn UID" Command="{Binding ResetUidCommand}" IsEnabled="{Binding CanEditBuild}"
                                 ToolTip="Đưa UID về trạng thái ẩn mặc định"
                                 Padding="12,9" VerticalAlignment="Center"/>
                     </Grid>

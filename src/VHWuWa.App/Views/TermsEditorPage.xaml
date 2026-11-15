@@ -43,9 +43,9 @@
                 <WrapPanel Grid.Column="3" VerticalAlignment="Center">
                     <Expander Header="Khôi phục" IsExpanded="False" Margin="0,0,9,0">
                         <StackPanel Margin="8,6">
-                            <Button Content="Đặt lại nhóm" Command="{Binding ResetBuildCommand}" IsEnabled="{Binding CanEditBuild}"
+                            <Button Style="{StaticResource WahuStandardButtonStyle}" Content="Đặt lại nhóm" Command="{Binding ResetBuildCommand}" IsEnabled="{Binding CanEditBuild}"
                                     Padding="10,7" Margin="0,0,0,6"/>
-                            <Button Content="Tải PAK gốc" Command="{Binding RestorePaksCommand}" IsEnabled="{Binding CanEditBuild}"
+                            <Button Style="{StaticResource WahuStandardButtonStyle}" Content="Tải PAK gốc" Command="{Binding RestorePaksCommand}" IsEnabled="{Binding CanEditBuild}"
                                     Padding="10,7"/>
                         </StackPanel>
                     </Expander>
@@ -75,7 +75,7 @@
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
                                     <TextBlock Text="{Binding En}" VerticalAlignment="Center" TextWrapping="Wrap" Margin="3,0,6,0" />
-                                    <Button Grid.Column="1" Content="Chép EN" ToolTip="Sao chép nguyên văn tiếng Anh"
+                                    <Button Style="{StaticResource WahuStandardButtonStyle}" Grid.Column="1" Content="Chép EN" ToolTip="Sao chép nguyên văn tiếng Anh"
                                             Command="{Binding DataContext.CopyEnglishCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                             CommandParameter="{Binding}"
                                             Padding="4,2" FontSize="10" VerticalAlignment="Center" Opacity="0.85" />
