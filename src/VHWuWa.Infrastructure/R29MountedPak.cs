@@ -105,17 +105,20 @@ public static class R29MountedPak
     public static bool PackagePresent(string appDirectory) => File.Exists(Source(appDirectory));
 
     /// <summary>
-    /// A 3.0.19 R29 release must never fall back to stale 3.7 loader/PAK files
+    /// All releases since 3.0.19 using R29 must never fall back to stale 3.7 loader/PAK files
     /// left behind by the 3.0.18 in-place updater if R29 content is missing.
     /// The release marker is also shipped with the final ZIP.
     /// </summary>
+    public static bool VersionRequiresR29(Version? version) =>
+        version is { Major: 3, Minor: 0 } && version.Build >= 19;
+
     public static bool ReleaseRequired(string appDirectory)
     {
         if (File.Exists(Path.Combine(appDirectory, "content", "r29-release.json")))
             return true;
         var entry = System.Reflection.Assembly.GetEntryAssembly()?.GetName();
         return string.Equals(entry?.Name, "VHWuWa", StringComparison.OrdinalIgnoreCase)
-            && entry?.Version is { Major: 3, Minor: 0, Build: 19 };
+            && VersionRequiresR29(entry?.Version);
     }
 
     public static bool PackageVerified(string appDirectory)

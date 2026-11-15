@@ -149,6 +149,17 @@ public sealed class R29MountedPakTests : IDisposable
         return (game, sig, mount);
     }
 
+    [Theory]
+    [InlineData("3.0.18.0", false)]
+    [InlineData("3.0.19.0", true)]
+    [InlineData("3.0.20.0", true)]
+    [InlineData("3.0.21.0", true)]
+    [InlineData("3.1.0.0", false)]
+    public void ReleaseRequired_PersistsAcrossFutureR29Versions(string version, bool expected)
+    {
+        Assert.Equal(expected, R29MountedPak.VersionRequiresR29(Version.Parse(version)));
+    }
+
     public void Dispose()
     {
         try { if (Directory.Exists(_root)) Directory.Delete(_root, recursive: true); } catch { }
