@@ -127,7 +127,7 @@ public partial class HomeViewModel : ObservableObject
             ? (!r29Verified ? "Gói Việt hóa R29 bị thiếu hoặc lỗi dữ liệu."
                 : !PathOk ? "Gói Việt hóa R29 đã sẵn sàng. Hãy chọn thư mục game."
                 : r29Compatible ? "Gói Việt hóa R29 đã sẵn sàng để cài."
-                : "Không tìm thấy đủ tệp Mount/SIG trong thư mục game.")
+                : R29MountedPak.CompatibilityIssue(GamePath) ?? "Không thể xác minh dữ liệu Mount/SIG.")
             : staged.ShaVerified
             ? (r28KnownFailure
                 ? "PAK R28 (dữ liệu 3.8.10) đã gây lỗi Corrupt pak index trên PC 3.8.0/dữ liệu 3.8.11. Chưa cài được."

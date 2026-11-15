@@ -45,27 +45,36 @@ public static class R29MountedPak
         Path.Combine(MountDir(gameRoot), SidecarName);
 
     /// <summary>
-    /// Uses the installed English-language SIG instead of assuming a fixed
-    /// patch directory (the file moved between resource updates).
+    /// Finds the English-language SIG in either a numbered patch directory or
+    /// Lang_en/Base (used by full installs without incremental language patches).
     /// </summary>
     private static string? StockSig(string gameRoot)
     {
         var langEn = Path.Combine(GameResourceDir(gameRoot), "Lang_en");
         if (!Directory.Exists(langEn)) return null;
         string? latest = null;
+        string? baseSig = null;
         Version? latestVersion = null;
         foreach (var dir in Directory.EnumerateDirectories(langEn, "*", SearchOption.TopDirectoryOnly))
         {
-            if (!Version.TryParse(Path.GetFileName(dir), out var version)) continue;
             var candidate = Path.Combine(dir, "pakchunk10-WindowsNoEditor_P.sig");
-            if (!File.Exists(candidate)) continue;
+            if (!File.Exists(candidate) || new FileInfo(candidate).Length == 0) continue;
+            var name = Path.GetFileName(dir);
+            if (name.Equals("Base", StringComparison.OrdinalIgnoreCase))
+            {
+                baseSig = candidate;
+                continue;
+            }
+            if (!Version.TryParse(name, out var version)) continue;
             if (latestVersion is null || version.CompareTo(latestVersion) > 0)
             {
                 latest = candidate;
                 latestVersion = version;
             }
         }
-        return latest;
+        if (latest is not null) return latest;
+        var rootSig = Path.Combine(langEn, "pakchunk10-WindowsNoEditor_P.sig");
+        return baseSig ?? (File.Exists(rootSig) && new FileInfo(rootSig).Length > 0 ? rootSig : null);
     }
 
     private static string OfficialMount(string gameRoot) =>
@@ -122,25 +131,31 @@ public static class R29MountedPak
     }
 
     /// <summary>
-    /// Checks only the files required by the R29 sidecar installer. The game's
-    /// EXE checksum or content patch version may change without changing this
-    /// mount layout. Neither value should block installation of a text PAK.
+    /// Checks only paths required by the independent R29 sidecar installer.
+    /// Official MountLang_en.txt is never modified and is optional in a clean
+    /// install if the Mount directory itself is present.
     /// </summary>
-    public static bool GameCompatible(string gameRoot)
+    public static string? CompatibilityIssue(string gameRoot)
     {
         try
         {
-            if (string.IsNullOrWhiteSpace(gameRoot)) return false;
+            if (string.IsNullOrWhiteSpace(gameRoot)) return "Chưa chọn thư mục game.";
             var exe = Path.Combine(gameRoot, "Client", "Binaries", "Win64", "Client-Win64-Shipping.exe");
-            return File.Exists(exe)
-                && File.Exists(StockSig(gameRoot))
-                && File.Exists(OfficialMount(gameRoot))
-                && Directory.Exists(MountDir(gameRoot));
+            if (!File.Exists(exe)) return "Không tìm thấy Client/Binaries/Win64/Client-Win64-Shipping.exe.";
+            if (!Directory.Exists(GameResourceDir(gameRoot)))
+                return "Không tìm thấy Client/Saved/Resources/3.8.0. R29 cần dữ liệu game 3.8.0.";
+            if (!Directory.Exists(MountDir(gameRoot)))
+                return "Thiếu thư mục Resources/3.8.0/Mount của game.";
+            if (StockSig(gameRoot) is null)
+                return "Thiếu SIG tiếng Anh tại Lang_en/Base hoặc Lang_en/<phiên bản>. Hãy tải dữ liệu ngôn ngữ English trong game.";
+            return null;
         }
-        catch (IOException) { return false; }
-        catch (UnauthorizedAccessException) { return false; }
-        catch (ArgumentException) { return false; }
+        catch (IOException) { return "Không đọc được dữ liệu Mount/SIG của game."; }
+        catch (UnauthorizedAccessException) { return "Không có quyền đọc Mount/SIG của game."; }
+        catch (ArgumentException) { return "Đường dẫn game không hợp lệ."; }
     }
+
+    public static bool GameCompatible(string gameRoot) => CompatibilityIssue(gameRoot) is null;
 
     public static bool IsInstalled(string gameRoot)
     {
@@ -185,8 +200,8 @@ public static class R29MountedPak
             if (IsGameRunning()) return Result.Fail("Hãy đóng game trước khi cài bản Việt hóa R29.");
             if (!PackageVerified(appDirectory))
                 return Result.Fail("PAK PC R29 bị thiếu hoặc SHA-256 không khớp. Không ghi vào game.");
-            if (!GameCompatible(gameRoot))
-                return Result.Fail("Chưa tìm thấy đủ tệp game cần thiết (Client, Mount và SIG ngôn ngữ). Hãy chọn đúng thư mục game.");
+            if (CompatibilityIssue(gameRoot) is { } issue)
+                return Result.Fail(issue);
             if (IsInstalled(gameRoot)) return Result.Ok();
 
             var modDir = DestinationDir(gameRoot);
@@ -202,7 +217,9 @@ public static class R29MountedPak
                 || (Directory.Exists(modDir) && HasReparsePoint(modDir)))
                 return Result.Fail("Đã có dữ liệu Mount tên WAHU nhưng chưa xác minh là R29. Không ghi đè.");
 
-            var mountHashBefore = Sha(originalMount, HashAlgorithmName.SHA256);
+            // Never create or change the optional official MountLang_en.txt.
+            var mountHashBefore = File.Exists(originalMount)
+                ? Sha(originalMount, HashAlgorithmName.SHA256) : null;
             var sourceSigHash = Sha(sourceSig, HashAlgorithmName.SHA256);
             Directory.CreateDirectory(modDir);
             var createdPak = false;
@@ -221,7 +238,9 @@ public static class R29MountedPak
                 createdSidecar = true;
                 File.WriteAllText(sidecar, content, new UTF8Encoding(false));
                 if (!IsInstalled(gameRoot)) throw new IOException("Hậu kiểm 3 tệp R29 thất bại.");
-                if (!ShaMatches(originalMount, mountHashBefore))
+                if (mountHashBefore is not null
+                        ? !ShaMatches(originalMount, mountHashBefore)
+                        : File.Exists(originalMount))
                     throw new IOException("Mount chính thức của game đã thay đổi.");
                 return Result.Ok();
             }
@@ -256,14 +275,15 @@ public static class R29MountedPak
             var sig = DestinationSig(gameRoot);
             var modDir = DestinationDir(gameRoot);
             var officialMount = OfficialMount(gameRoot);
-            var originalHash = Sha(officialMount, HashAlgorithmName.SHA256);
+            var originalHash = File.Exists(officialMount)
+                ? Sha(officialMount, HashAlgorithmName.SHA256) : null;
 
             // The sidecar is the activation switch. Remove it before the two PAK resources.
             File.Delete(mount);
             File.Delete(sig);
             File.Delete(pak);
             if (!Directory.EnumerateFileSystemEntries(modDir).Any()) Directory.Delete(modDir);
-            if (!ShaMatches(officialMount, originalHash))
+            if (originalHash is not null && !ShaMatches(officialMount, originalHash))
                 return Result.Fail("Mount gốc bị thay đổi ngoài phạm vi gỡ R29; hãy kiểm tra game.");
             return Result.Ok();
         }

@@ -130,7 +130,7 @@ public partial class InstallViewModel : ObservableObject
             Summary = r29Installed ? "Đã cài Việt hóa. Có thể cài lại hoặc gỡ."
                 : !valid ? "Hãy chọn đúng thư mục game."
                 : !r29Verified ? "Gói Việt hóa R29 bị thiếu hoặc lỗi dữ liệu."
-                : !r29Compatible ? "Thiếu tệp Mount/SIG cần thiết để cài."
+                : !r29Compatible ? R29MountedPak.CompatibilityIssue(game) ?? "Không thể xác minh dữ liệu Mount/SIG."
                 : "Sẵn sàng cài Việt hóa R29.";
         }
         else if (staged.Present)

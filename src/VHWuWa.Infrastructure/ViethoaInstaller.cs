@@ -1582,7 +1582,7 @@ public sealed class ViethoaInstaller : IViethoaInstaller
                 if (!R29MountedPak.PackageVerified(AppContext.BaseDirectory))
                     return Result.Fail("Gói Việt hóa R29 bị thiếu hoặc lỗi dữ liệu.");
                 if (!R29MountedPak.GameCompatible(gamePath))
-                    return Result.Fail("Hãy chọn đúng thư mục game có đủ Client và Mount/SIG.");
+                    return Result.Fail(R29MountedPak.CompatibilityIssue(gamePath) ?? "Không thể xác minh dữ liệu Mount/SIG.");
                 using var r29Lock = TryAcquireOperationLock(gamePath);
                 if (r29Lock is null)
                     return Result.Fail("Đang cài/gỡ ở cửa sổ khác. Hãy thử lại.");

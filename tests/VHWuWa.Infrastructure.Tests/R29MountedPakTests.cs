@@ -71,7 +71,11 @@ public sealed class R29MountedPakTests : IDisposable
         Assert.True(R29MountedPak.GameCompatible(game));
 
         File.Delete(officialMount);
+        // MountLang_en.txt is not modified by this installer and can be absent.
+        Assert.True(R29MountedPak.GameCompatible(game));
+        Directory.Delete(Path.GetDirectoryName(officialMount)!);
         Assert.False(R29MountedPak.GameCompatible(game));
+        Assert.Contains("Mount", R29MountedPak.CompatibilityIssue(game));
     }
 
     [Fact]
@@ -90,6 +94,41 @@ public sealed class R29MountedPakTests : IDisposable
 
         File.Delete(newer);
         Assert.False(R29MountedPak.GameCompatible(game));
+    }
+
+    [Fact]
+    public void BaseAndUnversionedEnglishSignatures_AreRecognized()
+    {
+        var (game, signature, _) = CreateMountReadyGame();
+        File.Delete(signature);
+        Assert.False(R29MountedPak.GameCompatible(game));
+
+        var lang = Path.Combine(game, "Client", "Saved", "Resources", "3.8.0", "Lang_en");
+        var baseSig = Path.Combine(lang, "Base", "pakchunk10-WindowsNoEditor_P.sig");
+        Directory.CreateDirectory(Path.GetDirectoryName(baseSig)!);
+        File.WriteAllBytes(baseSig, new byte[] { 1, 2, 3 });
+        Assert.True(R29MountedPak.GameCompatible(game));
+        Assert.Null(R29MountedPak.CompatibilityIssue(game));
+
+        File.Delete(baseSig);
+        var rootSig = Path.Combine(lang, "pakchunk10-WindowsNoEditor_P.sig");
+        File.WriteAllBytes(rootSig, new byte[] { 1, 2, 3 });
+        Assert.True(R29MountedPak.GameCompatible(game));
+        File.WriteAllBytes(rootSig, Array.Empty<byte>());
+        Assert.False(R29MountedPak.GameCompatible(game));
+        Assert.Contains("SIG", R29MountedPak.CompatibilityIssue(game));
+    }
+
+    [Fact]
+    public void MissingResourceAndMount_GiveSpecificPreflightErrors()
+    {
+        var (game, _, mountFile) = CreateMountReadyGame();
+        var resource = Path.Combine(game, "Client", "Saved", "Resources", "3.8.0");
+        Directory.Delete(resource, recursive: true);
+        Assert.Contains("3.8.0", R29MountedPak.CompatibilityIssue(game));
+
+        Directory.CreateDirectory(resource);
+        Assert.Contains("Mount", R29MountedPak.CompatibilityIssue(game));
     }
 
     private (string Game, string Signature, string OfficialMount) CreateMountReadyGame()

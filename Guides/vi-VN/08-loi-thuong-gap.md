@@ -6,7 +6,7 @@ Trong **Trang chủ**, bấm **Tự tìm game** hoặc **Chọn thư mục**. Ch
 
 ## Không cài được Việt hóa
 
-Đóng game, kiểm tra đường dẫn và đọc trạng thái trong app. Nếu nút **Cài Việt hóa** chưa khả dụng, không tự sao chép PAK/loader vào game.
+Đóng game và kiểm tra đường dẫn trong ứng dụng. Với R29, app nhận SIG tiếng Anh ở thư mục `Lang_en/Base` hoặc thư mục bản vá. Nếu báo thiếu SIG, chọn **Text Language = English**, mở game để tải đủ dữ liệu ngôn ngữ rồi thoát và kiểm tra lại. Nếu báo thiếu thư mục Mount, dùng Verify/Repair trong launcher. Không tự chép hoặc xóa tệp game gốc.
 
 ## Vẫn còn tiếng Anh sau khi cài
 
