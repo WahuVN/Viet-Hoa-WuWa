@@ -3,6 +3,7 @@ using System.IO;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using VHWuWa.Core.Services;
 
 namespace VHWuWa.App.Services;
 
@@ -19,6 +20,10 @@ public sealed class PakEditorBridge
             throw new FileNotFoundException(
                 "Bản cài này chưa có bộ sửa PAK. Hãy tải đúng gói VietHoa-WuWa mới nhất từ GitHub Releases.",
                 ExecutablePath);
+
+        // The packaged baseline has a different name so the updater never
+        // overwrites user edits in editor/project.db on 3.0.18 -> 3.0.19.
+        EditorProjectDatabaseSeeder.EnsureSeeded(EditorDirectory);
 
         var temp = Path.Combine(Path.GetTempPath(), "VHWuWa_Editor_" + Guid.NewGuid().ToString("N") + ".json");
         try

@@ -10,6 +10,7 @@ using VHWuWa.App.Services;
 using VHWuWa.App.ViewModels;
 using VHWuWa.App.Views;
 using VHWuWa.Core.Abstractions;
+using VHWuWa.Core.Services;
 using VHWuWa.Infrastructure;
 using Wpf.Ui.Appearance;
 
@@ -81,7 +82,15 @@ public partial class App : Application
         var mainWindow = Services.GetRequiredService<MainWindow>();
         ApplyWindowIcon(mainWindow);
         // Signal health only after WPF has rendered main window content, not merely after Show().
-        mainWindow.ContentRendered += (_, _) => CompleteUpdateStartup(e.Args);
+        mainWindow.ContentRendered += (_, _) =>
+        {
+            CompleteUpdateStartup(e.Args);
+            // Deactivate only verified v3.0.18 content files after the R29
+            // app has rendered; preserve originals outside the app directory.
+            // Never mutate the source tree while previewing the UI.
+            if (!e.Args.Contains("--ui-qa-preview", StringComparer.OrdinalIgnoreCase))
+                _ = Task.Run(MigrateVerifiedLegacyContent);
+        };
         mainWindow.Show();
         // UI preview keeps the user's current desktop shortcut untouched.
         if (!e.Args.Contains("--ui-qa-preview", StringComparer.OrdinalIgnoreCase))
@@ -127,6 +136,36 @@ public partial class App : Application
         // đã cache trực tiếp lúc startup để Windows nhận đúng HICON của cửa sổ.
         var iconUri = new Uri("pack://application:,,,/Assets/app-logo-transparent.ico", UriKind.Absolute);
         window.Icon = BitmapFrame.Create(iconUri, BitmapCreateOptions.None, BitmapCacheOption.OnLoad);
+    }
+
+    private static void MigrateVerifiedLegacyContent()
+    {
+        try
+        {
+            var dir = AppContext.BaseDirectory;
+            if (!R29MountedPak.ReleaseRequired(dir) || !R29MountedPak.PackageVerified(dir))
+                return;
+            var qaBackupOverride = Environment.GetEnvironmentVariable("VHWUWA_QA_BACKUP_DIRECTORY");
+            var backupDir = string.IsNullOrWhiteSpace(qaBackupOverride)
+                ? Path.Combine(AppPaths.AppData, "Backups", "v3.0.18-legacy-content")
+                : qaBackupOverride;
+            var result = LegacyReleaseAssetMigration.BackupAndDeactivate(
+                dir, backupDir, verifiedR29: true);
+            if (result.BackedUp > 0 || result.UnknownPreserved > 0 || result.Errors.Count > 0)
+            {
+                Services.GetService<ILogService>()?.Info(
+                    "Update", $"R29 migration: {result.BackedUp} old assets backed up; "
+                        + $"{result.UnknownPreserved} modified assets preserved; "
+                        + $"{result.Errors.Count} errors.");
+                foreach (var error in result.Errors)
+                    Services.GetService<ILogService>()?.Warn("Update", error);
+            }
+        }
+        catch (Exception ex)
+        {
+            try { Services.GetService<ILogService>()?.Warn(
+                "Update", "R29 migration skipped: " + ex.Message); } catch { }
+        }
     }
 
     private static void CompleteUpdateStartup(string[] args)

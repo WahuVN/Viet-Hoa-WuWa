@@ -61,6 +61,24 @@ public sealed class GameDetectionTests : IDisposable
         Assert.DoesNotContain(Path.GetDirectoryName(fake)!, found);
     }
 
+    [Fact]
+    public void DetectVersion_FallsBackToPcResourcesAndReadsLatestManifest()
+    {
+        var game = Path.Combine(_work, "PC Game");
+        var exe = Path.Combine(game, "Client", "Binaries", "Win64", "Client-Win64-Shipping.exe");
+        Directory.CreateDirectory(Path.GetDirectoryName(exe)!);
+        File.WriteAllBytes(exe, Array.Empty<byte>());
+        var manifests = Path.Combine(game, "Client", "Saved", "Resources", "3.8.0", "ResManifest");
+        Directory.CreateDirectory(manifests);
+        File.WriteAllText(Path.Combine(manifests, "ManifestResource_3.8.9.txt"), "older");
+        File.WriteAllText(Path.Combine(manifests, "ManifestResource_3.8.11.txt"), "latest");
+        var detect = new GameDetectionService(_log, _config, new[] { _work });
+
+        Assert.Equal("3.8.0", detect.Validate(game).DetectedVersion);
+        Assert.Equal("3.8.11", GameDetectionService.DetectResourceVersion(game, "3.8.0"));
+        Assert.Null(GameDetectionService.DetectResourceVersion(game, "3.7.0"));
+    }
+
     public void Dispose()
     {
         _log.Dispose();

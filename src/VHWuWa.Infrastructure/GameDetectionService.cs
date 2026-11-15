@@ -86,9 +86,43 @@ public sealed class GameDetectionService : IGameDetectionService
             // fallback: version.txt / *.version
             var vf = Path.Combine(gamePath, "version.txt");
             if (File.Exists(vf)) return File.ReadAllText(vf).Trim();
+            // The PC shipping executable often has no FileVersion or version.txt.
+            var resources = Path.Combine(gamePath, "Client", "Saved", "Resources");
+            if (Directory.Exists(resources))
+            {
+                Version? newest = null;
+                foreach (var dir in Directory.EnumerateDirectories(resources))
+                {
+                    if (!Version.TryParse(Path.GetFileName(dir), out var parsed)) continue;
+                    if (newest is null || newest.CompareTo(parsed) < 0) newest = parsed;
+                }
+                if (newest is not null) return newest.ToString();
+            }
         }
         catch { }
         return null;
+    }
+
+    public static string? DetectResourceVersion(string gamePath, string? gameVersion)
+    {
+        if (string.IsNullOrWhiteSpace(gameVersion)) return null;
+        try
+        {
+            var dir = Path.Combine(gamePath, "Client", "Saved", "Resources", gameVersion, "ResManifest");
+            if (!Directory.Exists(dir)) return null;
+            Version? newest = null;
+            const string prefix = "ManifestResource_";
+            foreach (var file in Directory.EnumerateFiles(dir, "ManifestResource_*.txt", SearchOption.TopDirectoryOnly))
+            {
+                var name = Path.GetFileNameWithoutExtension(file);
+                if (!name.StartsWith(prefix, StringComparison.Ordinal)) continue;
+                if (!Version.TryParse(name[prefix.Length..], out var parsed)) continue;
+                if (newest is null || newest.CompareTo(parsed) < 0) newest = parsed;
+            }
+            return newest?.ToString();
+        }
+        catch (IOException) { return null; }
+        catch (UnauthorizedAccessException) { return null; }
     }
 
     public string? NormalizeGamePath(string path)

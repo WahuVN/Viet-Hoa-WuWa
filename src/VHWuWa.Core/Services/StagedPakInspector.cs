@@ -58,7 +58,7 @@ public static class StagedPakInspector
             if (!digest.Equals(ExpectedSha256, StringComparison.OrdinalIgnoreCase))
                 return new Result(true, false, "PAK R28 sai SHA-256, đã khóa cài đặt.");
             return new Result(true, true,
-                "PAK R28 (3.8.10) đã nạp: 62 DB, SHA-256 khớp. Chưa xác minh loader PC 3.8.1; tạm khóa cài vào game.");
+                "PAK R28 (3.8.10) có SHA hợp lệ, nhưng thử nghiệm PC 3.8.0/resource 3.8.11 báo Corrupt pak index. Không cài.");
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException
                                     or JsonException or ArgumentException)

@@ -10,6 +10,7 @@ using VHWuWa.App.Services;
 using VHWuWa.Core.Abstractions;
 using VHWuWa.Core.Models;
 using VHWuWa.Core.Services;
+using VHWuWa.Infrastructure;
 
 namespace VHWuWa.App.ViewModels;
 
@@ -90,7 +91,8 @@ public abstract partial class PakEditorViewModelBase : ObservableObject
     [ObservableProperty] private string _status = "Đang chuẩn bị dữ liệu…";
 
     // Keep full diagnostics in Status (tooltip/log), but show only one short line in UI.
-    public bool CanEditBuild => !StagedPakInspector.Inspect(AppContext.BaseDirectory).Present;
+    public bool CanEditBuild => !R29MountedPak.PackagePresent(AppContext.BaseDirectory)
+        && !StagedPakInspector.Inspect(AppContext.BaseDirectory).Present;
 
     public string StatusSummary =>
         (Status ?? "").Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
@@ -127,6 +129,12 @@ public abstract partial class PakEditorViewModelBase : ObservableObject
     protected void UpdateInstallPrompt(bool hasVi, bool hasHv, bool uidChanged)
     {
         var staged = StagedPakInspector.Inspect(AppContext.BaseDirectory);
+        if (R29MountedPak.PackagePresent(AppContext.BaseDirectory))
+        {
+            CanInstall = false;
+            InstallPromptMessage = "PAK PC R29 có sẵn ở trang Cài đặt. Chức năng ghi bản chỉnh sửa trực tiếp chưa hỗ trợ R29.";
+            return;
+        }
         if (staged.Present)
         {
             CanInstall = false;
@@ -200,9 +208,11 @@ public abstract partial class PakEditorViewModelBase : ObservableObject
     private async Task InstallAsync(NameVariant variant, string label)
         => await RunAsync($"Đang ghi đè bản {label} vào game…", async () =>
         {
+            if (R29MountedPak.PackagePresent(AppContext.BaseDirectory))
+                throw new InvalidOperationException("PAK R29 cài qua trang Cài đặt; chức năng ghi bản chỉnh sửa trực tiếp chưa hỗ trợ R29.");
             var staged = StagedPakInspector.Inspect(AppContext.BaseDirectory);
             if (staged.Present)
-                throw new InvalidOperationException("PAK R28 đang ở chế độ preupdate. Chưa xác minh loader PC 3.8.1 nên không cài trực tiếp từ trang chỉnh sửa.");
+                throw new InvalidOperationException("PAK R28 không tương thích. Không cài trực tiếp từ trang chỉnh sửa.");
             var game = _settings.Settings.GamePath;
             if (string.IsNullOrWhiteSpace(game))
                 throw new InvalidOperationException("Chưa chọn thư mục game ở Trang chủ.");

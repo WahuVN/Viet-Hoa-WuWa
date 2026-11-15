@@ -7,6 +7,7 @@ using Microsoft.Win32;
 using VHWuWa.Core.Abstractions;
 using VHWuWa.Core.Models;
 using VHWuWa.Core.Services;
+using VHWuWa.Infrastructure;
 
 namespace VHWuWa.App.ViewModels;
 
@@ -76,7 +77,12 @@ public partial class HomeViewModel : ObservableObject
         PathOk = v.IsValid;
         PathStatus = string.IsNullOrWhiteSpace(GamePath) ? "Chưa chọn"
             : v.IsValid ? "Hợp lệ" : v.Message;
-        DetectedVersion = v.DetectedVersion ?? "Chưa xác định";
+        var resourceVersion = PathOk
+            ? GameDetectionService.DetectResourceVersion(GamePath, v.DetectedVersion)
+            : null;
+        DetectedVersion = (v.DetectedVersion ?? "Chưa xác định")
+            + (resourceVersion is null ? "" : " · dữ liệu " + resourceVersion);
+        var r28KnownFailure = v.DetectedVersion == "3.8.0" && resourceVersion == "3.8.11";
 
         // A stale package record cannot confirm an installation in a missing game folder.
         var vst = PathOk ? _viet.GetStatus(GamePath) : null;
@@ -86,6 +92,7 @@ public partial class HomeViewModel : ObservableObject
             TranslationStatus = "Đã cài";
             TranslationVersion = string.IsNullOrWhiteSpace(vst.Version)
                 ? "-"
+                : vst.Version.StartsWith("R", StringComparison.Ordinal) ? vst.Version
                 : "v" + vst.Version.TrimStart('v', 'V');
             CurrentVariant = vst.VariantLabel;
             CurrentFont = (PathOk ? _fonts.CurrentFontPak(GamePath) : null) ?? "Mặc định";
@@ -111,17 +118,34 @@ public partial class HomeViewModel : ObservableObject
         }
 
         var staged = StagedPakInspector.Inspect(AppContext.BaseDirectory);
-        HasStagedContent = staged.Present;
-        StagedContentText = staged.ShaVerified
-            ? "PAK R28 · 62 DB · SHA-256 hợp lệ. Chờ loader 3.8.1."
+        var r29Present = R29MountedPak.ReleaseRequired(AppContext.BaseDirectory)
+            || R29MountedPak.PackagePresent(AppContext.BaseDirectory);
+        var r29Verified = r29Present && R29MountedPak.PackageVerified(AppContext.BaseDirectory);
+        var r29Compatible = PathOk && R29MountedPak.GameCompatible(GamePath);
+        HasStagedContent = r29Present || staged.Present;
+        StagedContentText = r29Present
+            ? (r29Verified
+                ? (r29Compatible
+                    ? "PAK R29 đã cài thử thành công trên PC 3.8.0 / dữ liệu 3.8.11. Cài qua Mount, không dùng DLL."
+                    : "PAK R29 có SHA hợp lệ nhưng phiên bản game chưa khớp bản đã thử nghiệm.")
+                : "PAK R29 bị thiếu hoặc SHA-256 sai. Không cài.")
+            : staged.ShaVerified
+            ? (r28KnownFailure
+                ? "PAK R28 (dữ liệu 3.8.10) đã gây lỗi Corrupt pak index trên PC 3.8.0/dữ liệu 3.8.11. Chưa cài được."
+                : "PAK R28 · 62 DB · SHA-256 hợp lệ; chưa được game PC xác nhận tương thích.")
             : staged.Message;
-        if (staged.Present)
+        if (r29Present)
+        {
+            CanOneClickInstall = PathOk && !IsInstalled && r29Verified && r29Compatible;
+            Message = IsInstalled ? "Đã cài Việt hóa R29 qua Mount." : StagedContentText;
+        }
+        else if (staged.Present)
         {
             CanOneClickInstall = false;
             Message = !PathOk
                 ? "Chưa tìm thấy game PC. Chọn thư mục chứa Client để cài."
                 : staged.ShaVerified
-                    ? "PAK R28 đã có. Chờ loader 3.8.1 tương thích trước khi cài."
+                    ? StagedContentText
                     : staged.Message;
         }
 
@@ -131,9 +155,11 @@ public partial class HomeViewModel : ObservableObject
     [RelayCommand]
     private async Task OneClickInstallAsync()
     {
-        if (StagedPakInspector.Inspect(AppContext.BaseDirectory).Present)
+        if (!R29MountedPak.ReleaseRequired(AppContext.BaseDirectory)
+            && !R29MountedPak.PackagePresent(AppContext.BaseDirectory)
+            && StagedPakInspector.Inspect(AppContext.BaseDirectory).Present)
         {
-            Message = "R28 đang ở chế độ xem trước. Chưa có loader PC 3.8.1 đã xác minh; không cài vào game.";
+            Message = StagedContentText;
             return;
         }
         if (!PathOk)
@@ -142,8 +168,12 @@ public partial class HomeViewModel : ObservableObject
             return;
         }
 
+        var installDescription = R29MountedPak.ReleaseRequired(AppContext.BaseDirectory)
+            || R29MountedPak.PackagePresent(AppContext.BaseDirectory)
+            ? "Ứng dụng chỉ thêm PAK R29, SIG và file Mount phụ; không sửa file game gốc hoặc chép DLL loader."
+            : "Ứng dụng sẽ cài PAK, font và loader từ bộ cài tương thích.";
         var res = MessageBox.Show(
-            $"Bạn có muốn tự động cài đặt bản Việt Hóa chuẩn vào thư mục game:\n{GamePath}\n\n(Hệ thống sẽ tự động cài file PAK Việt Hóa, Font chữ và Loader chống lỗi).",
+            $"Bạn muốn cài Việt hóa vào thư mục game:\n{GamePath}\n\n{installDescription}",
             "Cài đặt Việt Hóa tự động",
             MessageBoxButton.OKCancel,
             MessageBoxImage.Information);
@@ -157,9 +187,9 @@ public partial class HomeViewModel : ObservableObject
             var r = await _viet.InstallAsync(GamePath, NameVariant.English, withFont: true);
             if (r.Success)
             {
-                Message = "✅ Cài đặt Việt Hóa thành công! Bạn có thể bấm “Mở game” ngay bây giờ.";
+                Message = "Đã ghi và kiểm tra PAK Việt hóa. Có thể mở game để xem bản dịch.";
                 MessageBox.Show(
-                    "Cài đặt Việt Hóa thành công 100%!\nBạn có thể bấm “Mở game” để trải nghiệm ngay.",
+                    "Đã cài đặt và đối chiếu SHA-256. Có thể mở game để kiểm tra bản dịch.",
                     "VHWuWa — Cài đặt hoàn tất",
                     MessageBoxButton.OK,
                     MessageBoxImage.Information);
@@ -187,9 +217,10 @@ public partial class HomeViewModel : ObservableObject
     [RelayCommand]
     private async Task OneClickInstallHvAsync()
     {
-        if (StagedPakInspector.Inspect(AppContext.BaseDirectory).Present)
+        if (R29MountedPak.ReleaseRequired(AppContext.BaseDirectory)
+            || StagedPakInspector.Inspect(AppContext.BaseDirectory).Present)
         {
-            Message = "R28 chưa có bản Hán Việt và loader PC 3.8.1 đã nghiệm thu.";
+            Message = "R29 chỉ có bản giữ tên quốc tế; chưa có PAK Hán Việt tương thích.";
             return;
         }
         if (!PathOk) return;

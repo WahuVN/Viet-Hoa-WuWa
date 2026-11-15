@@ -255,6 +255,13 @@ public sealed class ViethoaInstaller : IViethoaInstaller
         var st = new ViethoaStatus { GamePath = gamePath };
         try
         {
+            if (R29MountedPak.IsInstalled(gamePath))
+            {
+                st.Installed = true;
+                st.Version = R29MountedPak.Release;
+                st.Variant = "en";
+                return st;
+            }
             var mods = ModsOf(gamePath);
             var win64 = Win64Of(gamePath);
             var marker = ViethoaInstallMarker.Load(Path.Combine(mods, MarkerName));
@@ -1248,10 +1255,19 @@ public sealed class ViethoaInstaller : IViethoaInstaller
         LastAutoDeletedConflictCount = 0;
         try
         {
+            if (R29MountedPak.ReleaseRequired(AppContext.BaseDirectory)
+                || R29MountedPak.PackagePresent(AppContext.BaseDirectory))
+            {
+                if (variant != NameVariant.English)
+                    return Result.Fail("R29 mới chỉ có bản Việt hóa giữ tên quốc tế; chưa có Hán Việt.");
+                return R29MountedPak.IsInstalled(gamePath)
+                    ? Result.Ok()
+                    : Result.Fail("R29 chưa cài qua Mount. Chọn Cài Việt hóa trong ứng dụng.");
+            }
             var staged = StagedPakInspector.Inspect(AppContext.BaseDirectory);
             if (staged.Present && !staged.CanInstallToGame)
                 return Result.Fail(staged.ShaVerified
-                    ? "PAK R28 đã có nhưng loader 3.8.1 chưa được xác minh. Không ghi vào game."
+                    ? "PAK R28 chưa được game PC chấp nhận (thử nghiệm: Corrupt pak index). Không ghi vào game."
                     : staged.Message);
             var status = GetStatus(gamePath);
             if (!status.Installed)
@@ -1445,10 +1461,20 @@ public sealed class ViethoaInstaller : IViethoaInstaller
         LastAutoDeletedConflictCount = 0;
         try
         {
+            if (R29MountedPak.ReleaseRequired(AppContext.BaseDirectory)
+                || R29MountedPak.PackagePresent(AppContext.BaseDirectory))
+            {
+                if (variant != NameVariant.English)
+                    return Result.Fail("R29 mới chỉ có bản Việt hóa giữ tên quốc tế; chưa có Hán Việt.");
+                using var r29Lock = TryAcquireOperationLock(gamePath);
+                if (r29Lock is null)
+                    return Result.Fail("Đang có thao tác cài/gỡ khác. Không ghi PAK R29.");
+                return await Task.Run(() => R29MountedPak.Install(AppContext.BaseDirectory, gamePath), ct);
+            }
             var staged = StagedPakInspector.Inspect(AppContext.BaseDirectory);
             if (staged.Present && !staged.CanInstallToGame)
                 return Result.Fail(staged.ShaVerified
-                    ? "PAK R28 đã có nhưng loader 3.8.1 chưa được xác minh. Không ghi vào game."
+                    ? "PAK R28 chưa được game PC chấp nhận (thử nghiệm: Corrupt pak index). Không ghi vào game."
                     : staged.Message);
             var win64 = Win64Of(gamePath);
             if (!File.Exists(Path.Combine(win64, "Client-Win64-Shipping.exe")))
@@ -1658,6 +1684,13 @@ public sealed class ViethoaInstaller : IViethoaInstaller
     {
         try
         {
+            if (R29MountedPak.IsInstalled(gamePath))
+            {
+                using var r29Lock = TryAcquireOperationLock(gamePath);
+                if (r29Lock is null)
+                    return Result.Fail("Đang có thao tác cài/gỡ khác. Không xóa PAK R29.");
+                return await Task.Run(() => R29MountedPak.Uninstall(gamePath), ct);
+            }
             var win64 = Win64Of(gamePath);
             if (!GetStatus(gamePath).Installed)
                 return Result.Fail("Chưa phát hiện bản Việt hóa do VHWuWa cài trong thư mục game này.");

@@ -33,6 +33,7 @@ public partial class InstallViewModel : ObservableObject
     [ObservableProperty] private bool _busy;
     [ObservableProperty] private bool _canInstall;
     [ObservableProperty] private bool _fontAvailable;
+    [ObservableProperty] private bool _isHanVietAvailable = true;
     [ObservableProperty] private bool _hasConflicts;
     [ObservableProperty] private string _conflictText = "✔ Không phát hiện mod khác.";
     [ObservableProperty] private bool _hasQuarantine;
@@ -81,18 +82,43 @@ public partial class InstallViewModel : ObservableObject
         FontAvailable = content.FontPak is not null;
         HasHanViet = File.Exists(HanVietPakPath);
         var staged = StagedPakInspector.Inspect(AppContext.BaseDirectory);
-        InstallButtonText = !valid
-            ? "Chưa có game PC"
-            : staged.Present ? "Chờ loader 3.8.1" : "Cài Việt hóa";
-        ShowHanVietDownload = !HasHanViet && !staged.Present;
+        var r29Present = R29MountedPak.ReleaseRequired(AppContext.BaseDirectory)
+            || R29MountedPak.PackagePresent(AppContext.BaseDirectory);
+        // R29 is mounted without the old DLL/font PAK; never claim that the
+        // separate font option is installed when the R29 branch ignores it.
+        IsHanVietAvailable = !r29Present;
+        if (r29Present)
+        {
+            VariantEnglish = true;
+            ApplyFont = false;
+            FontAvailable = false;
+            HasHanViet = false;
+        }
+        var r29Verified = r29Present && R29MountedPak.PackageVerified(AppContext.BaseDirectory);
+        var r29Compatible = valid && R29MountedPak.GameCompatible(game);
+        var r29Installed = valid && R29MountedPak.IsInstalled(game);
+        InstallButtonText = !valid ? "Chưa có game PC"
+            : r29Present ? (r29Installed ? "Đã cài R29" : "Cài Việt hóa R29")
+            : staged.Present ? "PAK R28 chưa tương thích" : "Cài Việt hóa";
+        ShowHanVietDownload = !HasHanViet && !staged.Present && !r29Present;
         HanVietDownloadBtnText = HasHanViet ? "Đã có bản Hán Việt" : "Tải bản Hán Việt (~60 MB)";
 
-        if (staged.Present)
+        if (r29Present)
+        {
+            ContentText = r29Verified
+                ? "PAK R29 · 62 DB · SHA-256 hợp lệ · game PC đã xác nhận hiển thị tiếng Việt."
+                : "PAK R29 thiếu hoặc sai SHA-256; không cài.";
+            CanInstall = valid && r29Verified && r29Compatible && !r29Installed;
+            Summary = r29Installed ? "Đã cài R29 qua Mount. Có thể gỡ ở trang này."
+                : CanInstall ? "Sẵn sàng cài bản R29 giữ tên quốc tế, không dùng DLL cũ."
+                : "Chưa xác minh được bản game hoặc PAK R29. Không cài.";
+        }
+        else if (staged.Present)
         {
             ContentText = staged.Message;
             CanInstall = false;
             Summary = staged.ShaVerified
-                ? "PAK mới đã nạp vào ứng dụng. Chờ kiểm thử loader 3.8.1 trước khi cài vào game PC."
+                ? "PAK R28 đã vượt kiểm tra offline nhưng game PC thực tế báo Corrupt pak index. Không cài gói này vào game."
                 : "Gói R28 chưa vượt kiểm tra an toàn. Không cài vào game.";
         }
         else if (!content.HasLoader)
@@ -409,6 +435,13 @@ public partial class InstallViewModel : ObservableObject
         var game = _settings.Settings.GamePath;
         if (string.IsNullOrWhiteSpace(game)) { Summary = "Chưa chọn thư mục game (ở Trang chủ)."; return; }
         var variant = VariantEnglish ? NameVariant.English : NameVariant.HanViet;
+        if ((R29MountedPak.ReleaseRequired(AppContext.BaseDirectory)
+            || R29MountedPak.PackagePresent(AppContext.BaseDirectory))
+            && variant == NameVariant.HanViet)
+        {
+            Summary = "R29 chưa có PAK Hán Việt. Hãy chọn tên Anh để cài bản Việt hóa này.";
+            return;
+        }
         _cts = new CancellationTokenSource();
         Busy = true; Progress = 0; ProgressText = "Bắt đầu...";
         Summary = "⚠ HÃY TẮT GAME trước khi cài.";

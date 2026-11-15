@@ -62,7 +62,7 @@
                     BorderBrush="#3A434D" BorderThickness="1"
                     Visibility="{Binding HasStagedContent, Converter={StaticResource BoolToVis}}">
                 <StackPanel>
-                    <TextBlock Text="PAK R28" FontSize="13" FontWeight="SemiBold" Foreground="#F1F3F5"/>
+                    <TextBlock Text="PAK Việt hóa PC" FontSize="13" FontWeight="SemiBold" Foreground="#F1F3F5"/>
                     <TextBlock Text="{Binding StagedContentText}" Margin="0,5,0,0"
                                FontSize="12" TextWrapping="Wrap" Foreground="#B6C2CF"/>
                 </StackPanel>
@@ -188,6 +188,8 @@
                                              IsChecked="{Binding VariantEnglish, Mode=TwoWay}"
                                              FontSize="13" Margin="0,4,0,7" />
                                 <RadioButton GroupName="variant" Content="Tên Hán Việt"
+                                             IsEnabled="{Binding IsHanVietAvailable}"
+                                             ToolTip="R29 chưa có PAK Hán Việt tương thích game PC 3.8.11."
                                              IsChecked="{Binding VariantHanViet, Mode=TwoWay}"
                                              FontSize="13" Margin="0,3,0,7" />
                                 <Button Style="{StaticResource WahuStandardButtonStyle}" Content="{Binding HanVietDownloadBtnText}"
@@ -197,6 +199,7 @@
                                         Padding="10,6" FontSize="11" />
                                 <CheckBox IsChecked="{Binding ApplyFont, Mode=TwoWay}"
                                           IsEnabled="{Binding FontAvailable}"
+                                          ToolTip="R29 đang dùng Mount không hỗ trợ cài PAK font riêng; chỉ bật khi có gói font tương thích."
                                           Content="Cài font tiếng Việt" FontSize="12" Margin="0,8,0,0" />
                             </StackPanel>
                             <Border Grid.Column="1" Width="1" Background="#292D33"

@@ -14,12 +14,16 @@ Bản cập nhật tập trung vào giao diện, quản lý font và độ an to
 - Bổ sung xử lý trạng thái PAK và kiểm tra bản cập nhật, giữ cơ chế xác minh SHA-256, sao lưu và khôi phục khi có lỗi.
 
 ## Dữ liệu Việt hóa
-- Đã chuẩn bị riêng gói PAK PC R28 cho tài nguyên 3.8.10. Kiểm tra đóng/mở 62/62 mục đạt, nhưng **chưa nghiệm thu loader và hiển thị trong game Wuthering Waves 3.8.1**.
-- Chưa mở cài tự động PAK R28. Bản PC và bản Android sử dụng PAK riêng, không hoán đổi lẫn nhau.
+- Sửa đóng gói PAK PC R29 theo cấu trúc đã dùng trên Android/PC cũ, giữ nguyên 62/62 DB của R28. Gói R28 PC cũ gây lỗi `Corrupt pak index`; R29 đã vào game thật và hiển thị tiếng Việt ở cảnh báo/đăng nhập.
+- Đưa cơ chế cài/gỡ R29 vào chính ứng dụng **v3.0.19**: dùng Mount phụ, không chép loader DLL 3.7, kiểm tra SHA-256, bảo vệ tệp gốc và xác minh gỡ/cài lại trên PC.
+- R29 mới hỗ trợ biến thể tên quốc tế; Hán Việt, font và độ phủ toàn bộ gameplay còn cần QA trước khi phát hành.
 
 ## Kiểm thử
-- Unit test Release trên WIN3: 162/162 PASS (50 Core, 112 Infrastructure).
+- Unit test Release trên WIN3: **172/172 PASS** (56 Core, 116 Infrastructure).
+- ZIP ứng viên v3.0.19 + R29 kiểm tra đầy đủ file bắt buộc, đúng tên updater; updater công khai 3.0.18 đã nâng sandbox thành công, không ảnh hưởng máy thật.
+- Thêm khối an toàn chống rơi ngược về PAK/loader 3.7 khi gói R29 thiếu hoặc hỏng; sao lưu 6 tệp cũ theo SHA sau nâng cấp.
+- Cải tiến giữ `editor/project.db` của người dùng khi cập nhật; máy cài mới dùng `editor/project.default.db` để khởi tạo dữ liệu làm việc.
 - Gói QA nội bộ đã thử nâng cấp 3.0.18 → 3.0.19 và giữ cấu hình thử nghiệm.
-- **Chưa phát hành v3.0.19**; cần nghiệm thu game PC thực tế, loader, font và PAK trước khi công bố.
+- **Chưa phát hành v3.0.19**; bản PAK R29 đã được kiểm tra cảnh báo/đăng nhập, nhưng cần QA Hán Việt, font và nội dung gameplay trước khi công bố.
 
 *Nhật ký này được chuyển thành nội dung công khai chỉ sau khi các điều kiện phát hành đạt.*
