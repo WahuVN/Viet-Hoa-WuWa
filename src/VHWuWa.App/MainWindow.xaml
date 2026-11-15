@@ -12,41 +12,80 @@
                   FontFamily="{StaticResource WahuAppFontFamily}" FontSize="14"
                   UseLayoutRounding="True" SnapsToDevicePixels="True">
     <ui:FluentWindow.Resources>
-        <!-- Native navigation: consistent heights, keyboard focus, clear selection.
-             Palette from WAHU Windows Desktop UI Kit / Dark Professional. -->
+        <!-- Compact, accessible desktop navigation: restrained slate palette, vector icons,
+             clear grouping, hover/focus feedback and a persistent selection rail. -->
+        <Style x:Key="WahuNavGlyphStyle" TargetType="{x:Type Path}">
+            <Setter Property="Width" Value="19" />
+            <Setter Property="Height" Value="19" />
+            <Setter Property="Stretch" Value="Uniform" />
+            <Setter Property="Margin" Value="0,0,13,0" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="StrokeThickness" Value="1.65" />
+            <Setter Property="StrokeStartLineCap" Value="Round" />
+            <Setter Property="StrokeEndLineCap" Value="Round" />
+            <Setter Property="StrokeLineJoin" Value="Round" />
+            <Setter Property="Fill" Value="Transparent" />
+            <Setter Property="Stroke" Value="{Binding Foreground, RelativeSource={RelativeSource AncestorType={x:Type ListBoxItem}}}" />
+        </Style>
+        <Style x:Key="WahuNavLabelStyle" TargetType="{x:Type TextBlock}">
+            <Setter Property="FontFamily" Value="{StaticResource WahuAppFontFamily}" />
+            <Setter Property="FontSize" Value="12.5" />
+            <Setter Property="FontWeight" Value="Medium" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Foreground" Value="{Binding Foreground, RelativeSource={RelativeSource AncestorType={x:Type ListBoxItem}}}" />
+        </Style>
+        <Style x:Key="WahuNavGroupStyle" TargetType="{x:Type ListBoxItem}">
+            <Setter Property="IsEnabled" Value="False" />
+            <Setter Property="Focusable" Value="False" />
+            <Setter Property="MinHeight" Value="23" />
+            <Setter Property="Margin" Value="6,9,6,1" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type ListBoxItem}">
+                        <TextBlock Text="{TemplateBinding Content}" Margin="12,2,0,0"
+                                   Foreground="#83919F" FontFamily="{StaticResource WahuAppFontFamily}"
+                                   FontSize="10" FontWeight="SemiBold" VerticalAlignment="Center" />
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
         <Style x:Key="WahuNavItemStyle" TargetType="{x:Type ListBoxItem}">
             <Setter Property="FontFamily" Value="{StaticResource WahuAppFontFamily}" />
-            <Setter Property="FontSize" Value="13" />
-            <Setter Property="MinHeight" Value="44" />
-            <Setter Property="Margin" Value="6,3" />
-            <Setter Property="Padding" Value="15,11" />
-            <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
+            <Setter Property="MinHeight" Value="43" />
+            <Setter Property="Margin" Value="6,2" />
+            <Setter Property="Padding" Value="14,9" />
+            <Setter Property="Foreground" Value="#B9C3CE" />
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="HorizontalContentAlignment" Value="Stretch" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="{x:Type ListBoxItem}">
-                        <Border x:Name="NavSurface"
-                                CornerRadius="8"
-                                Background="{TemplateBinding Background}"
-                                Padding="{TemplateBinding Padding}"
-                                SnapsToDevicePixels="True">
-                            <ContentPresenter Content="{TemplateBinding Content}"
-                                              VerticalAlignment="Center"
-                                              HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" />
-                        </Border>
+                        <Grid>
+                            <Border x:Name="NavSurface" CornerRadius="9"
+                                    BorderThickness="1" BorderBrush="Transparent"
+                                    Background="{TemplateBinding Background}"
+                                    Padding="{TemplateBinding Padding}" SnapsToDevicePixels="True">
+                                <ContentPresenter Content="{TemplateBinding Content}"
+                                                  VerticalAlignment="Center"
+                                                  HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" />
+                            </Border>
+                            <Border x:Name="ActiveRail" Width="3" CornerRadius="2"
+                                    Margin="0,10,0,10" HorizontalAlignment="Left"
+                                    Background="#A2B9CC" Visibility="Collapsed" />
+                        </Grid>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="NavSurface" Property="Background" Value="#1A1E23" />
+                                <Setter TargetName="NavSurface" Property="Background" Value="#222A33" />
+                                <Setter Property="Foreground" Value="#E1E8EF" />
                             </Trigger>
                             <Trigger Property="IsSelected" Value="True">
-                                <Setter TargetName="NavSurface" Property="Background" Value="#1B2026" />
-                                <Setter Property="Foreground" Value="#F1F3F5" />
-                                <Setter Property="FontWeight" Value="SemiBold" />
+                                <Setter TargetName="NavSurface" Property="Background" Value="#283442" />
+                                <Setter TargetName="NavSurface" Property="BorderBrush" Value="#455567" />
+                                <Setter TargetName="ActiveRail" Property="Visibility" Value="Visible" />
+                                <Setter Property="Foreground" Value="#F6F8FA" />
                             </Trigger>
                             <Trigger Property="IsKeyboardFocusWithin" Value="True">
-                                <Setter TargetName="NavSurface" Property="BorderBrush" Value="#B6C2CF" />
-                                <Setter TargetName="NavSurface" Property="BorderThickness" Value="1" />
+                                <Setter TargetName="NavSurface" Property="BorderBrush" Value="#A5BACE" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -65,14 +104,13 @@
 
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="252" />
+                <ColumnDefinition Width="260" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
 
             <Border Grid.Column="0" BorderThickness="0,0,1,0"
-                    Background="{DynamicResource ApplicationBackgroundBrush}"
-                    BorderBrush="{DynamicResource ControlElevationBorderBrush}">
-                <DockPanel Margin="6">
+                    Background="#151A20" BorderBrush="#303842">
+                <DockPanel Margin="6,0,6,6">
                     <StackPanel DockPanel.Dock="Bottom" Margin="4,6,4,4">
                         <Separator Margin="0,4" Opacity="0.4" />
 
@@ -104,10 +142,23 @@
                             </StackPanel>
                         </Border>
 
-                        <StackPanel Margin="2,0,2,6">
-                            <TextBlock Text="{Binding AppVersion}" Opacity="0.75" FontSize="11" />
-                            <TextBlock Text="{Binding GameStatus}" Opacity="0.6" FontSize="11" Margin="0,1,0,0" TextWrapping="Wrap" />
-                        </StackPanel>
+                        <Border Background="#1D252E" BorderBrush="#303D49" BorderThickness="1"
+                                CornerRadius="9" Margin="2,1,2,9" Padding="10,9">
+                            <StackPanel>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="16" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <Ellipse Width="7" Height="7" Fill="#9BB4CA"
+                                             HorizontalAlignment="Left" VerticalAlignment="Center" Margin="2,0,0,0" />
+                                    <TextBlock Grid.Column="1" Text="{Binding AppVersion}"
+                                               Foreground="#E1E7ED" FontWeight="SemiBold" FontSize="11" />
+                                </Grid>
+                                <TextBlock Text="{Binding GameStatus}" Foreground="#A2ADB7"
+                                           FontSize="10.5" Margin="16,5,0,0" TextWrapping="Wrap" />
+                            </StackPanel>
+                        </Border>
 
                         <Grid Margin="0,0,0,6">
                             <Grid.ColumnDefinitions>
@@ -137,22 +188,92 @@
 
 
                     </StackPanel>
-                    <StackPanel DockPanel.Dock="Top" Margin="12,10,12,18">
-                        <TextBlock Text="Bản dịch và công cụ" FontSize="16" FontWeight="SemiBold" Foreground="#F1F3F5" />
-                        <TextBlock Text="Wuthering Waves · PC" FontSize="11" Foreground="#969DA6" Margin="0,3,0,0" />
-                    </StackPanel>
+                    <Border DockPanel.Dock="Top" BorderThickness="0,0,0,1"
+                            BorderBrush="#2E3843" Margin="12,10,12,10" Padding="0,9,0,17">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="43" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Border Width="38" Height="38" CornerRadius="10" HorizontalAlignment="Left"
+                                    Background="#273240" BorderBrush="#394958" BorderThickness="1">
+                                <Image Source="/Assets/app-logo-transparent.ico"
+                                       Width="28" Height="28" Stretch="Uniform"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                <TextBlock Text="Công cụ Việt hóa" Foreground="#F4F6F8"
+                                           FontSize="15" FontWeight="SemiBold" />
+                                <TextBlock Text="WUTHERING WAVES  ·  PC" Foreground="#91A1B0"
+                                           FontSize="9.5" Margin="0,5,0,0" />
+                            </StackPanel>
+                        </Grid>
+                    </Border>
 
                     <ListBox x:Name="Nav" SelectionChanged="Nav_SelectionChanged"
                              BorderThickness="0" Background="Transparent"
+                             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                             ScrollViewer.VerticalScrollBarVisibility="Auto"
                              ItemContainerStyle="{StaticResource WahuNavItemStyle}">
-                        <ListBoxItem Tag="home" Content="Trang chủ" />
-                        <ListBoxItem Tag="characters" Content="Tên nhân vật" />
-                        <ListBoxItem Tag="terms" Content="Thuật ngữ" />
-                        <ListBoxItem Tag="uid" Content="UID" />
-                        <ListBoxItem Tag="font" Content="Font game" />
-                        <ListBoxItem Tag="graphics" Content="Đồ họa" />
-                        <ListBoxItem Tag="guide" Content="Trợ giúp" />
-                        <ListBoxItem Tag="settings" Content="Cài đặt" />
+                        <ListBoxItem Style="{StaticResource WahuNavGroupStyle}" Content="TỔNG QUAN" />
+                        <ListBoxItem Tag="home" AutomationProperties.Name="Trang chủ">
+                            <StackPanel Orientation="Horizontal">
+                                <Path Style="{StaticResource WahuNavGlyphStyle}"
+                                      Data="M3,10.5 L12,3 L21,10.5 M5.5,9 V20 H10 V14 H14 V20 H18.5 V9" />
+                                <TextBlock Style="{StaticResource WahuNavLabelStyle}" Text="Trang chủ" />
+                            </StackPanel>
+                        </ListBoxItem>
+                        <ListBoxItem Style="{StaticResource WahuNavGroupStyle}" Content="CÁ NHÂN HÓA" />
+                        <ListBoxItem Tag="characters" AutomationProperties.Name="Tên nhân vật">
+                            <StackPanel Orientation="Horizontal">
+                                <Path Style="{StaticResource WahuNavGlyphStyle}"
+                                      Data="M16,8 A4,4 0 1 1 8,8 A4,4 0 1 1 16,8 M4,21 C4,16 8,14 12,14 C16,14 20,16 20,21" />
+                                <TextBlock Style="{StaticResource WahuNavLabelStyle}" Text="Tên nhân vật" />
+                            </StackPanel>
+                        </ListBoxItem>
+                        <ListBoxItem Tag="terms" AutomationProperties.Name="Thuật ngữ">
+                            <StackPanel Orientation="Horizontal">
+                                <Path Style="{StaticResource WahuNavGlyphStyle}"
+                                      Data="M5,4 H19 V20 H5 Z M8,8 H16 M8,12 H16 M8,16 H13" />
+                                <TextBlock Style="{StaticResource WahuNavLabelStyle}" Text="Thuật ngữ" />
+                            </StackPanel>
+                        </ListBoxItem>
+                        <ListBoxItem Tag="uid" AutomationProperties.Name="UID">
+                            <StackPanel Orientation="Horizontal">
+                                <Path Style="{StaticResource WahuNavGlyphStyle}"
+                                      Data="M4,8 V5 H8 M16,5 H20 V8 M20,16 V20 H16 M8,20 H4 V16 M9,10 H15 V14 H9 Z" />
+                                <TextBlock Style="{StaticResource WahuNavLabelStyle}" Text="UID" />
+                            </StackPanel>
+                        </ListBoxItem>
+                        <ListBoxItem Tag="font" AutomationProperties.Name="Font game">
+                            <StackPanel Orientation="Horizontal">
+                                <Path Style="{StaticResource WahuNavGlyphStyle}"
+                                      Data="M5,19 L11,5 H13 L19,19 M7.5,14 H16.5" />
+                                <TextBlock Style="{StaticResource WahuNavLabelStyle}" Text="Font game" />
+                            </StackPanel>
+                        </ListBoxItem>
+                        <ListBoxItem Tag="graphics" AutomationProperties.Name="Đồ họa">
+                            <StackPanel Orientation="Horizontal">
+                                <Path Style="{StaticResource WahuNavGlyphStyle}"
+                                      Data="M3,5 H21 V18 H3 Z M9,22 H15 M12,18 V22 M6,14 L10,10 L13,13 L17,8" />
+                                <TextBlock Style="{StaticResource WahuNavLabelStyle}" Text="Đồ họa" />
+                            </StackPanel>
+                        </ListBoxItem>
+                        <ListBoxItem Style="{StaticResource WahuNavGroupStyle}" Content="HỆ THỐNG" />
+                        <ListBoxItem Tag="guide" AutomationProperties.Name="Trợ giúp">
+                            <StackPanel Orientation="Horizontal">
+                                <Path Style="{StaticResource WahuNavGlyphStyle}"
+                                      Data="M4,5 C8,3 10,5 12,6 C14,5 17,3 20,5 V19 C17,17 14,18 12,20 C10,18 7,17 4,19 Z M12,6 V20" />
+                                <TextBlock Style="{StaticResource WahuNavLabelStyle}" Text="Trợ giúp" />
+                            </StackPanel>
+                        </ListBoxItem>
+                        <ListBoxItem Tag="settings" AutomationProperties.Name="Cài đặt">
+                            <StackPanel Orientation="Horizontal">
+                                <Path Style="{StaticResource WahuNavGlyphStyle}"
+                                      Data="M12,3 L13.5,5.1 L16,5.8 L18.2,4.8 L19.2,5.8 L18.2,8 L18.9,10.5 L21,12 L18.9,13.5 L18.2,16 L19.2,18.2 L18.2,19.2 L16,18.2 L13.5,18.9 L12,21 L10.5,18.9 L8,18.2 L5.8,19.2 L4.8,18.2 L5.8,16 L5.1,13.5 L3,12 L5.1,10.5 L5.8,8 L4.8,5.8 L5.8,4.8 L8,5.8 L10.5,5.1 Z M15.2,12 A3.2,3.2 0 1 1 8.8,12 A3.2,3.2 0 1 1 15.2,12" />
+                                <TextBlock Style="{StaticResource WahuNavLabelStyle}" Text="Cài đặt" />
+                            </StackPanel>
+                        </ListBoxItem>
                     </ListBox>
                 </DockPanel>
             </Border>

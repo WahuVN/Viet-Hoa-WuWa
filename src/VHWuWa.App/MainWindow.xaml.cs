@@ -15,7 +15,7 @@ public partial class MainWindow : FluentWindow
         _sp = sp;
         InitializeComponent();
         DataContext = vm;
-        Nav.SelectedIndex = 0; // mở Trang chủ
+        Nav.SelectedIndex = 1; // Nhóm Tổng quan là nhãn không chọn; mở Trang chủ
     }
 
     private void Nav_SelectionChanged(object sender, SelectionChangedEventArgs e)
