@@ -106,12 +106,14 @@ public partial class InstallViewModel : ObservableObject
         if (r29Present)
         {
             ContentText = r29Verified
-                ? "PAK R29 · 62 DB · SHA-256 hợp lệ · game PC đã xác nhận hiển thị tiếng Việt."
-                : "PAK R29 thiếu hoặc sai SHA-256; không cài.";
+                ? "Gói Việt hóa R29 đã sẵn sàng."
+                : "Gói Việt hóa R29 bị thiếu hoặc lỗi dữ liệu.";
             CanInstall = valid && r29Verified && r29Compatible && !r29Installed;
-            Summary = r29Installed ? "Đã cài R29 qua Mount. Có thể gỡ ở trang này."
-                : CanInstall ? "Sẵn sàng cài bản R29 giữ tên quốc tế, không dùng DLL cũ."
-                : "Chưa xác minh được bản game hoặc PAK R29. Không cài.";
+            Summary = r29Installed ? "Đã cài R29. Có thể gỡ ở trang này."
+                : !valid ? "Hãy chọn đúng thư mục game."
+                : !r29Verified ? "Gói Việt hóa R29 bị thiếu hoặc lỗi dữ liệu."
+                : !r29Compatible ? "Thiếu tệp Mount/SIG cần thiết để cài."
+                : "Sẵn sàng cài Việt hóa R29.";
         }
         else if (staged.Present)
         {

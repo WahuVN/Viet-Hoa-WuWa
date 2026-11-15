@@ -124,11 +124,10 @@ public partial class HomeViewModel : ObservableObject
         var r29Compatible = PathOk && R29MountedPak.GameCompatible(GamePath);
         HasStagedContent = r29Present || staged.Present;
         StagedContentText = r29Present
-            ? (r29Verified
-                ? (r29Compatible
-                    ? "PAK R29 đã cài thử thành công trên PC 3.8.0 / dữ liệu 3.8.11. Cài qua Mount, không dùng DLL."
-                    : "PAK R29 có SHA hợp lệ nhưng phiên bản game chưa khớp bản đã thử nghiệm.")
-                : "PAK R29 bị thiếu hoặc SHA-256 sai. Không cài.")
+            ? (!r29Verified ? "Gói Việt hóa R29 bị thiếu hoặc lỗi dữ liệu."
+                : !PathOk ? "Gói Việt hóa R29 đã sẵn sàng. Hãy chọn thư mục game."
+                : r29Compatible ? "Gói Việt hóa R29 đã sẵn sàng để cài."
+                : "Không tìm thấy đủ tệp Mount/SIG trong thư mục game.")
             : staged.ShaVerified
             ? (r28KnownFailure
                 ? "PAK R28 (dữ liệu 3.8.10) đã gây lỗi Corrupt pak index trên PC 3.8.0/dữ liệu 3.8.11. Chưa cài được."

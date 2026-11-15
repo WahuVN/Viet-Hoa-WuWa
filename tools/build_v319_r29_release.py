@@ -142,7 +142,7 @@ def prepare(args: argparse.Namespace) -> int:
         "appVersion": "3.0.19",
         "translationRelease": "R29",
         "resourceVersion": "3.8.11",
-        "supportedGame": "Wuthering Waves PC 3.8.0 / 3.8.11 (MAY-007 verified build only)",
+        "supportedGame": "Wuthering Waves PC with Client and Mount/SIG language files (not EXE or resource version locked)",
         "pakSha256": R29_PAK_SHA256,
         "pakPath": R29_PAK_REL,
         "mode": "mount-sidecar-no-dll",
@@ -156,8 +156,8 @@ def prepare(args: argparse.Namespace) -> int:
         "WuWa Viet Hoa PC v3.0.19 - R29\n"
         "1. Giai nen toan bo ZIP vao mot thu muc co dinh.\n"
         "2. Chay VHWuWa.exe (khong mo truc tiep tu ZIP).\n"
-        "3. Chon thu muc game. R29 chi ho tro ban PC 3.8.0 / data 3.8.11\n"
-        "   va file game da xac minh; neu khong khop, nut Cai se bi khoa.\n"
+        "3. Chon thu muc game chua Client. App kiem tra cac file Mount/SIG\n"
+        "   can thiet; khong khoa theo phien ban EXE hay patch resource.\n"
         "4. R29 giu ten nhan vat quoc te; chua ho tro Han Viet / font PAK rieng.\n"
         "5. Ung dung hoi truoc khi tai/cap nhat tren GitHub; co rollback.\n"
         "6. Da tai tu Github Releases chinh thuc; khong tat Defender/SmartScreen.\n",

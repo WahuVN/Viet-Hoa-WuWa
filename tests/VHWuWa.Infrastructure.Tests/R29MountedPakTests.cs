@@ -50,6 +50,66 @@ public sealed class R29MountedPakTests : IDisposable
         Assert.False(R29MountedPak.PackageVerified(app));
     }
 
+    [Fact]
+    public void ChangedGameExeAndNewerResourceManifest_DoNotBlockR29Mount()
+    {
+        // Neither the EXE hash pinned on MAY-007 nor the exact resource manifest
+        // is a requirement for installing a text PAK using the same Mount layout.
+        var (game, signature, officialMount) = CreateMountReadyGame();
+        var manifests = Path.Combine(game, "Client", "Saved", "Resources", "3.8.0", "ResManifest");
+        Directory.CreateDirectory(manifests);
+        File.WriteAllText(Path.Combine(manifests, "ManifestResource_3.8.12.txt"), "new game resource");
+
+        Assert.True(R29MountedPak.GameCompatible(game));
+
+        Directory.Delete(manifests, recursive: true);
+        Assert.True(R29MountedPak.GameCompatible(game));
+
+        File.Delete(signature);
+        Assert.False(R29MountedPak.GameCompatible(game));
+        File.WriteAllBytes(signature, new byte[] { 1, 2, 3 });
+        Assert.True(R29MountedPak.GameCompatible(game));
+
+        File.Delete(officialMount);
+        Assert.False(R29MountedPak.GameCompatible(game));
+    }
+
+    [Fact]
+    public void AnyExistingLanguageSignatureVersion_CanProvideTheMountSignature()
+    {
+        var (game, signature, _) = CreateMountReadyGame();
+        Assert.True(R29MountedPak.GameCompatible(game));
+
+        // Updates may leave a newer language SIG without the old 3.8.6 folder.
+        File.Delete(signature);
+        var newer = Path.Combine(game, "Client", "Saved", "Resources", "3.8.0",
+            "Lang_en", "3.9.1", "pakchunk10-WindowsNoEditor_P.sig");
+        Directory.CreateDirectory(Path.GetDirectoryName(newer)!);
+        File.WriteAllBytes(newer, new byte[] { 3, 9, 1 });
+        Assert.True(R29MountedPak.GameCompatible(game));
+
+        File.Delete(newer);
+        Assert.False(R29MountedPak.GameCompatible(game));
+    }
+
+    private (string Game, string Signature, string OfficialMount) CreateMountReadyGame()
+    {
+        var game = Path.Combine(_root, Guid.NewGuid().ToString("N"));
+        var exe = Path.Combine(game, "Client", "Binaries", "Win64", "Client-Win64-Shipping.exe");
+        Directory.CreateDirectory(Path.GetDirectoryName(exe)!);
+        File.WriteAllText(exe, "different EXE build from MAY-007");
+
+        var resource = Path.Combine(game, "Client", "Saved", "Resources", "3.8.0");
+        var mount = Path.Combine(resource, "Mount", "MountLang_en.txt");
+        Directory.CreateDirectory(Path.GetDirectoryName(mount)!);
+        File.WriteAllText(mount, "::Mount::\r\n");
+
+        var sig = Path.Combine(resource, "Lang_en", "3.8.9", "pakchunk10-WindowsNoEditor_P.sig");
+        Directory.CreateDirectory(Path.GetDirectoryName(sig)!);
+        File.WriteAllBytes(sig, new byte[] { 1, 2, 3 });
+        return (game, sig, mount);
+    }
+
     public void Dispose()
     {
         try { if (Directory.Exists(_root)) Directory.Delete(_root, recursive: true); } catch { }

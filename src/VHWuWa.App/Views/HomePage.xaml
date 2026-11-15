@@ -189,7 +189,7 @@
                                              FontSize="13" Margin="0,4,0,7" />
                                 <RadioButton GroupName="variant" Content="Tên Hán Việt"
                                              IsEnabled="{Binding IsHanVietAvailable}"
-                                             ToolTip="R29 chưa có PAK Hán Việt tương thích game PC 3.8.11."
+                                             ToolTip="R29 hiện chưa có gói Hán Việt."
                                              IsChecked="{Binding VariantHanViet, Mode=TwoWay}"
                                              FontSize="13" Margin="0,3,0,7" />
                                 <Button Style="{StaticResource WahuStandardButtonStyle}" Content="{Binding HanVietDownloadBtnText}"
@@ -213,7 +213,7 @@
                                 <ui:Button Content="{Binding InstallButtonText}"
                                            Appearance="Primary" Command="{Binding InstallCommand}"
                                            Padding="18,10" MinHeight="44" FontSize="14" FontWeight="SemiBold"
-                                           ToolTip="Chỉ cài khi game, PAK và loader đã được xác minh tương thích."
+                                           ToolTip="Cài bản dịch khi đã chọn đúng thư mục game và gói Việt hóa sẵn sàng."
                                            AutomationProperties.Name="Cài Việt hóa vào game"
                                            HorizontalAlignment="Stretch" Margin="0,0,0,9" />
                                 <Expander Header="Tùy chọn nâng cao" IsExpanded="False">
