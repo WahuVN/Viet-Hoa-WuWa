@@ -1,4 +1,4 @@
-"""Create canonical portable ZIPs for v3.0.20 Windows release QA.
+"""Create canonical portable ZIPs for the current Windows release QA.
 
 Preserve directory structure with forward-slash ZIP entries, verify the R29 PAK
 inside the archive and only replace an existing candidate after all checks pass.
@@ -60,7 +60,7 @@ def package(stage: Path, output: Path, version: str, expected_files: int):
             raise RuntimeError(f"R29 SHA inside ZIP mismatch: {pak_sha}")
         marker = json.loads(z.read("content/r29-release.json"))
         if marker.get("appVersion") != version or marker.get("translationRelease") != "R29":
-            raise RuntimeError("Release marker does not match v3.0.20 and R29")
+            raise RuntimeError("Release marker does not match the expected version and R29")
         if any(z.getinfo(x).file_size == 0 for x in REQUIRED):
             raise RuntimeError("Empty required release entry")
     with temp.open("rb") as archive_stream:
@@ -83,15 +83,15 @@ def package(stage: Path, output: Path, version: str, expected_files: int):
     print(f"ZIP_FILES={len(names)}")
     print("CANONICAL_ZIP_PATHS=PASS")
     print("R29_ARCHIVE_SHA256=" + pak_sha)
-    print(f"V320_ZIP_BYTES={output.stat().st_size}")
-    print("V320_ZIP_SHA256=" + new_sha)
-    print("V320_RELEASE_READY=YES")
+    print(f"RELEASE_ZIP_BYTES={output.stat().st_size}")
+    print("RELEASE_ZIP_SHA256=" + new_sha)
+    print("RELEASE_RELEASE_READY=YES")
 
 if __name__ == "__main__":
     a = argparse.ArgumentParser()
     a.add_argument("stage", type=Path)
     a.add_argument("output", type=Path)
-    a.add_argument("--version", default="3.0.20")
+    a.add_argument("--version", default="3.0.21")
     a.add_argument("--expected-files", type=int, default=84)
     args = a.parse_args()
     package(args.stage, args.output, args.version, args.expected_files)
