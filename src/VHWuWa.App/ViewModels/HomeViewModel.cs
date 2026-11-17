@@ -208,7 +208,7 @@ public partial class HomeViewModel : ObservableObject
             return;
         }
 
-        // R29 force-install: tự dọn file cũ/xung đột đã nhận diện rồi cài đè.
+        // R29 direct-insert: chỉ ghi đè các tệp WAHU quản lý, không quét/dọn mod khác.
         var isR29 = R29MountedPak.ReleaseRequired(AppContext.BaseDirectory)
             || R29MountedPak.PackagePresent(AppContext.BaseDirectory);
         if (!isR29)

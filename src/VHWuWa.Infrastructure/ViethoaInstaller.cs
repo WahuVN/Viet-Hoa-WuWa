@@ -1285,8 +1285,6 @@ public sealed class ViethoaInstaller : IViethoaInstaller
             {
                 if (variant != NameVariant.English)
                     return Result.Fail("R29 mới chỉ có bản Việt hóa giữ tên quốc tế; chưa có Hán Việt.");
-                // Refresh and repair R29 using the same one-click path as install.
-                // This also cleans any newly introduced third-party mod conflicts.
                 return await InstallAsync(gamePath, variant, withFont: false, ct: ct);
             }
             var staged = StagedPakInspector.Inspect(AppContext.BaseDirectory);
