@@ -6,7 +6,7 @@
 
 Bộ công cụ mã nguồn mở hỗ trợ cài đặt, tùy biến phông chữ và quản lý bản dịch tiếng Việt cho **Wuthering Waves (PC / Windows)**.
 
-[![Phiên bản](https://img.shields.io/badge/phiên_bản-3.0.22-blue?style=flat-square)](https://github.com/WahuVN/Viet-Hoa-WuWa/releases/latest)
+[![Phiên bản](https://img.shields.io/badge/phiên_bản-3.0.23-blue?style=flat-square)](https://github.com/WahuVN/Viet-Hoa-WuWa/releases/latest)
 [![Game đã kiểm thử](https://img.shields.io/badge/Wuthering_Waves-R29_3.8.11-informational?style=flat-square)](https://github.com/WahuVN/Viet-Hoa-WuWa/releases/latest)
 [![Nền tảng](https://img.shields.io/badge/Nền_tảng-Windows_10_%7C_11_x64-0078D4?style=flat-square&logo=windows&logoColor=white)](https://github.com/WahuVN/Viet-Hoa-WuWa/releases/latest)
 [![Giấy phép](https://img.shields.io/badge/Giấy_phép-MIT-green?style=flat-square)](LICENSE)
@@ -48,9 +48,9 @@ VHWuWa được thiết kế nhằm hỗ trợ người chơi trải nghiệm tr
 
 | Gói tải về | Đối tượng | Mô tả |
 | :--- | :--- | :--- |
-| 🎮 [**VietHoa-WuWa-v3.0.22.zip**](https://github.com/WahuVN/Viet-Hoa-WuWa/releases/latest) | **Người chơi** | Ứng dụng cài đặt Việt hóa trên Windows (Khuyên dùng) |
+| 🎮 [**VietHoa-WuWa-v3.0.23.zip**](https://github.com/WahuVN/Viet-Hoa-WuWa/releases/latest) | **Người chơi** | Ứng dụng cài đặt Việt hóa trên Windows (Khuyên dùng) |
 | 🛠️ [**App-Dich-WuWa-v3.0.16.zip**](https://github.com/WahuVN/Viet-Hoa-WuWa/releases/download/v3.0.16/App-Dich-WuWa-v3.0.16.zip) | **Dịch giả / Modder** | Bộ công cụ WAHU Community hỗ trợ duyệt ngữ cảnh, QA và đóng gói PAK |
-| 📱 [**VHWuWa Mobile 0.2.0-alpha.18**](https://github.com/WahuVN/VHWuWa-Mobile/releases/tag/v0.2.0-alpha.18) | **Android** | Android 10+, cài patch qua Shizuku; game 3.7.0, content 3.7.0-R6 (bản thử nghiệm) |
+| 📱 [**VHWuWa Mobile 0.2.0-alpha.28**](https://github.com/WahuVN/WuwaVH-Android-Releases/releases/tag/android-alpha.28) | **Android** | Android 10+, cài qua Shizuku; kênh public alpha sạch. Stable 0.2.0 đang được chuẩn bị theo quy trình signing riêng. |
 
 ### App-Dịch-WuWa — bộ công cụ dịch thuật và kiểm tra chất lượng
 
@@ -62,15 +62,15 @@ App-Dịch-WuWa dành cho người biên dịch và người kiểm thử chất
 
 **Tải công cụ thực tế:** [App-Dich-WuWa v3.0.16](https://github.com/WahuVN/Viet-Hoa-WuWa/releases/download/v3.0.16/App-Dich-WuWa-v3.0.16.zip).
 
-> Lưu ý: App-Dịch v3.0.16 và bộ cài PC v3.0.22 có chu kỳ phiên bản riêng. Không sử dụng liên kết release mới nhất của PC để tìm công cụ App-Dịch.
+> Lưu ý: App-Dịch v3.0.16 và bộ cài PC v3.0.23 có chu kỳ phiên bản riêng. Không sử dụng liên kết release mới nhất của PC để tìm công cụ App-Dịch.
 
 ---
 > [!IMPORTANT]
-> Người chơi chỉ cần tải gói **`VietHoa-WuWa-v3.0.22.zip`**. Ứng dụng sẽ tự động tải các gói tài nguyên cần thiết khi cài đặt.
+> Người chơi chỉ cần tải gói **`VietHoa-WuWa-v3.0.23.zip`**. Ứng dụng sẽ tự động tải các gói tài nguyên cần thiết khi cài đặt.
 >
 > **Lưu ý version:** `VietHoa-WuWa` (Player) và `App-Dich-WuWa` (WAHU Community) có version độc lập. Không đổi tên App-Dịch theo Player nếu WAHU Community chưa được rebuild + QA.
 >
-> **v3.0.22 / R29:** bản Player hiện dùng gói R29 và mặc định Lexend 660. Luồng R29 hiện dùng tên nhân vật Tiếng Anh; tùy chọn Hán Việt R29 chỉ được bật khi có gói đã QA riêng.
+> **v3.0.23 / R29:** bản Player hiện dùng gói R29 và mặc định Lexend 660. Luồng R29 hiện dùng tên nhân vật Tiếng Anh; tùy chọn Hán Việt R29 chỉ được bật khi có gói đã QA riêng.
 
 ---
 
@@ -81,7 +81,7 @@ App-Dịch-WuWa dành cho người biên dịch và người kiểm thử chất
 - **Game:** Wuthering Waves phiên bản PC (Launcher chính thức hoặc Epic Games Store).
 
 ### Các bước thực hiện
-1. Tải file **`VietHoa-WuWa-v3.0.22.zip`** mới nhất và giải nén ra một thư mục riêng.
+1. Tải file **`VietHoa-WuWa-v3.0.23.zip`** mới nhất và giải nén ra một thư mục riêng.
 2. Mở file **`VHWuWa.exe`**.
 
    **Vị trí ứng dụng:** đây là bản portable, không phải Setup/MSI. Ứng dụng chạy ngay trong thư mục bạn đã giải nén; lần mở đầu tạo shortcut Desktop `WuWa` trỏ đến EXE đó. Khi cập nhật, updater tải gói mới, đối chiếu SHA-256 rồi cập nhật ngay tại thư mục đang chạy (có sao lưu/rollback). Cấu hình và log ở `%LOCALAPPDATA%\VHWuWa\`. Không xóa hoặc di chuyển thư mục ứng dụng sau khi tạo shortcut.
