@@ -1,0 +1,52 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <!-- Dynamic color overrides, merged after Wahu.Dark.xaml only for Light mode. -->
+  <SolidColorBrush x:Key="Wahu.Text" Color="#1C2440"/>
+  <SolidColorBrush x:Key="Wahu.Muted" Color="#536783"/>
+  <SolidColorBrush x:Key="Wahu.Surface" Color="#F5F6F8FD"/>
+  <SolidColorBrush x:Key="Wahu.InputBrush" Color="#FEF0F4FA"/>
+  <SolidColorBrush x:Key="Wahu.Border" Color="#806E89AA"/>
+  <SolidColorBrush x:Key="Wahu.Accent" Color="#168FA9"/>
+  <SolidColorBrush x:Key="Wahu.TableSurface" Color="#F1F5FB"/>
+  <SolidColorBrush x:Key="Wahu.TableAlternate" Color="#E7EDF7"/>
+  <SolidColorBrush x:Key="Wahu.TableHeader" Color="#DADEF4"/>
+  <SolidColorBrush x:Key="Wahu.TableLine" Color="#B6C6DB"/>
+  <SolidColorBrush x:Key="Wahu.TableHover" Color="#D5E6F5"/>
+  <SolidColorBrush x:Key="Wahu.TableSelected" Color="#BEDDEB"/>
+  <SolidColorBrush x:Key="Wahu.ButtonSecondary" Color="#E3EAF5"/>
+  <SolidColorBrush x:Key="Wahu.DisabledSurface" Color="#D8E1EC"/>
+  <SolidColorBrush x:Key="Wahu.Purple" Color="#6255C0"/>
+  <SolidColorBrush x:Key="Wahu.TitleBarBackground" Color="#DFE6F6"/>
+  <LinearGradientBrush x:Key="Wahu.HeaderAccent" StartPoint="0,0" EndPoint="1,0"><GradientStop Color="#B1A0ED" Offset="0"/><GradientStop Color="#76C5DE" Offset="1"/></LinearGradientBrush>
+  <LinearGradientBrush x:Key="Wahu.PageBackground" StartPoint="0,0" EndPoint="1,1">
+    <GradientStop Color="#E6EDF8" Offset="0"/>
+    <GradientStop Color="#F4F6FC" Offset="0.6"/>
+    <GradientStop Color="#E9EDF8" Offset="1"/>
+  </LinearGradientBrush>
+
+  <!-- Paired theme-aware launcher video/card colors. -->
+  <SolidColorBrush x:Key="Wahu.HomeText" Color="#17233C"/>
+  <SolidColorBrush x:Key="Wahu.HomeMuted" Color="#40536D"/>
+  <SolidColorBrush x:Key="Wahu.HomeAccentText" Color="#5742A6"/>
+  <LinearGradientBrush x:Key="Wahu.HomeCard" StartPoint="0,0" EndPoint="1,1"><GradientStop Color="#F2F7FAFF" Offset="0"/><GradientStop Color="#F1F1F6FF" Offset="1"/></LinearGradientBrush>
+  <SolidColorBrush x:Key="Wahu.HomeBorder" Color="#A48195BD"/>
+  <SolidColorBrush x:Key="Wahu.HomeInput" Color="#FFF8FAFF"/>
+  <SolidColorBrush x:Key="Wahu.HomeButton" Color="#F5E7EEF9"/>
+  <LinearGradientBrush x:Key="Wahu.HomeHeroHorizontalShade" StartPoint="0,0" EndPoint="1,0"><GradientStop Color="#300C1931" Offset="0"/><GradientStop Color="#0E10192D" Offset="0.37"/><GradientStop Color="#00141638" Offset="1"/></LinearGradientBrush>
+  <LinearGradientBrush x:Key="Wahu.HomeHeroVerticalShade" StartPoint="0,0" EndPoint="0,1"><GradientStop Color="#15111929" Offset="0"/><GradientStop Color="#000D1427" Offset="0.42"/><GradientStop Color="#140C172B" Offset="1"/></LinearGradientBrush>
+  <!-- Sidebar follows Light/Dark as well, including nav text and focus. -->
+  <SolidColorBrush x:Key="Wahu.WindowBackground" Color="#F0F4FC"/>
+  <DrawingBrush x:Key="Wahu.SideBackground" Stretch="Fill"><DrawingBrush.Drawing><DrawingGroup>
+    <GeometryDrawing Geometry="M0,0 L211,0 211,820 0,820 Z" Brush="#F4F7FF"/>
+    <GeometryDrawing Geometry="M0,805 C73,760 150,723 211,669"><GeometryDrawing.Pen><Pen Brush="#4E8F9FE8" Thickness="7"/></GeometryDrawing.Pen></GeometryDrawing>
+    <GeometryDrawing Geometry="M0,805 C73,760 150,723 211,669"><GeometryDrawing.Pen><Pen Thickness="1.5"><Pen.Brush><LinearGradientBrush StartPoint="0,0" EndPoint="1,0"><GradientStop Color="#80936ED8" Offset="0"/><GradientStop Color="#5B54B8D3" Offset="1"/></LinearGradientBrush></Pen.Brush></Pen></GeometryDrawing.Pen></GeometryDrawing>
+    <GeometryDrawing Geometry="M18,818 C96,773 169,743 211,702"><GeometryDrawing.Pen><Pen Brush="#4878A1C6" Thickness="1"/></GeometryDrawing.Pen></GeometryDrawing>
+  </DrawingGroup></DrawingBrush.Drawing></DrawingBrush>
+  <SolidColorBrush x:Key="Wahu.SideHover" Color="#DFE8F5"/>
+  <SolidColorBrush x:Key="Wahu.SideSelected" Color="#CBD9F1"/>
+  <SolidColorBrush x:Key="Wahu.SideBorder" Color="#94A9CB"/>
+  <SolidColorBrush x:Key="Wahu.SideFocus" Color="#6558AD"/>
+  <LinearGradientBrush x:Key="Wahu.SideRail" StartPoint="0,0" EndPoint="0,1"><GradientStop Color="#7968BF" Offset="0"/><GradientStop Color="#2698BF" Offset="1"/></LinearGradientBrush>
+  <SolidColorBrush x:Key="Wahu.SidePrimary" Color="#1C2B46"/>
+  <SolidColorBrush x:Key="Wahu.SideSecondary" Color="#435675"/>
+  <SolidColorBrush x:Key="Wahu.SideMuted" Color="#5E6F8D"/>
+</ResourceDictionary>

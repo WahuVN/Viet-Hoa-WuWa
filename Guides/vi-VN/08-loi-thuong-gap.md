@@ -6,7 +6,7 @@ Trong **Trang chủ**, bấm **Tự tìm game** hoặc **Chọn thư mục**. Ch
 
 ## Không cài được Việt hóa
 
-Đóng game và kiểm tra đường dẫn trong ứng dụng. Với R29, app nhận SIG tiếng Anh ở thư mục `Lang_en/Base` hoặc thư mục bản vá. Nếu báo thiếu SIG, chọn **Text Language = English**, mở game để tải đủ dữ liệu ngôn ngữ rồi thoát và kiểm tra lại. Nếu báo thiếu thư mục Mount, dùng Verify/Repair trong launcher. Không tự chép hoặc xóa tệp game gốc.
+Đóng game và kiểm tra đường dẫn trong ứng dụng. R29 dùng SIG có sẵn của game: trước tiên kiểm tra nguồn `Lang_en` như các bản cũ; khi không có nguồn này, chỉ chấp nhận SIG ngôn ngữ khác nếu `MountLang_*` chính thức tham chiếu đúng tệp và SHA-1. **Không cần chuyển game sang tiếng Nhật, không phải tự tạo SIG.** Nếu không xác minh được, ứng dụng dừng trước khi ghi; dùng **Verify/Repair** trong launcher và kiểm tra lại thư mục game. Không tự chép hoặc xóa tệp game gốc.
 
 ## Vẫn còn tiếng Anh sau khi cài
 
@@ -23,7 +23,7 @@ Trong **Trang chủ**, bấm **Tự tìm game** hoặc **Chọn thư mục**. Ch
 
 ## Chữ thiếu dấu hoặc ô vuông
 
-Mở tab **Font game** để thử Lexend Variable **650** và kiểm tra hiển thị dấu. Phần xem trước không tự cài font vào game; hãy gửi ảnh nếu vấn đề xuất hiện trong game.
+Mặc định bản Việt hóa cài **Lexend 660**. Nếu chữ thiếu dấu hoặc ô vuông, mở tab **Font game** để kiểm tra Lexend 660 hoặc thử font khác; phần xem trước không tự đổi font trong game cho đến khi bấm **Áp dụng**.
 
 ## Game lỗi hoặc thoát bất thường
 

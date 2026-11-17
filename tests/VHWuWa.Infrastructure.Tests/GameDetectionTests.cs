@@ -43,6 +43,22 @@ public sealed class GameDetectionTests : IDisposable
     }
 
     [Fact]
+    public void NormalizeGamePath_SteamLibraryNestedGame_CoversParentClientAndExe()
+    {
+        var steamInstall = Path.Combine(_work, "SteamLibrary", "steamapps", "common", "Wuthering Waves");
+        var game = Path.Combine(steamInstall, "Wuthering Waves Game");
+        var exe = Path.Combine(game, "Client", "Binaries", "Win64", "Client-Win64-Shipping.exe");
+        Directory.CreateDirectory(Path.GetDirectoryName(exe)!);
+        File.WriteAllBytes(exe, new byte[] { 7, 8, 9 });
+        var detect = new GameDetectionService(_log, _config, new[] { _work });
+
+        Assert.Equal(game, detect.NormalizeGamePath(steamInstall));
+        Assert.Equal(game, detect.NormalizeGamePath(Path.Combine(game, "Client")));
+        Assert.Equal(game, detect.NormalizeGamePath(exe));
+        Assert.True(detect.Validate(game).IsValid);
+    }
+
+    [Fact]
     public void AutoDetect_FindsSingularGameFolderAndRequiresRealClientExecutable()
     {
         var expected = Path.Combine(_work, "Game", "Wuthering Waves Game");

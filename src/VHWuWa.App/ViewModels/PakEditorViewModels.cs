@@ -131,8 +131,10 @@ public abstract partial class PakEditorViewModelBase : ObservableObject
         var staged = StagedPakInspector.Inspect(AppContext.BaseDirectory);
         if (R29MountedPak.PackagePresent(AppContext.BaseDirectory))
         {
-            CanInstall = false;
-            InstallPromptMessage = "PAK PC R29 có sẵn ở trang Cài đặt. Chức năng ghi bản chỉnh sửa trực tiếp chưa hỗ trợ R29.";
+            CanInstall = !string.IsNullOrWhiteSpace(_settings.Settings.GamePath);
+            InstallPromptMessage = CanInstall
+                ? "R29 sẵn sàng. Bấm Cài để ghi đè trực tiếp vào game."
+                : "Chọn thư mục game ở Trang chủ.";
             return;
         }
         if (staged.Present)
@@ -208,14 +210,20 @@ public abstract partial class PakEditorViewModelBase : ObservableObject
     private async Task InstallAsync(NameVariant variant, string label)
         => await RunAsync($"Đang ghi đè bản {label} vào game…", async () =>
         {
-            if (R29MountedPak.PackagePresent(AppContext.BaseDirectory))
-                throw new InvalidOperationException("PAK R29 cài qua trang Cài đặt; chức năng ghi bản chỉnh sửa trực tiếp chưa hỗ trợ R29.");
-            var staged = StagedPakInspector.Inspect(AppContext.BaseDirectory);
-            if (staged.Present)
-                throw new InvalidOperationException("PAK R28 không tương thích. Không cài trực tiếp từ trang chỉnh sửa.");
             var game = _settings.Settings.GamePath;
             if (string.IsNullOrWhiteSpace(game))
                 throw new InvalidOperationException("Chưa chọn thư mục game ở Trang chủ.");
+            if (R29MountedPak.PackagePresent(AppContext.BaseDirectory))
+            {
+                var r29Result = await _installer.InstallAsync(game, NameVariant.English, withFont: false);
+                if (!r29Result.Success) throw new InvalidOperationException(r29Result.Error);
+                Status = "Đã ghi đè R29 vào game.";
+                InstallPromptMessage = "R29 đã được ghi đè.";
+                return;
+            }
+            var staged = StagedPakInspector.Inspect(AppContext.BaseDirectory);
+            if (staged.Present)
+                throw new InvalidOperationException("PAK R28 không tương thích. Không cài trực tiếp từ trang chỉnh sửa.");
             var result = await _installer.InstallAsync(game, variant, withFont: true);
             if (!result.Success) throw new InvalidOperationException(result.Error);
             Status = $"Đã cài bản {label} vào game.";
@@ -268,7 +276,7 @@ public partial class CharacterNamesViewModel : PakEditorViewModelBase
             Items.Add(row);
         }
         Loaded = true;
-        Status = $"Đã nạp {Items.Count:N0} nhân vật · chưa có thay đổi.";
+        Status = $"{Items.Count:N0} nhân vật";
         OnPropertyChanged(nameof(DirtyCount));
     }
 

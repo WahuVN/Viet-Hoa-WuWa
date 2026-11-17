@@ -22,7 +22,7 @@ public partial class GuideViewModel : ObservableObject
             ["03-cai-viet-hoa.md"] = ("Cài Việt hóa", "🌐", "Chọn bản tên và cài an toàn"),
             ["04-go-viet-hoa.md"] = ("Gỡ Việt hóa", "🧹", "Trả game về trạng thái sạch"),
             ["05-cai-go-mod.md"] = ("Xử lý xung đột", "🛡", "Nhận diện và xử lý mod khác"),
-            ["06-doi-font.md"] = ("Font chữ", "🔤", "Lexend Variable 650 và xem thử font"),
+            ["06-doi-font.md"] = ("Font chữ", "🔤", "Lexend Variable 660 và xem thử font"),
             ["07-do-hoa.md"] = ("Đồ họa", "🎮", "Preset, tùy chỉnh và sao lưu"),
             ["08-loi-thuong-gap.md"] = ("Khắc phục lỗi", "🧰", "Các bước kiểm tra nhanh"),
             ["09-dong-gop-ban-dich.md"] = ("Đóng góp bản dịch", "✍", "Quy trình sửa và gửi nội dung"),

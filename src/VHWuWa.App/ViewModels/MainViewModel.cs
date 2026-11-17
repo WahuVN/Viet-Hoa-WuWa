@@ -83,13 +83,11 @@ public partial class MainViewModel : ObservableObject
         var v = _detect.Validate(path);
         GameOk = v.IsValid;
         GameStatus = !v.IsValid ? "Đường dẫn game chưa hợp lệ"
-            : R29MountedPak.IsInstalled(path) ? "Đã cài và kiểm tra PAK PC R29"
+            : R29MountedPak.IsInstalled(path) ? "Đã cài PAK PC R29"
             : (R29MountedPak.ReleaseRequired(AppContext.BaseDirectory)
                 || R29MountedPak.PackagePresent(AppContext.BaseDirectory))
-                ? R29MountedPak.GameCompatible(path)
-                    ? "Game tương thích PAK R29 · chưa cài"
-                    : "PAK R29 chưa khớp phiên bản game"
-                : "Thư mục game hợp lệ; PAK chưa xác minh tương thích";
+                ? "Sẵn sàng ghi đè PAK R29"
+                : "Thư mục game hợp lệ";
     }
 
     [RelayCommand]

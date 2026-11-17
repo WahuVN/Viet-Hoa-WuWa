@@ -25,12 +25,28 @@
     <Resource Include="..\..\Assets\app-logo-transparent.ico" Link="Assets\app-logo-transparent.ico" />
     <Resource Include="..\..\Assets\logo-app-transparent.png" Link="Assets\logo-app-transparent.png" />
     <Resource Include="..\..\Assets\logo-app-compact.png" Link="Assets\logo-app-compact.png" />
+    <Resource Include="..\..\Assets\launcher-hero.jpg" Link="Assets\launcher-hero.jpg" />
+    <Resource Include="..\..\Assets\launcher-progress.gif" Link="Assets\launcher-progress.gif" />
+    <Resource Include="..\..\Assets\bg-fallback.png" Link="Assets\bg-fallback.png" />
+    <Content Include="..\..\Assets\bg-video.mp4" Link="Assets\bg-video.mp4"
+             CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest"
+             ExcludeFromSingleFile="true" />
     <None Include="..\..\Config\**\*" Link="Config\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\..\Guides\**\*" Link="Guides\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\..\Fonts\fonts.json" Link="Fonts\fonts.json" CopyToOutputDirectory="PreserveNewest" />
+    <Resource Include="..\..\Fonts\SourceSans3-Regular.ttf" Link="Fonts\SourceSans3-Regular.ttf" />
+    <Resource Include="..\..\Fonts\SourceSans3-Medium.ttf" Link="Fonts\SourceSans3-Medium.ttf" />
+    <Resource Include="..\..\Fonts\SourceSans3-SemiBold.ttf" Link="Fonts\SourceSans3-SemiBold.ttf" />
+    <Resource Include="..\..\Fonts\SourceSans3-Bold.ttf" Link="Fonts\SourceSans3-Bold.ttf" />
+    <None Include="..\..\Fonts\OFL-SourceSans3.txt" Link="Fonts\OFL-SourceSans3.txt" CopyToOutputDirectory="PreserveNewest" />
     <Resource Include="..\..\Fonts\Lexend-Variable.ttf" Link="Fonts\Lexend-Variable.ttf" />
     <None Include="..\..\Fonts\Lexend-Variable.ttf" Link="Fonts\Lexend-Variable.ttf" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
+    <None Include="..\..\Fonts\Lexend-660.ttf" Link="Fonts\Lexend-660.ttf" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
+    <None Include="..\..\content\font\Lexend-660_100_P.pak" Link="content\font\Lexend-660_100_P.pak" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
     <None Include="..\..\Fonts\OFL-Lexend.txt" Link="Fonts\OFL-Lexend.txt" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\tools\repak.exe" Link="tools\repak.exe" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
+    <None Include="..\..\tools\LICENSE-repak-APACHE.txt" Link="tools\LICENSE-repak-APACHE.txt" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\tools\LICENSE-repak-MIT.txt" Link="tools\LICENSE-repak-MIT.txt" CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\..\scripts\font-weight-instance.py" Link="tools\font-weight-instance.py" CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\..\tools\font-weight-instance.exe" Link="tools\font-weight-instance.exe" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true" Condition="Exists('..\..\tools\font-weight-instance.exe')" />
   </ItemGroup>

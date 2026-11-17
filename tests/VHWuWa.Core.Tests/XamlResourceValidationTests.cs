@@ -33,6 +33,26 @@ public class XamlResourceValidationTests
             globalKeys.Add(m.Groups[1].Value);
         }
 
+        // App-level merged dictionaries are available to every XAML page at runtime.
+        // Verify their actual source files and include their declared resources.
+        var mergedDictionarySources = Regex.Matches(
+            appXamlContent,
+            @"<ResourceDictionary\s+Source=""([^""]+)""",
+            RegexOptions.IgnoreCase);
+        foreach (Match source in mergedDictionarySources)
+        {
+            var resourcePath = source.Groups[1].Value.TrimStart('/').Replace('/', Path.DirectorySeparatorChar);
+            var absolutePath = Path.GetFullPath(Path.Combine(appDir, resourcePath));
+            Assert.True(
+                absolutePath.StartsWith(Path.GetFullPath(appDir) + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase),
+                $"ResourceDictionary path outside App: {absolutePath}");
+            Assert.True(File.Exists(absolutePath), $"Merged ResourceDictionary does not exist: {absolutePath}");
+            foreach (Match key in Regex.Matches(File.ReadAllText(absolutePath), @"x:Key=""([^""]+)"""))
+            {
+                globalKeys.Add(key.Groups[1].Value);
+            }
+        }
+
         var xamlFiles = Directory.GetFiles(appDir, "*.xaml", SearchOption.AllDirectories);
         var errors = new List<string>();
 

@@ -41,6 +41,8 @@ internal static class Program
         {
             zip = Path.GetFullPath(zip);
             target = Path.GetFullPath(target);
+            // Refuse before touching ready-file, parent process or target directory.
+            UpdateTargetGuard.EnsureSafeTarget(target);
             VerifySha256(zip, expectedSha256);
             ValidatePreflight(zip, target, relaunch, expectedVersion);
             // A production update must prove startup health. A ZIP-only offline swap is not a release-safe path.

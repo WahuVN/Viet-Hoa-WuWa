@@ -1,26 +1,18 @@
 <UserControl x:Class="VHWuWa.App.Views.SettingsPage"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml">
+             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+             Background="{DynamicResource Wahu.PageBackground}">
     <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-        <StackPanel Margin="26,24,26,28" MaxWidth="940" HorizontalAlignment="Stretch">
+        <StackPanel Margin="24,52,24,26" MaxWidth="1200" HorizontalAlignment="Stretch">
             <!-- Nội dung rõ ràng, không che cài đặt thật bằng các nhãn trang trí. -->
-            <TextBlock Text="TÙY CHỌN  /  ỨNG DỤNG"
-                       FontSize="11" FontWeight="SemiBold" Foreground="#B6C2CF"
-                       Margin="0,0,0,9" />
-            <TextBlock Text="Cài đặt" FontSize="29" FontWeight="Bold" />
-            <TextBlock Text="Quản lý thư mục game, giao diện và cách kiểm tra bản cập nhật."
-                       FontSize="12" Opacity="0.78" TextWrapping="Wrap"
-                       Margin="0,8,0,20" />
+            <TextBlock Text="Cài đặt" FontFamily="{StaticResource WahuHeadingFontFamily}" FontSize="25" FontWeight="SemiBold" Margin="0,0,0,18" />
 
-            <ui:Card Padding="20" Margin="0,0,0,14">
+            <ui:Card Background="{DynamicResource Wahu.Surface}" BorderBrush="{DynamicResource Wahu.Border}" BorderThickness="1" Padding="16" Margin="0,0,0,10">
                 <StackPanel>
-                    <TextBlock Text="01  /  VỊ TRÍ GAME" FontSize="11"
-                               Foreground="#B6C2CF" FontWeight="SemiBold"
-                               Margin="0,0,0,7" />
-                    <TextBlock Text="Thư mục Wuthering Waves"
+                    <TextBlock Text="Thư mục game"
                                FontSize="17" FontWeight="SemiBold" />
-                    <TextBlock Text="Chọn thư mục cài game chính xác để ứng dụng có thể kiểm tra phiên bản và dữ liệu."
+                    <TextBlock Text="Chọn đúng thư mục game."
                                FontSize="12" Opacity="0.75" TextWrapping="Wrap"
                                Margin="0,6,0,13" />
                     <Grid>
@@ -28,7 +20,7 @@
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
-                        <ui:TextBox Text="{Binding GamePath}" IsReadOnly="True"
+                        <ui:TextBox Background="{DynamicResource Wahu.InputBrush}" BorderBrush="{DynamicResource Wahu.Border}" Foreground="{DynamicResource Wahu.Text}" Text="{Binding GamePath}" IsReadOnly="True"
                                     PlaceholderText="Chưa tìm thấy thư mục game"
                                     FontSize="12" MinHeight="38"
                                     VerticalAlignment="Center" />
@@ -40,50 +32,34 @@
                 </StackPanel>
             </ui:Card>
 
-            <ui:Card Padding="20" Margin="0,0,0,14">
+            <ui:Card Background="{DynamicResource Wahu.Surface}" BorderBrush="{DynamicResource Wahu.Border}" BorderThickness="1" Padding="16" Margin="0,0,0,10">
                 <StackPanel>
-                    <TextBlock Text="02  /  GIAO DIỆN" FontSize="11"
-                               Foreground="#B6C2CF" FontWeight="SemiBold"
-                               Margin="0,0,0,7" />
-                    <TextBlock Text="Hiển thị &amp; tùy chọn" FontSize="17"
+                    <TextBlock Text="Giao diện" FontSize="17"
                                FontWeight="SemiBold" Margin="0,0,0,13" />
                     <CheckBox Content="Sử dụng chế độ tối"
                               IsChecked="{Binding IsDark}"
                               FontSize="13" Margin="0,0,0,10" />
-                    <TextBlock Text="Chế độ sáng/tối chỉ thay đổi giao diện ứng dụng, không sửa font hoặc hình ảnh trong game."
-                               FontSize="11" Opacity="0.7" TextWrapping="Wrap"
-                               Margin="26,0,0,13" />
-                    <Separator Opacity="0.3" Margin="0,0,0,14" />
+                    
+                    <Separator Opacity="0.26" Margin="0,0,0,10" />
                     <CheckBox Content="Tự kiểm tra phiên bản ứng dụng khi khởi động"
                               IsChecked="{Binding AutoCheckUpdate}"
                               FontSize="13" />
                 </StackPanel>
             </ui:Card>
 
-            <ui:Card Padding="20" Margin="0,0,0,14">
+            <ui:Card Background="{DynamicResource Wahu.Surface}" BorderBrush="{DynamicResource Wahu.Border}" BorderThickness="1" Padding="16" Margin="0,0,0,10">
                 <StackPanel>
-                    <TextBlock Text="03  /  CẬP NHẬT" FontSize="11"
-                               Foreground="#B6C2CF" FontWeight="SemiBold"
-                               Margin="0,0,0,7" />
                     <Grid Margin="0,0,0,14">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                         <StackPanel>
-                            <TextBlock Text="Ứng dụng WuWa Việt Hóa"
+                            <TextBlock Text="Cập nhật ứng dụng"
                                        FontSize="17" FontWeight="SemiBold" />
                             <TextBlock Text="{Binding AppVersion}"
                                        FontSize="12" Opacity="0.75" Margin="0,4,0,0" />
                         </StackPanel>
-                        <Border Grid.Column="1" CornerRadius="12"
-                                BorderThickness="1" BorderBrush="#3A434D"
-                                Background="#171A1F" Padding="13,8"
-                                VerticalAlignment="Center" Margin="14,0,0,0">
-                            <TextBlock Text="KIỂM TRA PHIÊN BẢN"
-                                       FontSize="10" Foreground="#B6C2CF"
-                                       FontWeight="SemiBold" />
-                        </Border>
                     </Grid>
                     <WrapPanel Margin="0,0,0,9">
                         <ui:Button Content="Kiểm tra cập nhật"
@@ -100,7 +76,7 @@
                     <StackPanel Margin="0,13,0,0"
                                 Visibility="{Binding Main.HasUpdate, Converter={StaticResource BoolToVis}}">
                         <TextBlock Text="{Binding Main.UpdateTitle}"
-                                   FontWeight="SemiBold" Foreground="#B6C2CF" />
+                                   FontWeight="SemiBold" Foreground="{DynamicResource Wahu.Muted}" />
                         <TextBlock Text="{Binding Main.UpdateNotes}"
                                    FontSize="12" TextWrapping="Wrap"
                                    Opacity="0.8" Margin="0,4,0,0" />
@@ -111,27 +87,14 @@
                                    FontSize="12" TextWrapping="Wrap" Margin="0,7,0,0"
                                    Visibility="{Binding Main.IsUpdating, Converter={StaticResource BoolToVis}}" />
                     </StackPanel>
-                    <TextBlock Text="Bản dịch và ứng dụng sẽ có cơ chế cập nhật riêng khi gói nội dung phù hợp được xác minh."
-                               FontSize="11" Opacity="0.68" TextWrapping="Wrap"
-                               Margin="0,14,0,0" />
-                </StackPanel>
-            </ui:Card>
+                    <!-- App folders belong to the update section, not a fourth full-width card. -->
+                    <Separator Opacity="0.28" Margin="0,13,0,14" />
 
-            <!-- Portable is intentional: let users see where the actual EXE lives. -->
-            <ui:Card Padding="18" Margin="0,0,0,14">
-                <StackPanel>
-                    <TextBlock Text="04  /  ỨNG DỤNG PORTABLE"
-                               FontSize="11" FontWeight="SemiBold"
-                               Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                               Margin="0,0,0,7" />
-                    <TextBlock Text="Không cần bộ cài Setup.exe"
-                               FontSize="17" FontWeight="SemiBold" />
-                    <TextBlock Text="Tải ZIP từ GitHub, giải nén vào một thư mục cố định rồi mở VHWuWa.exe. Ứng dụng sẽ tạo lối tắt WuWa trên Desktop."
+                    <TextBlock Text="Thư mục ứng dụng"
+                               FontSize="15" FontWeight="SemiBold" />
+                    <TextBlock Text="Giải nén vào thư mục ứng dụng riêng. Không đặt EXE trực tiếp trên Desktop."
                                FontSize="12.5" TextWrapping="Wrap" Margin="0,7,0,7"
-                               Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
-                    <TextBlock Text="Khi có bản mới, ứng dụng sẽ hỏi trước khi tải và cập nhật ngay trong thư mục đó. Cấu hình được lưu riêng, không cần giải nén lại."
-                               FontSize="12.5" TextWrapping="Wrap" Margin="0,0,0,12"
-                               Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                               Foreground="{DynamicResource Wahu.Muted}" />
                     <WrapPanel>
                         <Button Style="{StaticResource WahuStandardButtonStyle}"
                                 Content="Mở thư mục ứng dụng" Command="{Binding OpenAppFolderCommand}"

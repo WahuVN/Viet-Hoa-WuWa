@@ -112,13 +112,32 @@ public partial class App : Application
             : ApplicationTheme.Dark;
         ApplicationThemeManager.Apply(t);
 
+        // Shared WAHU UI Kit palette: keep control templates loaded from Dark,
+        // and overlay only color tokens for Light when selected.
+        var merged = Current.Resources.MergedDictionaries;
+        var existingLight = merged.FirstOrDefault(d =>
+            d.Source?.OriginalString.EndsWith("Wahu.Light.xaml",
+                StringComparison.OrdinalIgnoreCase) == true);
+        if (t == ApplicationTheme.Light)
+        {
+            if (existingLight is null)
+                merged.Add(new ResourceDictionary
+                {
+                    Source = new Uri("/Styles/Wahu.Light.xaml", UriKind.Relative)
+                });
+        }
+        else if (existingLight is not null)
+        {
+            merged.Remove(existingLight);
+        }
+
         // Fluent controls use the Windows system accent by default (often bright blue).
         // Keep radio buttons, sliders, focus and progress in the same neutral palette
         // as the PC interface. This changes only presentation, not control behavior.
-        var neutralAccent = t == ApplicationTheme.Dark
-            ? Color.FromRgb(0xB8, 0xBF, 0xC7)
-            : Color.FromRgb(0x5C, 0x63, 0x6B);
-        ApplicationAccentColorManager.Apply(neutralAccent, t, false);
+        var wahuAccent = t == ApplicationTheme.Dark
+            ? Color.FromRgb(0xB5, 0xAA, 0xEE)
+            : Color.FromRgb(0x76, 0x60, 0xB5);
+        ApplicationAccentColorManager.Apply(wahuAccent, t, false);
     }
 
     private void OnUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)

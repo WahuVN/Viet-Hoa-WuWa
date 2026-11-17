@@ -3,22 +3,22 @@
 ## Tải và mở ứng dụng
 
 1. Tải `VietHoa-WuWa-vX.Y.Z.zip` từ mục **Releases** trên GitHub chính thức.
-2. Giải nén toàn bộ ZIP vào một thư mục cố định, chẳng hạn `D:\Apps\WuWa-Viet-Hoa`. **Không mở EXE ngay trong ZIP.**
-3. Chạy `VHWuWa.exe` ở thư mục vừa giải nén. Ứng dụng tạo lối tắt **WuWa** trên Desktop.
+2. Giải nén toàn bộ ZIP vào thư mục cố định, chẳng hạn `D:\Apps\WuWa-Viet-Hoa`. **Không chạy EXE ngay trong ZIP.**
+3. Mở `VHWuWa.exe` từ thư mục vừa giải nén. Ứng dụng tạo lối tắt trên Desktop.
 
-Ứng dụng là bản **portable**, không có bước Setup.exe và không tự chuyển sang `Program Files`. Có thể xem đúng nơi đang chạy qua **Cài đặt → Mở thư mục ứng dụng**. Không xóa hoặc di chuyển thư mục sau khi tạo lối tắt.
+Đây là bản **portable**, không dùng Setup.exe. Xem thư mục hiện tại tại **Cài đặt → Mở thư mục ứng dụng**.
 
-## Cài Việt hóa trong ba bước
+## Cài Việt hóa R29 trong ba bước
 
-1. Tắt game, vào **Trang chủ** rồi chọn **Tự tìm game**; nếu không được, dùng **Chọn thư mục** và **Kiểm tra**.
-2. Chọn **Tên Anh** hoặc **Tên Hán Việt**, chọn tùy chọn font rồi bấm **Cài Việt hóa** khi nút cho phép.
-3. Mở game và đặt **Text Language = English**.
+1. **Tắt game**, mở **Trang chủ → Tự tìm**. Nếu không nhận diện được game, dùng **Chọn game** hoặc **Chọn thư mục** và chọn đúng thư mục chứa `Client`.
+2. Bấm **Cài Việt hóa**. Nếu chưa có game, ứng dụng sẽ cho chọn thư mục trước; sau khi chọn, bấm **Cài Việt hóa** lần nữa. **R29 hiện chỉ có biến thể tên Anh và font mặc định của game.** Hán Việt và font PAK riêng chưa có trong gói này.
+3. Khi trạng thái xác nhận đã cài, mở launcher chính thức rồi vào game và chọn **Text Language = English**.
 
-Nếu nút hiện **Chưa có game PC**, hoặc thông báo phiên bản/loader chưa tương thích, cần kiểm tra game và chờ bản Việt hóa phù hợp; không cố ghi PAK vào thư mục game.
+Trước khi sửa file game, ứng dụng kiểm tra **SHA-256 gói R29** và đường dẫn Client. File mod xung đột đã nhận diện được **sao lưu SHA-256 vào vùng cách ly**, không xóa vĩnh viễn. Nếu báo lỗi, không ghi PAK thủ công; kiểm tra thư mục, quyền và gói cập nhật.
 
 ## Cập nhật và gỡ
 
-- Ứng dụng có thể tự kiểm tra bản mới khi khởi động. Nếu bạn đồng ý cập nhật, updater xác minh ZIP rồi cập nhật trong **chính thư mục hiện tại**, giữ cấu hình và có cơ chế khôi phục khi lỗi.
-- Muốn gỡ bản dịch: **Trang chủ → Tùy chọn nâng cao → Gỡ Việt hóa**.
+- Chỉ cập nhật từ bản chính thức. Updater xác minh SHA-256 ZIP, giữ cấu hình và có rollback nếu ứng dụng mới không khởi động thành công.
+- Muốn gỡ bản dịch, vào **Trang chủ → Gỡ Việt hóa** (nút chỉ hiện sau khi ứng dụng xác nhận bản dịch đang cài).
 
-> Chỉ tải ứng dụng từ nguồn chính thức. Một số máy có thể cảnh báo SmartScreen vì EXE chưa ký số; không tắt Defender để cài phần mềm. Đây là dự án cộng đồng, không thuộc Kuro Games.
+> Đây là ứng dụng cộng đồng, không thuộc Kuro Games. Không tắt Defender để cài phần mềm từ nguồn không xác minh.

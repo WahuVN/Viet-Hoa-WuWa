@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.IO;
+using System.Text.Json;
 using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -40,6 +41,15 @@ public partial class HomeViewModel : ObservableObject
     [ObservableProperty] private bool _forceCSharpEnvironment;
     [ObservableProperty] private string _launchButtonText = "Mở game";
 
+    private DateTime _nextAutoDetectUtc = DateTime.MinValue;
+
+    // Read the release marker instead of presenting the app version as the game-data version.
+    public string FeaturedReleaseTitle { get; private set; } = "Wuthering Waves";
+    public string FeaturedReleaseBadge { get; private set; } = "Chưa xác định dữ liệu";
+    public bool ShowFeaturedSeasonTitle { get; private set; } = false;
+    public string FeaturedReleaseLineOne { get; private set; } = "";
+    public string FeaturedReleaseLineTwo { get; private set; } = "";
+
     public MainViewModel Main => _main;
 
     public HomeViewModel(ISettingsService settings, IGameDetectionService detect, IGameLaunchService gameLaunch,
@@ -53,20 +63,53 @@ public partial class HomeViewModel : ObservableObject
         settings.Settings.ForceCSharpEnvironment = false;
         settings.Save();
         LaunchButtonText = "Mở launcher";
+        LoadFeaturedRelease();
         OnActivated();
+    }
+
+    private void LoadFeaturedRelease()
+    {
+        // The text is local package metadata, never a network request or guessed game version.
+        try
+        {
+            var marker = Path.Combine(AppContext.BaseDirectory, "content", "r29-release.json");
+            if (!File.Exists(marker)) return;
+            using var metadata = JsonDocument.Parse(File.ReadAllText(marker));
+            var root = metadata.RootElement;
+            var resourceVersion = root.TryGetProperty("resourceVersion", out var resource)
+                ? resource.GetString() : null;
+            var release = root.TryGetProperty("translationRelease", out var pack)
+                ? pack.GetString() : null;
+            if (string.IsNullOrWhiteSpace(resourceVersion)) return;
+            FeaturedReleaseBadge = string.IsNullOrWhiteSpace(release)
+                ? resourceVersion
+                : $"{resourceVersion}  ·  {release}";
+            // The original clip and reference image identify this season only for 3.8.11.
+            FeaturedReleaseTitle = resourceVersion == "3.8.11"
+                ? "Bách Hợp Giữa Mộng Tàn"
+                : "Wuthering Waves";
+            ShowFeaturedSeasonTitle = resourceVersion == "3.8.11";
+            FeaturedReleaseLineOne = ShowFeaturedSeasonTitle ? "Bách Hợp" : "";
+            FeaturedReleaseLineTwo = ShowFeaturedSeasonTitle ? "Giữa Mộng Tàn" : "";
+        }
+        catch (Exception ex)
+        {
+            _log.Warn("UI", "Không đọc được tên phiên bản trên bản phát hành: " + ex.Message);
+        }
     }
 
     public void OnActivated()
     {
         GamePath = _settings.Settings.GamePath;
-        // Tự động tìm thư mục game nếu chưa chọn hoặc đường dẫn hiện tại không hợp lệ
-        if (string.IsNullOrWhiteSpace(GamePath) || !_detect.Validate(GamePath).IsValid)
+        // Avoid blocking every tab switch with repeated drive/Steam detection.
+        // The explicit "Tự tìm" command always performs a fresh scan.
+        if ((string.IsNullOrWhiteSpace(GamePath) || !_detect.Validate(GamePath).IsValid)
+            && DateTime.UtcNow >= _nextAutoDetectUtc)
         {
+            _nextAutoDetectUtc = DateTime.UtcNow.AddMinutes(2);
             var found = _detect.AutoDetect();
             if (found.Count > 0)
-            {
                 SetPath(found[0]);
-            }
         }
         Refresh();
     }
@@ -120,14 +163,10 @@ public partial class HomeViewModel : ObservableObject
         var staged = StagedPakInspector.Inspect(AppContext.BaseDirectory);
         var r29Present = R29MountedPak.ReleaseRequired(AppContext.BaseDirectory)
             || R29MountedPak.PackagePresent(AppContext.BaseDirectory);
-        var r29Verified = r29Present && R29MountedPak.PackageVerified(AppContext.BaseDirectory);
-        var r29Compatible = PathOk && R29MountedPak.GameCompatible(GamePath);
         HasStagedContent = r29Present || staged.Present;
         StagedContentText = r29Present
-            ? (!r29Verified ? "Gói Việt hóa R29 bị thiếu hoặc lỗi dữ liệu."
-                : !PathOk ? "Gói Việt hóa R29 đã sẵn sàng. Hãy chọn thư mục game."
-                : r29Compatible ? "Gói Việt hóa R29 đã sẵn sàng để cài."
-                : R29MountedPak.CompatibilityIssue(GamePath) ?? "Không thể xác minh dữ liệu Mount/SIG.")
+            ? (!PathOk ? "Chọn thư mục game để cài."
+                : "R29 sẵn sàng ghi đè trực tiếp.")
             : staged.ShaVerified
             ? (r28KnownFailure
                 ? "PAK R28 (dữ liệu 3.8.10) đã gây lỗi Corrupt pak index trên PC 3.8.0/dữ liệu 3.8.11. Chưa cài được."
@@ -169,9 +208,7 @@ public partial class HomeViewModel : ObservableObject
             return;
         }
 
-        // R29 is one-click: the installer automatically removes old/conflicting
-        // mods from the active game folders after backing them up. Don't ask
-        // for an additional confirmation dialog on each reinstall.
+        // R29 force-install: tự dọn file cũ/xung đột đã nhận diện rồi cài đè.
         var isR29 = R29MountedPak.ReleaseRequired(AppContext.BaseDirectory)
             || R29MountedPak.PackagePresent(AppContext.BaseDirectory);
         if (!isR29)
@@ -188,12 +225,12 @@ public partial class HomeViewModel : ObservableObject
         Message = "Đang tự động cài đặt Việt hóa vào game…";
         try
         {
-            var r = await _viet.InstallAsync(GamePath, NameVariant.English, withFont: true);
+            var r = await _viet.InstallAsync(GamePath, NameVariant.English, withFont: !isR29);
             if (r.Success)
             {
-                Message = "Đã ghi và kiểm tra PAK Việt hóa. Có thể mở game để xem bản dịch.";
+                Message = "Đã ghi đè PAK Việt hóa. Có thể mở game.";
                 MessageBox.Show(
-                    "Đã cài đặt và đối chiếu SHA-256. Có thể mở game để kiểm tra bản dịch.",
+                    "Đã ghi đè Việt hóa vào game.",
                     "VHWuWa — Cài đặt hoàn tất",
                     MessageBoxButton.OK,
                     MessageBoxImage.Information);
@@ -333,6 +370,7 @@ public partial class HomeViewModel : ObservableObject
     [RelayCommand]
     private void AutoDetect()
     {
+        _nextAutoDetectUtc = DateTime.UtcNow.AddMinutes(2);
         var found = _detect.AutoDetect();
         if (found.Count > 0)
         {
@@ -347,6 +385,7 @@ public partial class HomeViewModel : ObservableObject
 
     public void SetPath(string path)
     {
+        _nextAutoDetectUtc = DateTime.MinValue;
         GamePath = _detect.NormalizeGamePath(path) ?? path.Trim().TrimEnd('\\', '/');
         _settings.Settings.GamePath = GamePath;
         _settings.Save();

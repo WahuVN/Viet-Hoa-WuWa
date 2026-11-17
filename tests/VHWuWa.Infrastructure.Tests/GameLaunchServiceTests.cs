@@ -44,6 +44,49 @@ public sealed class GameLaunchServiceTests
         }
     }
     [Fact]
+    public void GetSteamLaunchUri_UsesMatchingSteamManifestInsteadOfGuessingAppId()
+    {
+        var temp = Path.Combine(Path.GetTempPath(), "vhwuwa-steam-uri-" + Guid.NewGuid().ToString("N"));
+        var steamapps = Path.Combine(temp, "SteamLibrary", "steamapps");
+        var game = Path.Combine(steamapps, "common", "Wuthering Waves", "Wuthering Waves Game");
+        var exe = Path.Combine(game, "Client", "Binaries", "Win64", "Client-Win64-Shipping.exe");
+        Directory.CreateDirectory(Path.GetDirectoryName(exe)!);
+        File.WriteAllBytes(exe, new byte[] { 1 });
+
+        try
+        {
+            var manifest = Path.Combine(steamapps, "appmanifest_1234567.acf");
+            File.WriteAllText(manifest, "\"AppState\"\n{\n\t\"appid\"\t\"1234567\"\n\t\"installdir\"\t\"Wuthering Waves\"\n}");
+            Assert.Equal("steam://rungameid/1234567", GameLaunchService.GetSteamLaunchUri(game));
+            Assert.Equal("steam://rungameid/1234567",
+                GameLaunchService.GetSteamLaunchUri(Path.Combine(game, "Client")));
+
+            File.WriteAllText(manifest, "\"AppState\"\n{\n\t\"installdir\"\t\"Other Game\"\n}");
+            Assert.Null(GameLaunchService.GetSteamLaunchUri(game));
+        }
+        finally
+        {
+            Directory.Delete(temp, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void GetSteamLaunchUri_KuroNonSteamFolderHasNoSteamOverride()
+    {
+        var temp = Path.Combine(Path.GetTempPath(), "vhwuwa-kuro-path-" + Guid.NewGuid().ToString("N"));
+        var game = Path.Combine(temp, "Kuro Games", "Wuthering Waves", "Wuthering Waves Game");
+        Directory.CreateDirectory(game);
+        try
+        {
+            Assert.Null(GameLaunchService.GetSteamLaunchUri(game));
+        }
+        finally
+        {
+            Directory.Delete(temp, recursive: true);
+        }
+    }
+
+    [Fact]
     public void CreateStartInfo_ForceCSharp_AddsOnlyExpectedArgument()
     {
         var exe = Path.Combine("D:\\Game Folder", "Client-Win64-Shipping.exe");

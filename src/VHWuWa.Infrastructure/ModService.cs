@@ -200,6 +200,8 @@ public sealed class FontService : IFontService
         {
             if (string.IsNullOrWhiteSpace(gamePath) || !Directory.Exists(gamePath))
                 return Task.FromResult(Result.Fail("Chưa chọn thư mục game hợp lệ."));
+            if (R29MountedPak.ReleaseRequired(AppContext.BaseDirectory) || R29MountedPak.IsInstalled(gamePath))
+                return Task.FromResult(R29FontMountedPak.Install(gamePath, fontPakPath));
             if (!File.Exists(fontPakPath))
                 return Task.FromResult(Result.Fail("Không thấy file font: " + fontPakPath));
 
@@ -256,6 +258,8 @@ public sealed class FontService : IFontService
     {
         try
         {
+            if (R29MountedPak.ReleaseRequired(AppContext.BaseDirectory) || R29MountedPak.IsInstalled(gamePath))
+                return Task.FromResult(R29FontMountedPak.Remove(gamePath));
             var mods = ModsDir(gamePath);
             if (!Directory.Exists(mods)) return Task.FromResult(Result.Ok());
             var markerPath = Path.Combine(mods, "vhwuwa_install.json");
@@ -373,6 +377,8 @@ public sealed class FontService : IFontService
     {
         try
         {
+            if (R29MountedPak.ReleaseRequired(AppContext.BaseDirectory) || R29MountedPak.IsInstalled(gamePath))
+                return R29FontMountedPak.CurrentFontPak(gamePath);
             var mods = ModsDir(gamePath);
             if (!Directory.Exists(mods)) return null;
             var marker = ViethoaInstallMarker.Load(Path.Combine(mods, "vhwuwa_install.json"));

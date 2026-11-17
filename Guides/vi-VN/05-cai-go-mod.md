@@ -2,27 +2,25 @@
 
 ## Cài Việt hóa R29
 
-Bạn chỉ cần **đóng game → chọn thư mục game → bấm Cài Việt hóa**.
+Đóng game và launcher, chọn đúng thư mục chứa `Client`, rồi bấm **Cài Việt hóa**. R29 hiện chỉ có biến thể **tên Anh** và dùng **font gốc của game**.
 
-Ứng dụng tự tìm và dọn các tệp mod cũ có thể cản bản dịch, bao gồm bản Việt hóa WAHU cũ, loader của mod khác, PAK từ thư mục mod và Mount phụ còn sót. Sau đó ứng dụng cài R29 và kiểm tra đã cài.
+Trước khi can thiệp, ứng dụng kiểm tra thư mục và SHA-256 gói R29. Chỉ file mod cũ/xung đột đã nhận diện rõ mới được chuyển vào vùng **Quarantine** có bản sao và manifest SHA-256 để khôi phục.
 
-**Không cần tự xóa mod, xác nhận từng tệp hay cài lại thủ công.**
+**Mount phụ không xác minh được phải bị chặn và giữ nguyên**, không tự xóa. Người dùng cần xác minh file thuộc mod nào trước khi cài tiếp. Không ghi vào PAK, SIG hoặc Mount chính thức.
 
-## Mod cũ được xử lý như thế nào?
+## Quy tắc xử lý file mod
 
-- Mod được dời ra khỏi các thư mục game đang hoạt động, nên không còn chèn vào bản dịch mới.
-- Một bản sao của từng tệp được lưu tại thư mục **Quarantine** trong dữ liệu ứng dụng để khôi phục nếu cần.
-- Tệp game gốc, dữ liệu chính thức và bản sao lưu của người dùng không bị xóa.
-- Nếu không đủ gói Việt hóa, app sẽ báo lỗi trước khi đụng vào mod cũ.
+- Mod được xác minh sẽ được cách ly bên ngoài thư mục game, không bị xóa vĩnh viễn.
+- Mod không rõ nguồn, file gốc và bản sao lưu người dùng được giữ nguyên.
+- Nếu thiếu gói/sai SHA-256, đường dẫn không hợp lệ, game đang chạy hoặc thiếu quyền ghi, quá trình cài sẽ dừng an toàn.
+- Nếu quá trình gặp lỗi, hãy đọc log và kiểm tra vùng cách ly trước khi thử lại.
 
 ## Cài lại và cập nhật
 
-Khi muốn cài lại R29, chỉ cần bấm **Cài lại Việt hóa**. Nếu có mod khác mới chèn vào, ứng dụng cũng tự dọn trong lần cài lại.
-
-Để cập nhật ứng dụng từ 3.0.18 lên 3.0.19, mở app, chọn **Có** khi có thông báo rồi để updater thay ZIP tại chỗ.
+Chỉ bấm **Cài lại Việt hóa** sau khi ứng dụng xác minh R29 và thư mục game hợp lệ. Với cập nhật ứng dụng, chỉ dùng gói đúng phiên bản từ nguồn chính thức; updater xác minh checksum và có cơ chế khôi phục khi khởi động bản mới lỗi.
 
 ## Khi không thể cài
 
-Hãy kiểm tra đã chọn đúng thư mục chứa `Client`, đóng game và đủ tệp Mount/SIG. Nếu Windows khóa tệp đang sử dụng, thoát chương trình giữ tệp rồi thử lại. Không nên tự xóa tệp game gốc.
+Kiểm tra thư mục chứa `Client`, đóng game, quyền truy cập và file Mount không rõ nguồn. R29 chỉ tạo các thư mục và tệp WAHU sau khi xác minh PAK và SIG nguồn hợp lệ. **Không tự tạo SIG rỗng, không quét đại SIG ngôn ngữ và không sửa file chính thức** để bỏ qua cảnh báo.
 
-Cần hỗ trợ? Nhấn **Hỗ trợ Discord** trong trang Trợ giúp, gửi ảnh lỗi và phiên bản app/game.
+Vào **Trợ giúp → Hỗ trợ Discord** để gửi ảnh lỗi, phiên bản game, phiên bản ứng dụng và log đã ẩn thông tin cá nhân.

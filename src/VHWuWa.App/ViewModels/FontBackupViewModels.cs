@@ -26,7 +26,7 @@ public partial class FontViewModel : ObservableObject
     [ObservableProperty] private ImageSource? _previewImage;
     [ObservableProperty] private string _previewMessage = "Chọn một font để xem trước.";
     [ObservableProperty] private int _previewFontSize = 30;
-    [ObservableProperty] private int _fontWeight = 650;
+    [ObservableProperty] private int _fontWeight = 660;
     [ObservableProperty] private int _minimumFontWeight = 100;
     [ObservableProperty] private int _maximumFontWeight = 900;
     [ObservableProperty] private bool _canAdjustFontWeight;
@@ -113,13 +113,17 @@ public partial class FontViewModel : ObservableObject
             && File.Exists(Path.Combine(path, "Client", "Binaries", "Win64", "Client-Win64-Shipping.exe"));
         var r29Mode = R29MountedPak.ReleaseRequired(AppContext.BaseDirectory)
             || R29MountedPak.PackagePresent(AppContext.BaseDirectory);
-        CanApplyToGame = gameFound && !r29Mode;
+        var r29Installed = gameFound && R29MountedPak.IsInstalled(path);
+        CanApplyToGame = gameFound && (!r29Mode || r29Installed);
         OnPropertyChanged(nameof(CanApplyToGame));
         if (gameFound && r29Mode)
         {
-            CurrentFont = R29MountedPak.IsInstalled(path) ? "Font game mặc định · R29" : "Chưa cài R29";
-            Message = "R29 đang dùng Mount mới. Font game đã hiển thị dấu tiếng Việt ở những màn hình được kiểm thử. "
-                + "Thay font bằng PAK cũ chưa được nghiệm thu; vẫn có thể chọn và xem trước font.";
+            CurrentFont = r29Installed
+                ? (_fonts.CurrentFontPak(path) ?? "Lexend 660 · R29")
+                : "Chưa cài Việt hóa R29";
+            Message = !r29Installed
+                ? "Cài Việt hóa R29 trước khi đổi font game."
+                : "R29 dùng Mount font riêng. Mặc định là Lexend 660; có thể chọn font khác mà không thay file game gốc.";
             return;
         }
         if (!CanApplyToGame)
@@ -192,7 +196,7 @@ public partial class FontViewModel : ObservableObject
         WeightHelp = info.IsVariable
             ? $"Font biến thiên · điều chỉnh từ {info.Minimum} đến {info.Maximum}."
             : $"Font tĩnh · độ đậm {info.Default}. Chọn Lexend Variable để kéo từ 100 đến 900.";
-        FontWeight = info.IsVariable ? Math.Clamp(650, info.Minimum, info.Maximum) : info.Default;
+        FontWeight = info.IsVariable ? Math.Clamp(660, info.Minimum, info.Maximum) : info.Default;
         RequestPreviewRefresh();
     }
 

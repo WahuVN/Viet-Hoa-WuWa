@@ -2,7 +2,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using VHWuWa.App.ViewModels;
 
-// Isolated preflight regression: no real game, no disk writes and no installer execution.
+// UI-only regression: no real game and no installer execution.
 var vm = (InstallViewModel)RuntimeHelpers.GetUninitializedObject(typeof(InstallViewModel));
 void Set(string name, object value)
 {
@@ -24,8 +24,9 @@ Require(vm.VariantHanViet && !vm.VariantEnglish, "Han Viet radio was not selecte
 Require(vm.ApplyFont, "Font checkbox could not be checked");
 Require(vm.CanInstall && vm.InstallCommand.CanExecute(null),
     "OneClick button incorrectly disabled for selected R29 Han Viet/font");
-Require(vm.OptionHelpText.Contains("tự chuyển", StringComparison.OrdinalIgnoreCase),
-    "Missing truthful fallback message");
+Require(vm.OptionHelpText.Contains("xung đột", StringComparison.OrdinalIgnoreCase)
+        && vm.OptionHelpText.Contains("cài đè", StringComparison.OrdinalIgnoreCase),
+    "Missing force-install cleanup message");
 Console.WriteLine("PASS ONECLICK_R29_BOTH_OPTIONS_SELECTED_STILL_INSTALLABLE");
 vm.ApplyFont = false;
 Require(vm.CanInstall && vm.InstallCommand.CanExecute(null), "Unchecking font disabled OneClick");

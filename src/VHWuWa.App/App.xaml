@@ -7,13 +7,17 @@
             <ResourceDictionary.MergedDictionaries>
                 <ui:ControlsDictionary />
                 <ui:ThemesDictionary Theme="Dark" />
+                <ResourceDictionary Source="/Styles/Wahu.Dark.xaml" />
             </ResourceDictionary.MergedDictionaries>
             <BooleanToVisibilityConverter x:Key="BoolToVis" />
-            <FontFamily x:Key="WahuAppFontFamily">pack://application:,,,/Fonts/#Lexend</FontFamily>
+            <FontFamily x:Key="WahuAppFontFamily">pack://application:,,,/Fonts/#Source Sans 3</FontFamily>
+            <FontFamily x:Key="WahuHeadingFontFamily">pack://application:,,,/Fonts/#Lexend</FontFamily>
 
             <!-- Chữ luôn sáng, đọc rõ trên nền tối -->
             <Style TargetType="TextBlock">
                 <Setter Property="FontFamily" Value="{StaticResource WahuAppFontFamily}" />
+                <Setter Property="FontWeight" Value="Normal" />
+                <Setter Property="FontSize" Value="14" />
                 <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
                 <Setter Property="TextOptions.TextFormattingMode" Value="Ideal" />
                 <Setter Property="TextOptions.TextRenderingMode" Value="ClearType" />
@@ -26,11 +30,11 @@
                 <Setter Property="Padding" Value="12,7" />
                 <Setter Property="Cursor" Value="Hand" />
                 <Setter Property="FontFamily" Value="{StaticResource WahuAppFontFamily}" />
-                <Setter Property="FontSize" Value="12.5" />
+                <Setter Property="FontSize" Value="13.5" />
                 <Setter Property="FontWeight" Value="Medium" />
                 <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
-                <Setter Property="Background" Value="{DynamicResource ControlFillColorDefaultBrush}" />
-                <Setter Property="BorderBrush" Value="{DynamicResource ControlElevationBorderBrush}" />
+                <Setter Property="Background" Value="{DynamicResource Wahu.ButtonSecondary}" />
+                <Setter Property="BorderBrush" Value="{DynamicResource Wahu.Border}" />
                 <Setter Property="Template">
                     <Setter.Value>
                         <ControlTemplate TargetType="{x:Type Button}">
@@ -64,32 +68,66 @@
             </Style>
             <!-- Bảng dữ liệu dễ đọc -->
             <Style TargetType="DataGrid">
-                <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
-                <Setter Property="Background" Value="{DynamicResource ApplicationBackgroundBrush}" />
-                <Setter Property="RowBackground" Value="Transparent" />
-                <Setter Property="AlternatingRowBackground" Value="{DynamicResource ControlFillColorDefaultBrush}" />
+                <Setter Property="Foreground" Value="{DynamicResource Wahu.Text}" />
+                <Setter Property="Background" Value="{DynamicResource Wahu.TableSurface}" />
+                <Setter Property="RowBackground" Value="{DynamicResource Wahu.TableSurface}" />
+                <Setter Property="AlternatingRowBackground" Value="{DynamicResource Wahu.TableAlternate}" />
                 <Setter Property="GridLinesVisibility" Value="Horizontal" />
-                <Setter Property="HorizontalGridLinesBrush" Value="{DynamicResource ControlElevationBorderBrush}" />
-                <Setter Property="BorderBrush" Value="{DynamicResource ControlElevationBorderBrush}" />
+                <Setter Property="HorizontalGridLinesBrush" Value="{DynamicResource Wahu.TableLine}" />
+                <Setter Property="BorderBrush" Value="{DynamicResource Wahu.Border}" />
+                <Setter Property="BorderThickness" Value="1" />
                 <Setter Property="HeadersVisibility" Value="Column" />
                 <Setter Property="RowHeight" Value="34" />
-                <Setter Property="FontSize" Value="14" />
+                <Setter Property="FontFamily" Value="{StaticResource WahuAppFontFamily}" />
+                <Setter Property="FontSize" Value="13" />
                 <Setter Property="IsReadOnly" Value="True" />
                 <Setter Property="AutoGenerateColumns" Value="False" />
                 <Setter Property="CanUserAddRows" Value="False" />
+                <Setter Property="EnableRowVirtualization" Value="True" />
+                <Setter Property="EnableColumnVirtualization" Value="True" />
+                <Setter Property="VirtualizingPanel.IsVirtualizing" Value="True" />
+                <Setter Property="VirtualizingPanel.VirtualizationMode" Value="Recycling" />
+                <Setter Property="ScrollViewer.CanContentScroll" Value="True" />
+            </Style>
+            <!-- Read-only name columns use the same baseline as editable inputs. -->
+            <Style x:Key="Wahu.TableCellText" TargetType="TextBlock">
+                <Setter Property="VerticalAlignment" Value="Center" />
+                <Setter Property="Margin" Value="7,0" />
+                <Setter Property="Foreground" Value="{DynamicResource Wahu.Text}" />
+                <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+                <Setter Property="FontFamily" Value="{StaticResource WahuAppFontFamily}" />
+                <Setter Property="FontSize" Value="13" />
             </Style>
             <Style TargetType="DataGridColumnHeader">
-                <Setter Property="Background" Value="{DynamicResource ControlFillColorDefaultBrush}" />
-                <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
-                <Setter Property="BorderBrush" Value="{DynamicResource ControlElevationBorderBrush}" />
-                <Setter Property="BorderThickness" Value="0,0,1,1" />
-                <Setter Property="Padding" Value="9,7" />
+                <Setter Property="Background" Value="{DynamicResource Wahu.TableHeader}" />
+                <Setter Property="FontSize" Value="13" />
+                <Setter Property="Foreground" Value="{DynamicResource Wahu.Text}" />
+                <Setter Property="BorderBrush" Value="{DynamicResource Wahu.TableLine}" />
+                <Setter Property="BorderThickness" Value="0,0,0,1" />
+                <Setter Property="Padding" Value="14,9" />
+                <Setter Property="MinHeight" Value="37" />
+                <Setter Property="FontFamily" Value="{StaticResource WahuAppFontFamily}" />
                 <Setter Property="FontWeight" Value="SemiBold" />
             </Style>
             <Style TargetType="DataGridCell">
-                <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
-                <Setter Property="BorderBrush" Value="{DynamicResource ControlElevationBorderBrush}" />
+                <Setter Property="Foreground" Value="{DynamicResource Wahu.Text}" />
+                <Setter Property="BorderBrush" Value="{DynamicResource Wahu.TableLine}" />
+                <Setter Property="BorderThickness" Value="0" />
+                <Setter Property="Padding" Value="3,1" />
                 <Setter Property="VerticalContentAlignment" Value="Center" />
+            </Style>
+            <Style TargetType="DataGridRow">
+                <Setter Property="BorderThickness" Value="0" />
+                <Setter Property="Foreground" Value="{DynamicResource Wahu.Text}" />
+                <Style.Triggers>
+                    <Trigger Property="IsMouseOver" Value="True">
+                        <Setter Property="Background" Value="{DynamicResource Wahu.TableHover}" />
+                    </Trigger>
+                    <Trigger Property="IsSelected" Value="True">
+                        <Setter Property="Background" Value="{DynamicResource Wahu.TableSelected}" />
+                        <Setter Property="Foreground" Value="{DynamicResource Wahu.Text}" />
+                    </Trigger>
+                </Style.Triggers>
             </Style>
         </ResourceDictionary>
     </Application.Resources>

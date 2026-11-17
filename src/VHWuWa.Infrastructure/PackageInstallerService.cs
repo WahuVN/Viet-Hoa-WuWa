@@ -112,7 +112,7 @@ public sealed class PackageInstallerService : IPackageInstallerService
             if (!HasFreeSpace(gamePath, need))
                 return Result.Fail("Không đủ dung lượng trống trên ổ đĩa game.");
             if (!CanWrite(gamePath))
-                return Result.Fail("Không có quyền ghi vào thư mục game. Hãy đóng game hoặc chạy lại.");
+                return Result.Fail("Không có quyền ghi vào thư mục game. Hãy kiểm tra quyền ghi rồi thử lại.");
 
             // Backup
             backup = _backup.CreateBackup(gamePath, "install:" + manifest.PackageType, manifest.PackageId,
