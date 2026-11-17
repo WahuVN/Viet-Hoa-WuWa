@@ -91,8 +91,9 @@ void Scenario(string mode, bool officialMount, bool englishSig, bool staleWahu,
     if (!R29MountedPak.PackageVerified(app))
         throw new Exception("Package SHA-256 preflight failed for " + mode);
     var expectedCompatible = englishSig || (japaneseSig && !tamperJapaneseMount && !omitJapaneseMount);
-    if (R29MountedPak.GameCompatible(game) != expectedCompatible)
-        throw new Exception("SIG provenance preflight mismatch for " + mode);
+    var sigAvailable = R29MountedPak.StockSig(game) is not null;
+    if (sigAvailable != expectedCompatible)
+        throw new Exception("SIG source preflight mismatch for " + mode);
     var result = R29MountedPak.Install(app, game);
     if (!expectedCompatible)
     {

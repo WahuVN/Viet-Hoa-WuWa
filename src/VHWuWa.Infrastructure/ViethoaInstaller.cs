@@ -1480,118 +1480,6 @@ public sealed class ViethoaInstaller : IViethoaInstaller
         }
     }
 
-    /// <summary>
-    /// Automatically removes the active mod files that can conflict with R29,
-    /// including previous WAHU loader installs and incomplete R29 mounts. The
-    /// existing quarantine transaction keeps exact SHA-256 backups outside game.
-    /// Game stock files, backups and arbitrary files outside known mod paths stay.
-    /// </summary>
-    private IReadOnlyList<string> CollectR29ReplacementFiles(string gamePath)
-    {
-        var files = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        void Add(string path)
-        {
-            if (File.Exists(path) && !IsProtectedBackupFile(path)
-                && !IsOfficialGameFile(gamePath, path))
-                files.Add(Path.GetFullPath(path));
-        }
-
-        var mods = ModsOf(gamePath);
-        var marker = ViethoaInstallMarker.Load(Path.Combine(mods, MarkerName));
-        var legacy = IsLegacyVhwuwaBundle(gamePath, marker);
-        if (Directory.Exists(mods) && !IsLinkedDirectory(mods))
-        {
-            foreach (var name in OwnedModFiles(mods)) Add(Path.Combine(mods, name));
-            // An unmarked old install may still leave a font PAK after the
-            // translation and loader were removed by a previous updater.
-            foreach (var name in new[] { "WahuFont_100_P.pak", "WahuFont_100_P.sig" })
-                Add(Path.Combine(mods, name));
-        }
-
-        // Don't mistake an unrelated single DLL for a complete WAHU install.
-        if (marker is not null || legacy)
-            foreach (var name in new[] { "version.dll", "verorg.dll", "WuWaVH.dll" })
-                Add(Path.Combine(Win64Of(gamePath), name));
-
-        foreach (var stale in R29MountedPak.StaleActivationFiles(gamePath))
-            Add(stale);
-
-        // Security boundary: ::Mount:: is not proof of a third-party mod. The game itself
-        // uses MountLauncher, MountResource, MountOption_Pack_* and many other sidecars.
-        // Never move a sidecar or its referenced PAK from official Resources merely
-        // because its file name is not MountLang_*. Delete only proven legacy WAHU
-        // targets above and the verified Iris Win64 artifacts from CollectOldTranslationFiles.
-
-        return files.OrderBy(x => x, StringComparer.OrdinalIgnoreCase).ToList();
-    }
-
-    // Unknown active resource mounts may load a second language PAK.
-    // Keep these files untouched and require the user to resolve provenance.
-    private static string? FindUnverifiedResourceMount(string gamePath)
-    {
-        var mount = Path.Combine(gamePath, "Client", "Saved", "Resources", "3.8.0", "Mount");
-        if (!Directory.Exists(mount)) return null;
-
-        foreach (var sidecar in Directory.EnumerateFiles(mount, "*.txt", SearchOption.TopDirectoryOnly))
-        {
-            var name = Path.GetFileName(sidecar);
-            if (name.Equals("wahuviethoa.txt", StringComparison.OrdinalIgnoreCase)
-                || name.StartsWith("Mount", StringComparison.OrdinalIgnoreCase))
-                continue;
-            if ((File.GetAttributes(sidecar) & FileAttributes.ReparsePoint) != 0
-                || new FileInfo(sidecar).Length > 1024 * 1024)
-                return sidecar;
-            if (File.ReadAllText(sidecar).Contains("::Mount::", StringComparison.OrdinalIgnoreCase))
-                return sidecar;
-        }
-        return null;
-    }
-
-    // Strict R29 isolation: verified source first; exact SHA backups for known conflicts.
-    private Result<ModQuarantineReport> QuarantineR29ConflictsUnderLock(string gamePath)
-    {
-        try
-        {
-            EnsureManagedMarkerReadable(ModsOf(gamePath));
-            var extraFiles = CollectR29ReplacementFiles(gamePath)
-                .Concat(CollectOldTranslationFiles(gamePath))
-                .Distinct(StringComparer.OrdinalIgnoreCase)
-                .ToList();
-            if (extraFiles.Count == 0 && CollectConflictFiles(gamePath).Count == 0)
-                return Result<ModQuarantineReport>.Ok(new ModQuarantineReport());
-            return QuarantineConflictsCore(gamePath, acquireLock: false,
-                extraFiles: extraFiles, allowWhileGameRunning: false);
-        }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException
-                                   or ArgumentException or InvalidDataException)
-        {
-            return Result<ModQuarantineReport>.Fail(
-                "Không thể cách ly mod trước khi cài R29: " + ex.Message, ex);
-        }
-    }
-
-    private void RestoreR29ConflictsOnFailure(string gamePath, ModQuarantineReport backup)
-    {
-        foreach (var relative in backup.MovedFiles.AsEnumerable().Reverse())
-        {
-            try
-            {
-                var saved = PathValidation.ResolveInsideRoot(backup.QuarantineDirectory, relative);
-                var original = PathValidation.ResolveInsideRoot(gamePath, relative);
-                if (!File.Exists(saved) || File.Exists(original)) continue;
-                Directory.CreateDirectory(Path.GetDirectoryName(original)!);
-                File.Copy(saved, original, overwrite: false);
-                if (!SameFile(saved, original))
-                    throw new IOException("Bản phục hồi không khớp SHA-256: " + relative);
-            }
-            catch (Exception ex)
-            {
-                _log.Warn("Conflict", "Không thể tự khôi phục mod cũ " + relative
-                    + ". Bản sao vẫn còn tại " + backup.QuarantineDirectory + ": " + ex.Message);
-            }
-        }
-    }
-
     public async Task<Result> InstallAsync(string gamePath, NameVariant variant, bool withFont,
         IProgress<InstallProgress>? progress = null, CancellationToken ct = default)
     {
@@ -1601,19 +1489,8 @@ public sealed class ViethoaInstaller : IViethoaInstaller
             if (R29MountedPak.ReleaseRequired(AppContext.BaseDirectory)
                 || R29MountedPak.PackagePresent(AppContext.BaseDirectory))
             {
-                // Validate immutable package and target before changing even one mod file.
                 if (!R29MountedPak.PackageVerified(AppContext.BaseDirectory))
                     return Result.Fail("R29 thiếu gói hoặc SHA-256 sai; chưa thay đổi file game.");
-                var issue = R29MountedPak.CompatibilityIssue(gamePath);
-                if (issue is not null)
-                    return Result.Fail("Thư mục game không hợp lệ: " + issue);
-                if (IsGameRunning())
-                    return Result.Fail("Hãy đóng game trước khi cài R29.");
-                var unverified = FindUnverifiedResourceMount(gamePath);
-                if (unverified is not null)
-                    return Result.Fail("Phát hiện Mount chưa xác minh (" + Path.GetFileName(unverified)
-                        + "). Chưa cách ly hay ghi PAK. Kiểm tra bản dịch/mod này trước.");
-
                 if (!File.Exists(DefaultR29FontPak))
                     return Result.Fail("Thiếu font mặc định Lexend 660; chưa thay đổi file game.");
                 if (!PakV12Converter.TryVerifyV12(DefaultR29FontPak, out var fontIssue))
@@ -1625,27 +1502,16 @@ public sealed class ViethoaInstaller : IViethoaInstaller
                 ct.ThrowIfCancellationRequested();
 
                 var textWasInstalled = R29MountedPak.IsInstalled(gamePath);
-                var quarantine = QuarantineR29ConflictsUnderLock(gamePath);
-                if (!quarantine.Success || quarantine.Value is null)
-                    return Result.Fail(quarantine.Error ?? "Không cách ly được mod cũ trước khi cài R29.");
-                LastAutoDeletedConflictCount = quarantine.Value.MovedFiles.Count;
-
                 var installed = await Task.Run(() =>
                     R29MountedPak.Install(AppContext.BaseDirectory, gamePath), CancellationToken.None);
                 if (!installed.Success)
-                {
-                    if (quarantine.Value.MovedFiles.Count > 0)
-                        RestoreR29ConflictsOnFailure(gamePath, quarantine.Value);
                     return installed;
-                }
 
                 var fontInstalled = await Task.Run(() =>
                     R29FontMountedPak.Install(gamePath, DefaultR29FontPak), CancellationToken.None);
                 if (!fontInstalled.Success)
                 {
                     if (!textWasInstalled) R29MountedPak.Uninstall(gamePath);
-                    if (quarantine.Value.MovedFiles.Count > 0)
-                        RestoreR29ConflictsOnFailure(gamePath, quarantine.Value);
                     return Result.Fail("Đã dừng vì không cài được Lexend 660: " + fontInstalled.Error);
                 }
 

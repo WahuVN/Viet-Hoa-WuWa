@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using System.Security.Cryptography;
 using System.Text;
 using VHWuWa.Core.Models;
@@ -48,7 +47,7 @@ public static class R29MountedPak
     /// Finds the English-language SIG in either a numbered patch directory or
     /// Lang_en/Base (used by full installs without incremental language patches).
     /// </summary>
-    internal static string? StockSig(string gameRoot)
+    public static string? StockSig(string gameRoot)
     {
         var langEn = Path.Combine(GameResourceDir(gameRoot), "Lang_en");
         if (!Directory.Exists(langEn)) return MountedLanguageFallbackSig(gameRoot);
@@ -200,30 +199,6 @@ public static class R29MountedPak
         catch (UnauthorizedAccessException) { return false; }
     }
 
-    /// <summary>
-    /// R29 chỉ dùng SIG có sẵn của game theo cơ chế đã kiểm chứng: bản English
-    /// hoặc file ngôn ngữ được MountLang_* chính thức tham chiếu và khớp SHA-1.
-    /// Không tự tạo SIG rỗng và không đụng dữ liệu gốc khi thiếu nguồn.
-    /// </summary>
-    public static string? CompatibilityIssue(string gameRoot)
-    {
-        try
-        {
-            if (string.IsNullOrWhiteSpace(gameRoot)) return "Chưa chọn thư mục game.";
-            var exe = Path.Combine(gameRoot, "Client", "Binaries", "Win64", "Client-Win64-Shipping.exe");
-            if (!File.Exists(exe)) return "Không tìm thấy Client/Binaries/Win64/Client-Win64-Shipping.exe.";
-            if (!Directory.Exists(GameResourceDir(gameRoot)))
-                return "Không tìm thấy Resources/3.8.0 của game. Hãy xác minh thư mục game.";
-            if (StockSig(gameRoot) is null)
-                return "Không tìm được SIG đang được game sử dụng hoặc được MountLang xác minh. Chưa thay đổi file nào.";
-            return null;
-        }
-        catch (IOException) { return "Không đọc được thư mục game."; }
-        catch (UnauthorizedAccessException) { return "Không có quyền đọc thư mục game."; }
-        catch (ArgumentException) { return "Đường dẫn game không hợp lệ."; }
-    }
-
-    public static bool GameCompatible(string gameRoot) => CompatibilityIssue(gameRoot) is null;
 
     public static bool IsInstalled(string gameRoot)
     {
@@ -246,20 +221,6 @@ public static class R29MountedPak
         }
     }
 
-    /// <summary>
-    /// Files from an incomplete or foreign mount using our exact R29 names may
-    /// be backed up automatically before installing. Never touch the official
-    /// game mount or SIG, and never remove an already healthy R29 install.
-    /// </summary>
-    public static IReadOnlyList<string> StaleActivationFiles(string gameRoot)
-    {
-        if (IsInstalled(gameRoot)) return Array.Empty<string>();
-        return new[] { DestinationPak(gameRoot), DestinationSig(gameRoot), DestinationMount(gameRoot) }
-            .Where(File.Exists).ToArray();
-    }
-
-    private static bool IsGameRunning() =>
-        Process.GetProcessesByName("Client-Win64-Shipping").Length > 0;
 
     private static void PrepareForOverwrite(string path)
     {
@@ -280,12 +241,6 @@ public static class R29MountedPak
         {
             if (!PackageVerified(appDirectory))
                 return Result.Fail("R29 thiếu gói hoặc SHA-256 sai. Không thay đổi file game.");
-            var compatibility = CompatibilityIssue(gameRoot);
-            if (compatibility is not null)
-                return Result.Fail("Thư mục game R29 không hợp lệ: " + compatibility);
-            if (IsGameRunning())
-                return Result.Fail("Hãy đóng game trước khi cài R29.");
-
             // Preflight SIG before creating or modifying any game-side folder/file.
             var sourceSig = StockSig(gameRoot);
             if (sourceSig is null || !File.Exists(sourceSig))
@@ -326,7 +281,6 @@ public static class R29MountedPak
     {
         try
         {
-            if (IsGameRunning()) return Result.Fail("Hãy đóng game trước khi gỡ bản Việt hóa R29.");
             if (!IsInstalled(gameRoot))
                 return Result.Fail("Không xác minh được đúng 3 tệp R29 đã cài. Không xóa file lạ.");
 
