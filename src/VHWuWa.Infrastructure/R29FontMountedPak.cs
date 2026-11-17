@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -94,23 +93,15 @@ public static class R29FontMountedPak
     public static string? CurrentFontPak(string game) => VerifiedReceipt(game)?.SourceName;
 
     public static Result Install(string game, string fontPakPath) =>
-        InstallCore(game, fontPakPath, R29MountedPak.IsInstalled(game));
+        InstallCore(game, fontPakPath);
 
-    // A private seam permits tests with a tiny synthetic game fixture; the
-    // production entrypoint above *always* verifies the installed R29 text PAK.
-    private static Result InstallCore(string game, string fontPakPath, bool translationVerified)
+    private static Result InstallCore(string game, string fontPakPath)
     {
         var staged = new List<string>();
         var movedOld = new List<(string Original, string Backup)>();
         var installedNew = new List<string>();
         try
         {
-            if (Process.GetProcessesByName("Client-Win64-Shipping").Length > 0)
-                return Result.Fail("Hãy đóng Wuthering Waves trước khi đổi font.");
-            if (!translationVerified)
-                return Result.Fail("Cần cài Việt hóa R29 hợp lệ trước khi đổi font.");
-            if (R29MountedPak.CompatibilityIssue(game) is { } issue)
-                return Result.Fail(issue);
             if (string.IsNullOrWhiteSpace(fontPakPath) || !File.Exists(fontPakPath))
                 return Result.Fail("Không tìm thấy gói font PAK.");
             var sourceName = Path.GetFileName(fontPakPath);
@@ -126,23 +117,12 @@ public static class R29FontMountedPak
             var sigSource = R29MountedPak.StockSig(game);
             if (sigSource is null) return Result.Fail("Không xác minh được SIG nguồn đang được game sử dụng.");
             var paths = new[] { Pak(game), Sig(game), Manifest(game), Sidecar(game) };
-            var existing = paths.Any(File.Exists);
-            if (existing && VerifiedReceipt(game) is null)
-                return Result.Fail("Mount font đã có file lạ hoặc thay đổi ngoài ứng dụng; không ghi đè.");
-            if (Directory.Exists(FontDir(game))
-                && Directory.EnumerateFileSystemEntries(FontDir(game))
-                    .Any(p => !paths.Contains(p, StringComparer.OrdinalIgnoreCase)))
-                return Result.Fail("Thư mục wahufont chứa dữ liệu không do VHWuWa quản lý; giữ nguyên.");
-
             var sourceSha = Sha(fontPakPath);
-            if (existing && sourceSha.Equals(Sha(Pak(game)), StringComparison.OrdinalIgnoreCase))
+            var current = VerifiedReceipt(game);
+            if (current is not null
+                && sourceSha.Equals(current.PakSha256, StringComparison.OrdinalIgnoreCase))
                 return Result.Ok();
 
-            var officialMountHashes = Directory.Exists(MountDir(game))
-                ? Directory.EnumerateFiles(MountDir(game), "MountLang_*.txt", SearchOption.TopDirectoryOnly)
-                    .Where(path => !IsLink(path))
-                    .ToDictionary(path => Path.GetFullPath(path), path => Sha(path), StringComparer.OrdinalIgnoreCase)
-                : new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
             Directory.CreateDirectory(FontDir(game));
             Directory.CreateDirectory(MountDir(game));
 
@@ -177,16 +157,6 @@ public static class R29FontMountedPak
 
             if (VerifiedReceipt(game)?.SourceName != sourceName)
                 throw new IOException("Font Mount hậu kiểm SHA-256 thất bại.");
-            var currentOfficialMounts = Directory.Exists(MountDir(game))
-                ? Directory.EnumerateFiles(MountDir(game), "MountLang_*.txt", SearchOption.TopDirectoryOnly)
-                    .Where(path => !IsLink(path))
-                    .ToDictionary(path => Path.GetFullPath(path), path => Sha(path), StringComparer.OrdinalIgnoreCase)
-                : new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-            if (officialMountHashes.Count != currentOfficialMounts.Count
-                || officialMountHashes.Any(pair => !currentOfficialMounts.TryGetValue(pair.Key, out var hash)
-                    || !hash.Equals(pair.Value, StringComparison.OrdinalIgnoreCase)))
-                throw new IOException("Mount ngôn ngữ chính thức đã thay đổi ngoài dự kiến.");
-
             foreach (var (_, backup) in movedOld)
                 if (File.Exists(backup)) File.Delete(backup);
             movedOld.Clear();
@@ -213,8 +183,6 @@ public static class R29FontMountedPak
     {
         try
         {
-            if (Process.GetProcessesByName("Client-Win64-Shipping").Length > 0)
-                return Result.Fail("Hãy đóng game trước khi gỡ font.");
             if (!File.Exists(Pak(game)) && !File.Exists(Sig(game))
                 && !File.Exists(Sidecar(game)) && !File.Exists(Manifest(game)))
                 return Result.Ok(); // Font game mặc định, không cần gỡ.

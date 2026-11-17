@@ -61,30 +61,30 @@ public sealed class R29MountedPakTests : IDisposable
         Directory.CreateDirectory(manifests);
         File.WriteAllText(Path.Combine(manifests, "ManifestResource_3.8.12.txt"), "new game resource");
 
-        Assert.True(R29MountedPak.GameCompatible(game));
+        Assert.NotNull(R29MountedPak.StockSig(game));
 
         Directory.Delete(manifests, recursive: true);
-        Assert.True(R29MountedPak.GameCompatible(game));
+        Assert.NotNull(R29MountedPak.StockSig(game));
 
         File.Delete(signature);
         // Không có SIG game thì không được tự bịa placeholder rồi báo tương thích.
-        Assert.False(R29MountedPak.GameCompatible(game));
+        Assert.Null(R29MountedPak.StockSig(game));
         File.WriteAllBytes(signature, new byte[] { 1, 2, 3 });
-        Assert.True(R29MountedPak.GameCompatible(game));
+        Assert.NotNull(R29MountedPak.StockSig(game));
 
         File.Delete(officialMount);
         // MountLang_en.txt is not modified by this installer and can be absent.
-        Assert.True(R29MountedPak.GameCompatible(game));
+        Assert.NotNull(R29MountedPak.StockSig(game));
         Directory.Delete(Path.GetDirectoryName(officialMount)!);
         // Missing destination Mount directory is now created automatically.
-        Assert.True(R29MountedPak.GameCompatible(game));
+        Assert.NotNull(R29MountedPak.StockSig(game));
     }
 
     [Fact]
     public void AnyExistingLanguageSignatureVersion_CanProvideTheMountSignature()
     {
         var (game, signature, _) = CreateMountReadyGame();
-        Assert.True(R29MountedPak.GameCompatible(game));
+        Assert.NotNull(R29MountedPak.StockSig(game));
 
         // Updates may leave a newer language SIG without the old 3.8.6 folder.
         File.Delete(signature);
@@ -92,11 +92,10 @@ public sealed class R29MountedPakTests : IDisposable
             "Lang_en", "3.9.1", "pakchunk10-WindowsNoEditor_P.sig");
         Directory.CreateDirectory(Path.GetDirectoryName(newer)!);
         File.WriteAllBytes(newer, new byte[] { 3, 9, 1 });
-        Assert.True(R29MountedPak.GameCompatible(game));
+        Assert.NotNull(R29MountedPak.StockSig(game));
 
         File.Delete(newer);
-        Assert.False(R29MountedPak.GameCompatible(game));
-        Assert.NotNull(R29MountedPak.CompatibilityIssue(game));
+        Assert.Null(R29MountedPak.StockSig(game));
     }
 
     [Fact]
@@ -104,22 +103,20 @@ public sealed class R29MountedPakTests : IDisposable
     {
         var (game, signature, _) = CreateMountReadyGame();
         File.Delete(signature);
-        Assert.False(R29MountedPak.GameCompatible(game));
+        Assert.Null(R29MountedPak.StockSig(game));
 
         var lang = Path.Combine(game, "Client", "Saved", "Resources", "3.8.0", "Lang_en");
         var baseSig = Path.Combine(lang, "Base", "pakchunk10-WindowsNoEditor_P.sig");
         Directory.CreateDirectory(Path.GetDirectoryName(baseSig)!);
         File.WriteAllBytes(baseSig, new byte[] { 1, 2, 3 });
-        Assert.True(R29MountedPak.GameCompatible(game));
-        Assert.Null(R29MountedPak.CompatibilityIssue(game));
+        Assert.NotNull(R29MountedPak.StockSig(game));
 
         File.Delete(baseSig);
         var rootSig = Path.Combine(lang, "pakchunk10-WindowsNoEditor_P.sig");
         File.WriteAllBytes(rootSig, new byte[] { 1, 2, 3 });
-        Assert.True(R29MountedPak.GameCompatible(game));
+        Assert.NotNull(R29MountedPak.StockSig(game));
         File.WriteAllBytes(rootSig, Array.Empty<byte>());
-        Assert.False(R29MountedPak.GameCompatible(game));
-        Assert.NotNull(R29MountedPak.CompatibilityIssue(game));
+        Assert.Null(R29MountedPak.StockSig(game));
     }
 
     [Fact]
@@ -129,12 +126,10 @@ public sealed class R29MountedPakTests : IDisposable
         var resource = Path.Combine(game, "Client", "Saved", "Resources", "3.8.0");
         Directory.Delete(resource, recursive: true);
 
-        Assert.False(R29MountedPak.GameCompatible(game));
-        Assert.NotNull(R29MountedPak.CompatibilityIssue(game));
+        Assert.Null(R29MountedPak.StockSig(game));
 
         Directory.CreateDirectory(resource);
-        Assert.False(R29MountedPak.GameCompatible(game));
-        Assert.NotNull(R29MountedPak.CompatibilityIssue(game));
+        Assert.Null(R29MountedPak.StockSig(game));
         Assert.False(File.Exists(Path.Combine(resource, "wahuviethoa", "WuWaVH_99_P.sig")));
     }
 
@@ -153,7 +148,7 @@ public sealed class R29MountedPakTests : IDisposable
             + sha1 + ",,\r\n::Del::\r\n";
         File.WriteAllText(jaMount, mountText);
 
-        Assert.True(R29MountedPak.GameCompatible(game), R29MountedPak.CompatibilityIssue(game));
+        Assert.NotNull(R29MountedPak.StockSig(game));
         Assert.Equal(mountText, File.ReadAllText(jaMount));
         Assert.Equal([5, 10, 22, 18], File.ReadAllBytes(jaSig));
     }
@@ -187,8 +182,7 @@ public sealed class R29MountedPakTests : IDisposable
                 + (failure == "wrong-sha" ? new string('A', 40) : sha1) + ",,\r\n::Del::\r\n");
         }
 
-        Assert.False(R29MountedPak.GameCompatible(game));
-        Assert.NotNull(R29MountedPak.CompatibilityIssue(game));
+        Assert.Null(R29MountedPak.StockSig(game));
         Assert.True(File.Exists(jaSig));
     }
 

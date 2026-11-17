@@ -67,7 +67,7 @@ public sealed class ViethoaInstallerTests : IDisposable
     }
 
     [Fact]
-    public void R29Cleanup_LeavesStockMountsAndTheirPaksIntact()
+    public void R29DirectInsert_HasNoCleanupScannerAndLeavesStockFixtureIntact()
     {
         var resources = Path.Combine(_game, "Client", "Saved", "Resources", "3.8.0");
         var mount = Path.Combine(resources, "Mount");
@@ -82,15 +82,14 @@ public sealed class ViethoaInstallerTests : IDisposable
         File.WriteAllText(officialSig, "GAME_STOCK_SIG");
         File.WriteAllText(officialSidecar, "::Mount::\nOption_Pack_LY_UHD/Base/pakchunk53-UHD-WindowsNoEditor,4,AAA,BBB,,\n::Del::");
         File.WriteAllText(launcherSidecar, "::Mount::\nLauncher/3.8.10/pakchunk1-WindowsNoEditor_P,14,AAA,BBB,,\n::Del::");
-        var method = typeof(ViethoaInstaller).GetMethod("CollectR29ReplacementFiles",
+
+        var removedCleanup = typeof(ViethoaInstaller).GetMethod("CollectR29ReplacementFiles",
             System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
-        Assert.NotNull(method);
-        var paths = (IReadOnlyList<string>)method!.Invoke(_viet, new object[] { _game })!;
-        Assert.DoesNotContain(paths, p => p.Equals(officialPak, StringComparison.OrdinalIgnoreCase));
-        Assert.DoesNotContain(paths, p => p.Equals(officialSig, StringComparison.OrdinalIgnoreCase));
-        Assert.DoesNotContain(paths, p => p.Equals(officialSidecar, StringComparison.OrdinalIgnoreCase));
-        Assert.DoesNotContain(paths, p => p.Equals(launcherSidecar, StringComparison.OrdinalIgnoreCase));
+        Assert.Null(removedCleanup);
         Assert.Equal("GAME_STOCK_PAK", File.ReadAllText(officialPak));
+        Assert.Equal("GAME_STOCK_SIG", File.ReadAllText(officialSig));
+        Assert.Contains("Option_Pack_LY_UHD", File.ReadAllText(officialSidecar));
+        Assert.Contains("Launcher/3.8.10", File.ReadAllText(launcherSidecar));
     }
 
     [Fact]
