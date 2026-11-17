@@ -40,6 +40,7 @@ public sealed class ApplicationUpdateTransaction : IDisposable
         Action<UpdateTransactionCheckpoint>? checkpoint = null)
     {
         var target = NormalizeTarget(targetDirectory);
+        UpdateTargetGuard.EnsureSafeTarget(target);
         var zip = Path.GetFullPath(zipPath);
         var currentExe = Path.Combine(target, UpdateArchiveInstaller.MainExecutable);
         if (!File.Exists(currentExe))

@@ -67,6 +67,33 @@ public sealed class ViethoaInstallerTests : IDisposable
     }
 
     [Fact]
+    public void R29Cleanup_LeavesStockMountsAndTheirPaksIntact()
+    {
+        var resources = Path.Combine(_game, "Client", "Saved", "Resources", "3.8.0");
+        var mount = Path.Combine(resources, "Mount");
+        var option = Path.Combine(resources, "Option_Pack_LY_UHD", "Base");
+        Directory.CreateDirectory(mount);
+        Directory.CreateDirectory(option);
+        var officialPak = Path.Combine(option, "pakchunk53-UHD-WindowsNoEditor.pak");
+        var officialSig = Path.ChangeExtension(officialPak, ".sig");
+        var officialSidecar = Path.Combine(mount, "MountOption_Pack_LY_UHD.txt");
+        var launcherSidecar = Path.Combine(mount, "MountLauncher.txt");
+        File.WriteAllText(officialPak, "GAME_STOCK_PAK");
+        File.WriteAllText(officialSig, "GAME_STOCK_SIG");
+        File.WriteAllText(officialSidecar, "::Mount::\nOption_Pack_LY_UHD/Base/pakchunk53-UHD-WindowsNoEditor,4,AAA,BBB,,\n::Del::");
+        File.WriteAllText(launcherSidecar, "::Mount::\nLauncher/3.8.10/pakchunk1-WindowsNoEditor_P,14,AAA,BBB,,\n::Del::");
+        var method = typeof(ViethoaInstaller).GetMethod("CollectR29ReplacementFiles",
+            System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+        Assert.NotNull(method);
+        var paths = (IReadOnlyList<string>)method!.Invoke(_viet, new object[] { _game })!;
+        Assert.DoesNotContain(paths, p => p.Equals(officialPak, StringComparison.OrdinalIgnoreCase));
+        Assert.DoesNotContain(paths, p => p.Equals(officialSig, StringComparison.OrdinalIgnoreCase));
+        Assert.DoesNotContain(paths, p => p.Equals(officialSidecar, StringComparison.OrdinalIgnoreCase));
+        Assert.DoesNotContain(paths, p => p.Equals(launcherSidecar, StringComparison.OrdinalIgnoreCase));
+        Assert.Equal("GAME_STOCK_PAK", File.ReadAllText(officialPak));
+    }
+
+    [Fact]
     public async Task ForeignWinHttpPakLoader_BlocksInstallWithoutDeletingExternalFiles()
     {
         var proxy = Path.Combine(_win64, "winhttp.dll");
@@ -574,21 +601,27 @@ public sealed class ViethoaInstallerTests : IDisposable
     }
 
     [Fact]
-    public async Task RunningGame_BlocksAllDestructiveCleanupAndInstall()
+    public async Task RunningGame_AllowsInstallButManualCleanupStillBlocks()
     {
         var foreign = Path.Combine(_paks, "~mods", "RunningGameMod_P.pak");
         Directory.CreateDirectory(Path.GetDirectoryName(foreign)!);
         File.WriteAllText(foreign, "DONT_TOUCH");
-        var blocked = new ViethoaInstaller(_log, _content,
-            Path.Combine(_work, "blocked-quarantine"), isGameRunning: () => true);
-        var install = await blocked.InstallAsync(_game, NameVariant.English, withFont: false);
-        var remove = blocked.DeleteConflicts(_game);
-        var quarantine = blocked.QuarantineConflicts(_game);
-        Assert.False(install.Success);
+        var running = new ViethoaInstaller(_log, _content,
+            Path.Combine(_work, "running-quarantine"), isGameRunning: () => true);
+
+        var install = await running.InstallAsync(_game, NameVariant.English, withFont: false);
+        Assert.True(install.Success, install.Error);
+        Assert.False(File.Exists(foreign));
+        Assert.Equal("ENGLISH", File.ReadAllText(Path.Combine(Mods, "WuWaVH_99_P.pak")));
+
+        var another = Path.Combine(_paks, "~mods2", "ManualCleanup_P.pak");
+        Directory.CreateDirectory(Path.GetDirectoryName(another)!);
+        File.WriteAllText(another, "KEEP_MANUAL");
+        var remove = running.DeleteConflicts(_game);
+        var quarantine = running.QuarantineConflicts(_game);
         Assert.False(remove.Success);
         Assert.False(quarantine.Success);
-        Assert.Equal("DONT_TOUCH", File.ReadAllText(foreign));
-        Assert.False(File.Exists(Path.Combine(Mods, "WuWaVH_99_P.pak")));
+        Assert.Equal("KEEP_MANUAL", File.ReadAllText(another));
     }
 
     [Fact]
@@ -684,6 +717,22 @@ public sealed class ViethoaInstallerTests : IDisposable
         Assert.True(r.Success, r.Error);
         Assert.Equal("ENGLISH", File.ReadAllText(Path.Combine(Mods, "WuWaVH_99_P.pak")));
         Assert.Equal("en", _viet.GetStatus(_game).Variant);
+    }
+
+    [Fact]
+    public async Task RunningGame_AllowsQuickPakUpdate()
+    {
+        Assert.True((await _viet.InstallAsync(_game, NameVariant.HanViet, withFont: true)).Success);
+        File.WriteAllText(Path.Combine(_content, "WuWaVH_EN_99_P.pak"), "ENGLISH_RUNNING_UPDATE");
+        var running = new ViethoaInstaller(_log, _content,
+            Path.Combine(_work, "running-update-quarantine"), isGameRunning: () => true);
+
+        var result = await running.UpdateTranslationPakAsync(_game, NameVariant.English);
+
+        Assert.True(result.Success, result.Error);
+        Assert.Equal("ENGLISH_RUNNING_UPDATE",
+            File.ReadAllText(Path.Combine(Mods, "WuWaVH_99_P.pak")));
+        Assert.Equal("en", running.GetStatus(_game).Variant);
     }
 
     [Fact]

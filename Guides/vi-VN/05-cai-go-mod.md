@@ -1,25 +1,26 @@
-# Xử lý xung đột mod
+# Xử lý mod cũ và xung đột
 
-## Bản 3.0.16 xử lý tự động
+## Cài Việt hóa R29
 
-- Khi bấm **Cài Việt hóa** hoặc khi chạy cập nhật nhanh, VHWuWa tự quét các file/mod ngoài có khả năng xung đột.
-- Các file ngoài đã được detector xác định sẽ được dọn khỏi thư mục game trước khi chèn lại bộ VHWuWa chuẩn.
-- Không cần bấm **Cách ly** hoặc **Xóa mod ngoài** thủ công trong luồng cài bình thường.
-- File official của game được bảo vệ bằng `OriginResource.json`; `pakchunk*` và file official không nằm trong tập dọn.
-- Bộ VHWuWa legacy của chính dự án được nhận diện riêng và nâng cấp/migrate, không bị coi là mod ngoài.
+Đóng game và launcher, chọn đúng thư mục chứa `Client`, rồi bấm **Cài Việt hóa**. R29 hiện chỉ có biến thể **tên Anh** và dùng **font gốc của game**.
 
-## Lineage VHWuWa được bảo vệ
+Trước khi can thiệp, ứng dụng kiểm tra thư mục và SHA-256 gói R29. Chỉ file mod cũ/xung đột đã nhận diện rõ mới được chuyển vào vùng **Quarantine** có bản sao và manifest SHA-256 để khôi phục.
 
-Các bản VHWuWa cũ dùng họ file:
+**Mount phụ không xác minh được phải bị chặn và giữ nguyên**, không tự xóa. Người dùng cần xác minh file thuộc mod nào trước khi cài tiếp. Không ghi vào PAK, SIG hoặc Mount chính thức.
 
-- `~WuWaMods\WuWaVH_99_P.pak`
-- `WahuFont_100_P.pak` ở các bản cũ
-- `Win64\version.dll`
-- `Win64\verorg.dll`
-- `Win64\WuWaVH.dll`
-- `vhwuwa_install.json`
-- `version_goc.dll` khi đó thực sự là backup do installer quản lý
+## Quy tắc xử lý file mod
 
-Các tên `wuwaVietHoa*`, WWMI/3DMigoto, UE4SS, proxy DLL ngoài và các thư mục mod tương tự không phải lineage managed của VHWuWa và được xử lý như mod ngoài.
+- Mod được xác minh sẽ được cách ly bên ngoài thư mục game, không bị xóa vĩnh viễn.
+- Mod không rõ nguồn, file gốc và bản sao lưu người dùng được giữ nguyên.
+- Nếu thiếu gói/sai SHA-256, đường dẫn không hợp lệ, game đang chạy hoặc thiếu quyền ghi, quá trình cài sẽ dừng an toàn.
+- Nếu quá trình gặp lỗi, hãy đọc log và kiểm tra vùng cách ly trước khi thử lại.
 
-> Luôn tắt hoàn toàn game và launcher trước khi cài, cập nhật hoặc gỡ Việt hóa.
+## Cài lại và cập nhật
+
+Chỉ bấm **Cài lại Việt hóa** sau khi ứng dụng xác minh R29 và thư mục game hợp lệ. Với cập nhật ứng dụng, chỉ dùng gói đúng phiên bản từ nguồn chính thức; updater xác minh checksum và có cơ chế khôi phục khi khởi động bản mới lỗi.
+
+## Khi không thể cài
+
+Kiểm tra thư mục chứa `Client`, đóng game, quyền truy cập và file Mount không rõ nguồn. R29 chỉ tạo các thư mục và tệp WAHU sau khi xác minh PAK và SIG nguồn hợp lệ. **Không tự tạo SIG rỗng, không quét đại SIG ngôn ngữ và không sửa file chính thức** để bỏ qua cảnh báo.
+
+Vào **Trợ giúp → Hỗ trợ Discord** để gửi ảnh lỗi, phiên bản game, phiên bản ứng dụng và log đã ẩn thông tin cá nhân.

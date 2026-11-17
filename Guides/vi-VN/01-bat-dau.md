@@ -1,19 +1,24 @@
 # Bắt đầu nhanh
 
-## Trước khi cài
+## Tải và mở ứng dụng
 
-- Tải `VietHoa-WuWa-vX.Y.Z.zip` từ GitHub Releases, rồi giải nén toàn bộ ra một thư mục riêng; không chạy trực tiếp trong ZIP.
-- Tắt game và launcher nếu launcher đang cập nhật file.
-- Mở `Chay VHWuWa.bat` hoặc `app\VHWuWa.exe`.
+1. Tải `VietHoa-WuWa-vX.Y.Z.zip` từ mục **Releases** trên GitHub chính thức.
+2. Giải nén toàn bộ ZIP vào thư mục cố định, chẳng hạn `D:\Apps\WuWa-Viet-Hoa`. **Không chạy EXE ngay trong ZIP.**
+3. Mở `VHWuWa.exe` từ thư mục vừa giải nén. Ứng dụng tạo lối tắt trên Desktop.
 
-## Cài trong ba bước
+Đây là bản **portable**, không dùng Setup.exe. Xem thư mục hiện tại tại **Cài đặt → Mở thư mục ứng dụng**.
 
-1. Vào **Trang chủ** và bấm **Tự tìm game**.
-2. Mở **Cài Việt hóa**, chọn kiểu tên rồi bấm **Cài Việt hóa ngay**.
-3. Mở game và đặt **Text Language = English**.
+## Cài Việt hóa R29 trong ba bước
 
-## Khi muốn hoàn tác
+1. **Tắt game**, mở **Trang chủ → Tự tìm**. Nếu không nhận diện được game, dùng **Chọn game** hoặc **Chọn thư mục** và chọn đúng thư mục chứa `Client`.
+2. Bấm **Cài Việt hóa**. Nếu chưa có game, ứng dụng sẽ cho chọn thư mục trước; sau khi chọn, bấm **Cài Việt hóa** lần nữa. **R29 hiện chỉ có biến thể tên Anh và font mặc định của game.** Hán Việt và font PAK riêng chưa có trong gói này.
+3. Khi trạng thái xác nhận đã cài, mở launcher chính thức rồi vào game và chọn **Text Language = English**.
 
-Vào **Cài Việt hóa** → **Gỡ Việt hóa**. App chỉ gỡ các file do VHWuWa quản lý.
+Trước khi sửa file game, ứng dụng kiểm tra **SHA-256 gói R29** và đường dẫn Client. File mod xung đột đã nhận diện được **sao lưu SHA-256 vào vùng cách ly**, không xóa vĩnh viễn. Nếu báo lỗi, không ghi PAK thủ công; kiểm tra thư mục, quyền và gói cập nhật.
 
-> Đây là dự án cộng đồng, không thuộc Kuro Games. Hãy đọc cảnh báo trong app và tự cân nhắc trước khi sử dụng.
+## Cập nhật và gỡ
+
+- Chỉ cập nhật từ bản chính thức. Updater xác minh SHA-256 ZIP, giữ cấu hình và có rollback nếu ứng dụng mới không khởi động thành công.
+- Muốn gỡ bản dịch, vào **Trang chủ → Gỡ Việt hóa** (nút chỉ hiện sau khi ứng dụng xác nhận bản dịch đang cài).
+
+> Đây là ứng dụng cộng đồng, không thuộc Kuro Games. Không tắt Defender để cài phần mềm từ nguồn không xác minh.

@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel;
 using System.Diagnostics;
+using System.Text.RegularExpressions;
 using VHWuWa.Core.Abstractions;
 using VHWuWa.Core.Models;
 
@@ -41,6 +42,54 @@ public sealed class GameLaunchService : IGameLaunchService
         return Path.Combine(root, "Wuthering Waves.exe");
     }
 
+    // Steam requires its own client protocol; direct Client-Win64-Shipping can
+    // be rejected with "Use launcher to start game!". Read app ID only from
+    // the matching, installed appmanifest; never guess a Steam app ID.
+    public static string? GetSteamLaunchUri(string gamePath)
+    {
+        if (string.IsNullOrWhiteSpace(gamePath)) return null;
+        try
+        {
+            var normalized = Path.GetFullPath(gamePath.Trim().Trim('"'));
+            var current = new DirectoryInfo(normalized);
+            for (var depth = 0; current is not null && depth < 8; depth++, current = current.Parent)
+            {
+                if (!current.Name.Equals("common", StringComparison.OrdinalIgnoreCase)
+                    || current.Parent is null
+                    || !current.Parent.Name.Equals("steamapps", StringComparison.OrdinalIgnoreCase))
+                    continue;
+
+                var relative = Path.GetRelativePath(current.FullName, normalized);
+                var installFolder = relative.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)[0];
+                if (installFolder.Length == 0 || installFolder == "..") return null;
+
+                foreach (var manifest in Directory.EnumerateFiles(current.Parent.FullName,
+                             "appmanifest_*.acf", SearchOption.TopDirectoryOnly))
+                {
+                    var fileName = Path.GetFileNameWithoutExtension(manifest);
+                    if (!fileName.StartsWith("appmanifest_", StringComparison.OrdinalIgnoreCase))
+                        continue;
+                    var appId = fileName["appmanifest_".Length..];
+                    if (!Regex.IsMatch(appId, "^[0-9]{1,10}$")
+                        || new FileInfo(manifest).Length > 1024 * 1024) continue;
+
+                    var match = Regex.Match(File.ReadAllText(manifest),
+                        "\"installdir\"\\s*\"([^\"]+)\"", RegexOptions.IgnoreCase);
+                    if (match.Success
+                        && match.Groups[1].Value.Equals(installFolder, StringComparison.OrdinalIgnoreCase))
+                        return "steam://rungameid/" + appId;
+                }
+                return null;
+            }
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException
+                                   or ArgumentException or NotSupportedException)
+        {
+            return null;
+        }
+        return null;
+    }
+
     public Result Launch(string gamePath, bool forceCSharpEnvironment)
     {
         try
@@ -68,6 +117,16 @@ public sealed class GameLaunchService : IGameLaunchService
             finally
             {
                 foreach (var process in running) process.Dispose();
+            }
+
+            // Route a verified Steam installation through Steam itself, not the
+            // raw shipping executable, and do not demand admin rights for a URI.
+            var steamUri = GetSteamLaunchUri(gamePath);
+            if (steamUri is not null)
+            {
+                Process.Start(new ProcessStartInfo(steamUri) { UseShellExecute = true });
+                _log.Info("LaunchGame", "Đã gửi yêu cầu mở game qua Steam.");
+                return Result.Ok();
             }
 
             ProcessStartInfo startInfo;

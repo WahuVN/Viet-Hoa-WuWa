@@ -27,7 +27,7 @@ public partial class UidEditorViewModel : PakEditorViewModelBase
     public async Task LoadAsync(bool force = false)
     {
         if (Loaded && !force) return;
-        await RunAsync("Đang nạp thiết lập UID và 4 trường dữ liệu game…", async () =>
+        await RunAsync("Đang đọc thiết lập UID…", async () =>
         {
             try
             {
@@ -56,8 +56,8 @@ public partial class UidEditorViewModel : PakEditorViewModelBase
             OnPropertyChanged(nameof(DirtyCount));
             Loaded = true;
             Status = string.IsNullOrWhiteSpace(CustomUid)
-                ? "UID hiện tại đang ẨN (khoảng trắng). Bạn có thể nhập tên tùy thích hoặc để trống."
-                : $"Tên UID hiện tại: “{CustomUid}”. Đã nạp 4 trường hiển thị trong game.";
+                ? "UID đang ẩn."
+                : $"Tên đang dùng: {CustomUid}";
         });
     }
 
@@ -71,8 +71,8 @@ public partial class UidEditorViewModel : PakEditorViewModelBase
     {
         var text = (CustomUid ?? "").Trim();
         await RunAsync(string.IsNullOrWhiteSpace(text)
-            ? "Đang lưu cấu hình ẩn UID và tạo lại hai PAK…"
-            : $"Đang lưu tên UID “{text}” và tạo lại hai PAK…", async () =>
+            ? "Đang ẩn UID và tạo PAK…"
+            : "Đang lưu UID và tạo PAK…", async () =>
         {
             await Bridge.RequestAsync(new { command = "save-uid", uid_text = text });
             _originalUid = text;
@@ -80,8 +80,8 @@ public partial class UidEditorViewModel : PakEditorViewModelBase
             OnPropertyChanged(nameof(IsUidDirty));
             UpdateInstallPrompt(true, true, true);
             Status = string.IsNullOrWhiteSpace(text)
-                ? "✅ Đã đặt lại ẩn UID mặc định và tạo xong 2 gói PAK trong app\\content\\."
-                : $"✅ Đã đặt tên UID thành “{text}” và tạo xong 2 gói PAK trong app\\content\\.";
+                ? "Đã ẩn UID. PAK đã sẵn sàng."
+                : "Đã lưu tên UID. PAK đã sẵn sàng.";
             
             Loaded = false;
             await LoadAsync(true);
@@ -91,14 +91,14 @@ public partial class UidEditorViewModel : PakEditorViewModelBase
     [RelayCommand]
     private async Task ResetUidAsync()
     {
-        await RunAsync("Đang khôi phục ẩn UID mặc định và tạo lại hai PAK…", async () =>
+        await RunAsync("Đang ẩn UID và tạo PAK…", async () =>
         {
             await Bridge.RequestAsync(new { command = "reset-uid" });
             CustomUid = "";
             _originalUid = "";
             OnPropertyChanged(nameof(IsUidDirty));
             UpdateInstallPrompt(true, true, true);
-            Status = "✅ Đã khôi phục ẩn UID mặc định và tạo lại hai PAK.";
+            Status = "Đã ẩn UID. PAK đã sẵn sàng.";
             Loaded = false;
             await LoadAsync(true);
         });
@@ -115,7 +115,7 @@ public partial class UidEditorViewModel : PakEditorViewModelBase
             return;
         }
 
-        await RunAsync("Đang lưu cấu hình UID và tạo lại 2 bản PAK…", async () =>
+        await RunAsync("Đang lưu bảng UID và tạo PAK…", async () =>
         {
             var req = new Dictionary<string, object>
             {
@@ -137,7 +137,7 @@ public partial class UidEditorViewModel : PakEditorViewModelBase
             }
             OnPropertyChanged(nameof(DirtyCount));
             UpdateInstallPrompt(true, true, true);
-            Status = "✅ Đã lưu cấu hình UID và tạo xong 2 gói PAK (Việt hóa & Hán Việt).";
+            Status = "Đã lưu bảng UID. PAK đã sẵn sàng.";
         });
     }
 }

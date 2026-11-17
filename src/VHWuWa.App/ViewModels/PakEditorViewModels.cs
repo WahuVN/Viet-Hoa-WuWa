@@ -9,6 +9,8 @@ using CommunityToolkit.Mvvm.Input;
 using VHWuWa.App.Services;
 using VHWuWa.Core.Abstractions;
 using VHWuWa.Core.Models;
+using VHWuWa.Core.Services;
+using VHWuWa.Infrastructure;
 
 namespace VHWuWa.App.ViewModels;
 
@@ -87,6 +89,16 @@ public abstract partial class PakEditorViewModelBase : ObservableObject
 
     [ObservableProperty] private bool _busy;
     [ObservableProperty] private string _status = "Đang chuẩn bị dữ liệu…";
+
+    // Keep full diagnostics in Status (tooltip/log), but show only one short line in UI.
+    public bool CanEditBuild => !R29MountedPak.PackagePresent(AppContext.BaseDirectory)
+        && !StagedPakInspector.Inspect(AppContext.BaseDirectory).Present;
+
+    public string StatusSummary =>
+        (Status ?? "").Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
+            .FirstOrDefault()?.Trim() ?? "";
+
+    partial void OnStatusChanged(string value) => OnPropertyChanged(nameof(StatusSummary));
     [ObservableProperty] private bool _canInstall;
     [ObservableProperty] private string _installPromptMessage = "";
     [ObservableProperty] private Wpf.Ui.Controls.ControlAppearance _viAppearance = Wpf.Ui.Controls.ControlAppearance.Primary;
@@ -116,6 +128,23 @@ public abstract partial class PakEditorViewModelBase : ObservableObject
 
     protected void UpdateInstallPrompt(bool hasVi, bool hasHv, bool uidChanged)
     {
+        var staged = StagedPakInspector.Inspect(AppContext.BaseDirectory);
+        if (R29MountedPak.PackagePresent(AppContext.BaseDirectory))
+        {
+            CanInstall = !string.IsNullOrWhiteSpace(_settings.Settings.GamePath);
+            InstallPromptMessage = CanInstall
+                ? "R29 sẵn sàng. Bấm Cài để ghi đè trực tiếp vào game."
+                : "Chọn thư mục game ở Trang chủ.";
+            return;
+        }
+        if (staged.Present)
+        {
+            CanInstall = false;
+            InstallPromptMessage = staged.ShaVerified
+                ? "PAK R28 đã nạp. Cài trực tiếp đang khóa cho đến khi loader PC 3.8.1 được xác minh."
+                : staged.Message;
+            return;
+        }
         CanInstall = true;
         var game = _settings.Settings.GamePath;
         var st = !string.IsNullOrWhiteSpace(game) ? _installer.GetStatus(game) : null;
@@ -127,22 +156,22 @@ public abstract partial class PakEditorViewModelBase : ObservableObject
             ViAppearance = Wpf.Ui.Controls.ControlAppearance.Secondary;
             HvAppearance = Wpf.Ui.Controls.ControlAppearance.Primary;
             if (isInstalled && currentVariant == "en")
-                InstallPromptMessage = "⚠️ Game của bạn hiện đang dùng bản Việt hóa. Bạn vừa cập nhật bản Hán Việt (chưa được áp dụng vào game). Bạn có muốn cài bản Hán Việt vào game ngay không?";
+                InstallPromptMessage = "Đang dùng Việt hóa. Cài Hán Việt để thay.";
             else if (isInstalled && currentVariant == "hanviet")
-                InstallPromptMessage = "📦 File PAK Hán Việt mới đã được tạo lại. Bấm nút dưới để ghi đè cập nhật vào game:";
+                InstallPromptMessage = "PAK Hán Việt mới đã sẵn sàng.";
             else
-                InstallPromptMessage = "📦 File PAK Hán Việt mới đã sẵn sàng. Bấm nút dưới để cài vào game:";
+                InstallPromptMessage = "Chọn cài Hán Việt để áp dụng.";
         }
         else if (hasVi && !hasHv && !uidChanged)
         {
             ViAppearance = Wpf.Ui.Controls.ControlAppearance.Primary;
             HvAppearance = Wpf.Ui.Controls.ControlAppearance.Secondary;
             if (isInstalled && currentVariant == "hanviet")
-                InstallPromptMessage = "⚠️ Game của bạn hiện đang dùng bản Hán Việt. Bạn vừa cập nhật bản Việt hóa (chưa được áp dụng vào game). Bạn có muốn cài bản Việt hóa vào game ngay không?";
+                InstallPromptMessage = "Đang dùng Hán Việt. Cài Việt hóa để thay.";
             else if (isInstalled && currentVariant == "en")
-                InstallPromptMessage = "📦 File PAK Việt hóa mới đã được tạo lại. Bấm nút dưới để ghi đè cập nhật vào game:";
+                InstallPromptMessage = "PAK Việt hóa mới đã sẵn sàng.";
             else
-                InstallPromptMessage = "📦 File PAK Việt hóa mới đã sẵn sàng. Bấm nút dưới để cài vào game:";
+                InstallPromptMessage = "Chọn cài Việt hóa để áp dụng.";
         }
         else
         {
@@ -150,15 +179,15 @@ public abstract partial class PakEditorViewModelBase : ObservableObject
             {
                 ViAppearance = Wpf.Ui.Controls.ControlAppearance.Secondary;
                 HvAppearance = Wpf.Ui.Controls.ControlAppearance.Primary;
-                InstallPromptMessage = "📦 Đã tạo lại cả 2 gói PAK. Game đang dùng bản Hán Việt, hãy bấm cài Hán Việt để cập nhật (hoặc chọn Việt hóa nếu muốn đổi):";
+                InstallPromptMessage = "PAK mới đã sẵn sàng. Chọn bản để cài.";
             }
             else
             {
                 ViAppearance = Wpf.Ui.Controls.ControlAppearance.Primary;
                 HvAppearance = Wpf.Ui.Controls.ControlAppearance.Secondary;
                 InstallPromptMessage = isInstalled
-                    ? "📦 Đã tạo lại cả 2 gói PAK. Game đang dùng bản Việt hóa, hãy bấm cài Việt hóa để cập nhật (hoặc chọn Hán Việt nếu muốn đổi):"
-                    : "📦 Đã tạo lại cả 2 gói PAK (Việt hóa & Hán Việt). Chọn bản bạn muốn cài vào thư mục game:";
+                    ? "PAK mới đã sẵn sàng. Chọn bản để cài."
+                    : "Chọn bản muốn cài vào game.";
             }
         }
     }
@@ -184,11 +213,21 @@ public abstract partial class PakEditorViewModelBase : ObservableObject
             var game = _settings.Settings.GamePath;
             if (string.IsNullOrWhiteSpace(game))
                 throw new InvalidOperationException("Chưa chọn thư mục game ở Trang chủ.");
+            if (R29MountedPak.PackagePresent(AppContext.BaseDirectory))
+            {
+                var r29Result = await _installer.InstallAsync(game, NameVariant.English, withFont: false);
+                if (!r29Result.Success) throw new InvalidOperationException(r29Result.Error);
+                Status = "Đã ghi đè R29 vào game.";
+                InstallPromptMessage = "R29 đã được ghi đè.";
+                return;
+            }
+            var staged = StagedPakInspector.Inspect(AppContext.BaseDirectory);
+            if (staged.Present)
+                throw new InvalidOperationException("PAK R28 không tương thích. Không cài trực tiếp từ trang chỉnh sửa.");
             var result = await _installer.InstallAsync(game, variant, withFont: true);
             if (!result.Success) throw new InvalidOperationException(result.Error);
-            var pakPath = Path.Combine(game, "Client", "Content", "Paks", "~WuWaMods", "WuWaVH_99_P.pak");
-            Status = $"✅ Đã ghi đè bản {label} thành công vào game ({pakPath}).";
-            InstallPromptMessage = $"✅ Đang sử dụng bản {label} trong game ({pakPath}).";
+            Status = $"Đã cài bản {label} vào game.";
+            InstallPromptMessage = $"Đang dùng: {label}.";
         });
 
     protected static object ToPayload(EditableMatrixRow row) => new
@@ -237,7 +276,7 @@ public partial class CharacterNamesViewModel : PakEditorViewModelBase
             Items.Add(row);
         }
         Loaded = true;
-        Status = $"Đã nạp {Items.Count:N0} nhân vật · chưa có thay đổi.";
+        Status = $"{Items.Count:N0} nhân vật";
         OnPropertyChanged(nameof(DirtyCount));
     }
 
@@ -279,7 +318,7 @@ public partial class CharacterNamesViewModel : PakEditorViewModelBase
     private async Task ResetBuildAsync()
     {
         if (MessageBox.Show("Trả toàn bộ tên VI/Hán Việt về mặc định và tạo lại hai PAK?",
-                "VHWuWa", MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes) return;
+                "WuWa Việt Hóa", MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes) return;
         await RunAsync("Đang khôi phục tên mặc định và tạo lại hai PAK…", async () =>
         {
             await Bridge.RequestAsync(new { command = "reset-build", category = "char" });
@@ -503,7 +542,7 @@ public partial class TermsEditorViewModel : PakEditorViewModelBase
         var category = SelectedCategory?.Id;
         if (category is null) return;
         if (MessageBox.Show($"Khôi phục toàn bộ loại “{SelectedCategory!.Title}” và tạo lại hai PAK?",
-                "VHWuWa", MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes) return;
+                "WuWa Việt Hóa", MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes) return;
         await RunAsync("Đang khôi phục phân khu và tạo lại hai PAK…", async () =>
         {
             await Bridge.RequestAsync(new { command="reset-build", category });

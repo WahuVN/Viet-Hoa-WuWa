@@ -26,7 +26,7 @@ public sealed class FontPreviewService : IFontPreviewService
         if (isFilePath && !File.Exists(fontPathOrFamily))
             return null;
 
-        if (string.IsNullOrWhiteSpace(sampleText)) sampleText = "Tiếng Việt Wuthering Waves";
+        if (string.IsNullOrWhiteSpace(sampleText)) sampleText = "Người Lữ Hành · Wuthering Waves";
 
         try
         {
@@ -72,8 +72,8 @@ public sealed class FontPreviewService : IFontPreviewService
             using var body = new Font(family, big * 0.56f, styleBody, GraphicsUnit.Pixel);
             using var small = new Font(family, Math.Max(14, big * 0.35f), styleBody, GraphicsUnit.Pixel);
 
-            const string line2 = "Tiếng Việt đủ dấu: ăâđêôơư — À Á Ả Ã Ạ · Ệ Ỡ Ự · ýỳỷỹỵ";
-            const string line3 = "0123456789  ·  Wuthering Waves  ·  Kim Tịch / Jinhsi";
+            const string line2 = "Tiếng Việt: Trời sáng, biển rộng, ký ức vẫn còn vang vọng.";
+            const string line3 = "ă â ê ô ơ ư đ · Á À Ả Ã Ạ · Ế Ề Ể Ễ Ệ · Ứ Ừ Ử Ữ Ự";
 
             // Đo kích thước thực tế của từng dòng bằng GenericTypographic để không bị cắt xén
             using var sf = new StringFormat(StringFormat.GenericTypographic)
@@ -108,14 +108,14 @@ public sealed class FontPreviewService : IFontPreviewService
             bmp.SetResolution(120, 120);
             using var g = Graphics.FromImage(bmp);
             // Nền xám hiện đại (Slate Gray #282A36), tương phản xuất sắc giúp nét chữ rõ ràng và nổi bật
-            g.Clear(Color.FromArgb(40, 42, 54));
+            g.Clear(Color.FromArgb(23, 26, 31));
             g.SmoothingMode = SmoothingMode.HighQuality;
             g.InterpolationMode = InterpolationMode.HighQualityBicubic;
             g.TextRenderingHint = TextRenderingHint.ClearTypeGridFit;
 
             using var white = new SolidBrush(Color.FromArgb(255, 255, 255));
             using var soft = new SolidBrush(Color.FromArgb(226, 232, 240));
-            using var accent = new SolidBrush(Color.FromArgb(167, 155, 255)); // tím sáng
+            using var accent = new SolidBrush(Color.FromArgb(182, 194, 207)); // tím sáng
 
             // Vẽ trực tiếp theo toạ độ PointF không dùng bounding box hạn chế -> KHÔNG BAO GIỜ BỊ CẮT CHỮ
             g.DrawString(family.Name, small, accent, new PointF(paddingX, y0), sf);

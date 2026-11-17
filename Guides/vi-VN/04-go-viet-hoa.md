@@ -1,13 +1,15 @@
 # Gỡ Việt hóa
 
-## Gỡ an toàn
+## Gỡ bằng ứng dụng
 
-1. Tắt game và launcher.
-2. Mở tab **Cài Việt hóa**.
-3. Bấm **Gỡ Việt hóa** và chờ kiểm tra hoàn tất.
+1. Đóng game.
+2. Vào **Trang chủ → Tùy chọn nâng cao**.
+3. Chọn **Gỡ Việt hóa**, chờ hoàn tất rồi mở lại game.
 
-## Nếu game vẫn còn file lạ
+Với bản R29, ứng dụng gỡ các tệp bản dịch do chính VHWuWa cài đặt. Không cần tự xóa tệp game gốc.
 
-VHWuWa không tự xóa mod do công cụ khác cài. Hãy gỡ bằng đúng công cụ đó hoặc dùng **Verify/Repair** của launcher chính thức.
+## Nếu game vẫn còn nội dung từ mod khác
 
-> Không xóa ngẫu nhiên DLL/PAK trong thư mục game khi chưa biết file thuộc mod nào.
+VHWuWa chỉ quản lý tệp của ứng dụng. Mod được cài bằng công cụ khác nên được gỡ bằng chính công cụ đó. Nếu game gốc vẫn lỗi, dùng **Verify/Repair** của launcher chính thức.
+
+> Không xóa ngẫu nhiên DLL, PAK, file Mount hoặc tệp chính thức của game.

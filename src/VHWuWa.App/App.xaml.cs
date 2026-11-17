@@ -3,12 +3,14 @@ using System.IO;
 using System.Reflection;
 using System.Windows;
 using System.Windows.Threading;
+using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using Microsoft.Extensions.DependencyInjection;
 using VHWuWa.App.Services;
 using VHWuWa.App.ViewModels;
 using VHWuWa.App.Views;
 using VHWuWa.Core.Abstractions;
+using VHWuWa.Core.Services;
 using VHWuWa.Infrastructure;
 using Wpf.Ui.Appearance;
 
@@ -37,8 +39,8 @@ public partial class App : Application
             _singleInstanceMutex.Dispose();
             _singleInstanceMutex = null;
             MessageBox.Show(
-                "VHWuWa đang mở ở một cửa sổ khác. Hãy dùng cửa sổ đang chạy để cài/gỡ Việt hóa.",
-                "VHWuWa", MessageBoxButton.OK, MessageBoxImage.Information);
+                "WuWa Việt Hóa đang mở ở cửa sổ khác. Hãy dùng cửa sổ đó để cài hoặc gỡ bản dịch.",
+                "WuWa Việt Hóa", MessageBoxButton.OK, MessageBoxImage.Information);
             Shutdown(0);
             return;
         }
@@ -79,9 +81,20 @@ public partial class App : Application
         ApplyTheme(Services.GetRequiredService<ISettingsService>().Settings.Theme);
         var mainWindow = Services.GetRequiredService<MainWindow>();
         ApplyWindowIcon(mainWindow);
+        // Signal health only after WPF has rendered main window content, not merely after Show().
+        mainWindow.ContentRendered += (_, _) =>
+        {
+            CompleteUpdateStartup(e.Args);
+            // Deactivate only verified v3.0.18 content files after the R29
+            // app has rendered; preserve originals outside the app directory.
+            // Never mutate the source tree while previewing the UI.
+            if (!e.Args.Contains("--ui-qa-preview", StringComparer.OrdinalIgnoreCase))
+                _ = Task.Run(MigrateVerifiedLegacyContent);
+        };
         mainWindow.Show();
-        CompleteUpdateStartup(e.Args);
-        EnsureDesktopShortcut();
+        // UI preview keeps the user's current desktop shortcut untouched.
+        if (!e.Args.Contains("--ui-qa-preview", StringComparer.OrdinalIgnoreCase))
+            EnsureDesktopShortcut();
     }
 
     protected override void OnExit(ExitEventArgs e)
@@ -98,12 +111,39 @@ public partial class App : Application
             ? ApplicationTheme.Light
             : ApplicationTheme.Dark;
         ApplicationThemeManager.Apply(t);
+
+        // Shared WAHU UI Kit palette: keep control templates loaded from Dark,
+        // and overlay only color tokens for Light when selected.
+        var merged = Current.Resources.MergedDictionaries;
+        var existingLight = merged.FirstOrDefault(d =>
+            d.Source?.OriginalString.EndsWith("Wahu.Light.xaml",
+                StringComparison.OrdinalIgnoreCase) == true);
+        if (t == ApplicationTheme.Light)
+        {
+            if (existingLight is null)
+                merged.Add(new ResourceDictionary
+                {
+                    Source = new Uri("/Styles/Wahu.Light.xaml", UriKind.Relative)
+                });
+        }
+        else if (existingLight is not null)
+        {
+            merged.Remove(existingLight);
+        }
+
+        // Fluent controls use the Windows system accent by default (often bright blue).
+        // Keep radio buttons, sliders, focus and progress in the same neutral palette
+        // as the PC interface. This changes only presentation, not control behavior.
+        var wahuAccent = t == ApplicationTheme.Dark
+            ? Color.FromRgb(0xB5, 0xAA, 0xEE)
+            : Color.FromRgb(0x76, 0x60, 0xB5);
+        ApplicationAccentColorManager.Apply(wahuAccent, t, false);
     }
 
     private void OnUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
     {
         MessageBox.Show("Đã xảy ra lỗi không mong muốn:\n" + e.Exception.Message,
-            "VHWuWa", MessageBoxButton.OK, MessageBoxImage.Error);
+            "WuWa Việt Hóa", MessageBoxButton.OK, MessageBoxImage.Error);
         try { Services.GetService<ILogService>()?.Error("UI", e.Exception.Message, e.Exception); } catch { }
         e.Handled = true;
     }
@@ -115,6 +155,36 @@ public partial class App : Application
         // đã cache trực tiếp lúc startup để Windows nhận đúng HICON của cửa sổ.
         var iconUri = new Uri("pack://application:,,,/Assets/app-logo-transparent.ico", UriKind.Absolute);
         window.Icon = BitmapFrame.Create(iconUri, BitmapCreateOptions.None, BitmapCacheOption.OnLoad);
+    }
+
+    private static void MigrateVerifiedLegacyContent()
+    {
+        try
+        {
+            var dir = AppContext.BaseDirectory;
+            if (!R29MountedPak.ReleaseRequired(dir) || !R29MountedPak.PackageVerified(dir))
+                return;
+            var qaBackupOverride = Environment.GetEnvironmentVariable("VHWUWA_QA_BACKUP_DIRECTORY");
+            var backupDir = string.IsNullOrWhiteSpace(qaBackupOverride)
+                ? Path.Combine(AppPaths.AppData, "Backups", "v3.0.18-legacy-content")
+                : qaBackupOverride;
+            var result = LegacyReleaseAssetMigration.BackupAndDeactivate(
+                dir, backupDir, verifiedR29: true);
+            if (result.BackedUp > 0 || result.UnknownPreserved > 0 || result.Errors.Count > 0)
+            {
+                Services.GetService<ILogService>()?.Info(
+                    "Update", $"R29 migration: {result.BackedUp} old assets backed up; "
+                        + $"{result.UnknownPreserved} modified assets preserved; "
+                        + $"{result.Errors.Count} errors.");
+                foreach (var error in result.Errors)
+                    Services.GetService<ILogService>()?.Warn("Update", error);
+            }
+        }
+        catch (Exception ex)
+        {
+            try { Services.GetService<ILogService>()?.Warn(
+                "Update", "R29 migration skipped: " + ex.Message); } catch { }
+        }
     }
 
     private static void CompleteUpdateStartup(string[] args)

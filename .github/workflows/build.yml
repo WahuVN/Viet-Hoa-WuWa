@@ -57,10 +57,31 @@ jobs:
           $zip = "VietHoa-WuWa-v$ver.zip"
           New-Item -ItemType Directory -Force update-payload | Out-Null
           Copy-Item dist/* update-payload -Recurse -Force
-          if (Test-Path update-payload/VHWuWa.Updater.exe) {
-            Move-Item update-payload/VHWuWa.Updater.exe update-payload/VHWuWa.Updater.next.exe -Force
+          # Keep the updater's canonical filename: the app requires this exact
+          # file name both on first launch and inside an update ZIP.
+          foreach ($required in @('VHWuWa.exe', 'VHWuWa.Updater.exe')) {
+            if (-not (Test-Path "update-payload/$required")) {
+              throw "ZIP thiếu tệp bắt buộc: $required"
+            }
           }
           Compress-Archive -Path update-payload/* -DestinationPath $zip -Force
+          Add-Type -AssemblyName System.IO.Compression
+          $archive = [IO.Compression.ZipFile]::OpenRead((Resolve-Path $zip).Path)
+          try {
+            $names = @($archive.Entries | ForEach-Object FullName)
+            foreach ($required in @('VHWuWa.exe', 'VHWuWa.Updater.exe')) {
+              if ($required -notin $names) {
+                throw "Gói cập nhật không có đúng tên $required"
+              }
+            }
+            if ('VHWuWa.Updater.next.exe' -in $names) {
+              throw 'Gói cập nhật chứa tên updater tạm không hợp lệ.'
+            }
+          } finally {
+            $archive.Dispose()
+          }
+          $sha = (Get-FileHash $zip -Algorithm SHA256).Hash.ToLowerInvariant()
+          Write-Host "Update ZIP OK: $zip SHA-256 $sha"
         shell: pwsh
 
       - name: Upload artifact

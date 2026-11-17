@@ -35,16 +35,21 @@ internal static class Program
         var cleanupDirectory = options.GetValueOrDefault("cleanup-dir", string.Empty);
         ApplicationUpdateTransaction? transaction = null;
         Process? launchedApp = null;
-        var parentHandoffComplete = !options.ContainsKey("pid");
+        var parentHandoffComplete = false;
 
         try
         {
             zip = Path.GetFullPath(zip);
             target = Path.GetFullPath(target);
+            // Refuse before touching ready-file, parent process or target directory.
+            UpdateTargetGuard.EnsureSafeTarget(target);
             VerifySha256(zip, expectedSha256);
             ValidatePreflight(zip, target, relaunch, expectedVersion);
+            // A production update must prove startup health. A ZIP-only offline swap is not a release-safe path.
+            if (noRelaunch)
+                throw new InvalidOperationException("Không cho phép cập nhật mà bỏ qua kiểm tra khởi động ứng dụng.");
             SignalReady(options, cleanupDirectory);
-            parentHandoffComplete = WaitForParent(options, TimeSpan.FromSeconds(30));
+            parentHandoffComplete = options.ContainsKey("pid") && WaitForParent(options, TimeSpan.FromSeconds(30));
 
             transaction = ApplicationUpdateTransaction.Begin(
                 zip,
@@ -52,13 +57,6 @@ internal static class Program
                 expectedVersion,
                 expectedSha256,
                 message => Console.WriteLine(message));
-
-            if (noRelaunch)
-            {
-                transaction.Commit();
-                transaction = null;
-                return 0;
-            }
 
             var healthFile = Path.Combine(
                 string.IsNullOrWhiteSpace(cleanupDirectory)
@@ -265,7 +263,48 @@ internal static class Program
         if (!PathValidation.IsSubPathOf(currentExecutable, target) || !File.Exists(currentExecutable))
             throw new InvalidDataException("Thư mục đích không chứa ứng dụng hiện tại hợp lệ.");
         using var archive = ZipFile.OpenRead(zip);
-        _ = UpdateArchiveInstaller.DetectApplicationPrefix(archive);
+        var prefix = UpdateArchiveInstaller.DetectApplicationPrefix(archive);
+        // Verify both release EXE versions before writing ready-file or exiting the old app.
+        var expected = Version.Parse(expectedVersion);
+        var expectedThree = new Version(expected.Major, Math.Max(0, expected.Minor),
+            Math.Max(0, expected.Build));
+        var current = ReadVersion(currentExecutable);
+        if (expectedThree <= current)
+            throw new InvalidDataException("Gói cập nhật không tăng phiên bản.");
+
+        var probe = Path.Combine(Path.GetTempPath(),
+            "VHWuWa_Preflight_" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            Directory.CreateDirectory(probe);
+            foreach (var exe in new[] {
+                         UpdateArchiveInstaller.MainExecutable,
+                         UpdateArchiveInstaller.UpdaterExecutable })
+            {
+                var entry = archive.Entries.SingleOrDefault(e =>
+                    e.FullName.Replace('\\', '/').Equals(prefix + exe,
+                        StringComparison.OrdinalIgnoreCase));
+                if (entry is null)
+                    throw new InvalidDataException("ZIP thiếu executable bắt buộc: " + exe);
+                var probeExe = Path.Combine(probe, exe);
+                entry.ExtractToFile(probeExe);
+                if (ReadVersion(probeExe) != expectedThree)
+                    throw new InvalidDataException("Phiên bản ZIP không khớp: " + exe);
+            }
+        }
+        finally
+        {
+            try { if (Directory.Exists(probe)) Directory.Delete(probe, true); }
+            catch (IOException) { /* Report cleanup separately during implementation. */ }
+        }
+    }
+
+    private static Version ReadVersion(string file)
+    {
+        var raw = FileVersionInfo.GetVersionInfo(file).FileVersion;
+        if (!Version.TryParse(raw, out var v))
+            throw new InvalidDataException("Không đọc được FileVersion: " + file);
+        return new Version(v.Major, Math.Max(0, v.Minor), Math.Max(0, v.Build));
     }
 
     private static void SignalReady(

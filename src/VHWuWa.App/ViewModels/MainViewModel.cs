@@ -6,6 +6,7 @@ using CommunityToolkit.Mvvm.Input;
 using VHWuWa.Core.Abstractions;
 using VHWuWa.Core.Models;
 using VHWuWa.Core.Services;
+using VHWuWa.Infrastructure;
 using Wpf.Ui.Appearance;
 
 namespace VHWuWa.App.ViewModels;
@@ -19,6 +20,7 @@ public partial class MainViewModel : ObservableObject
     private readonly IUpdateService _update;
     private readonly ILogService _log;
     private readonly IViethoaInstaller? _vietHoa;
+    private bool _pakRecoveryBlocked;
 
     [ObservableProperty] private string _appVersion;
     [ObservableProperty] private string _gameStatus = "Chưa chọn thư mục game";
@@ -38,9 +40,9 @@ public partial class MainViewModel : ObservableObject
     public UpdateManifest? CurrentUpdateManifest { get; set; }
 
     /// <summary>Phiên bản bản dịch đi cùng bản build hiện tại.</summary>
-    public string VhVersion => "Bản dịch v"
+    public string VhVersion => "Tool Việt hóa v"
         + (Assembly.GetEntryAssembly()?.GetName().Version?.ToString(3) ?? "0.0.0")
-        + " · game 3.7";
+        + " · thông tin game xem tại Trang chủ";
 
     public MainViewModel(ISettingsService settings, IGameDetectionService detect, IUpdateService update, ILogService log, IViethoaInstaller? vietHoa = null)
     {
@@ -49,8 +51,18 @@ public partial class MainViewModel : ObservableObject
         _update = update;
         _log = log;
         _vietHoa = vietHoa;
-        _appVersion = "VHWuWa v" + (Assembly.GetEntryAssembly()?.GetName().Version?.ToString(3) ?? "0.0.0");
+        _appVersion = "v" + (Assembly.GetEntryAssembly()?.GetName().Version?.ToString(3) ?? "0.0.0");
         _isDark = !settings.Settings.Theme.Equals("Light", StringComparison.OrdinalIgnoreCase);
+        try
+        {
+            PakContentBatchPublisher.RecoverIncomplete(Path.Combine(AppContext.BaseDirectory, "content"));
+        }
+        catch (Exception ex)
+        {
+            _pakRecoveryBlocked = true;
+            UpdateStatusMessage = "PAK cũ cần khôi phục thủ công; đã khóa cập nhật PAK.";
+            _log.Error("Update", "Không tự phục hồi được giao dịch PAK cũ.", ex);
+        }
         RefreshStatus();
 
         if (settings.Settings.AutoCheckUpdate)
@@ -70,7 +82,12 @@ public partial class MainViewModel : ObservableObject
         }
         var v = _detect.Validate(path);
         GameOk = v.IsValid;
-        GameStatus = v.IsValid ? "Game hợp lệ" : "Đường dẫn game chưa hợp lệ";
+        GameStatus = !v.IsValid ? "Đường dẫn game chưa hợp lệ"
+            : R29MountedPak.IsInstalled(path) ? "Đã cài PAK PC R29"
+            : (R29MountedPak.ReleaseRequired(AppContext.BaseDirectory)
+                || R29MountedPak.PackagePresent(AppContext.BaseDirectory))
+                ? "Sẵn sàng ghi đè PAK R29"
+                : "Thư mục game hợp lệ";
     }
 
     [RelayCommand]
@@ -80,7 +97,7 @@ public partial class MainViewModel : ObservableObject
         var theme = IsDark ? "Dark" : "Light";
         _settings.Settings.Theme = theme;
         _settings.Save();
-        ApplicationThemeManager.Apply(IsDark ? ApplicationTheme.Dark : ApplicationTheme.Light);
+        VHWuWa.App.App.ApplyTheme(theme);
     }
 
     [RelayCommand]
@@ -183,6 +200,11 @@ public partial class MainViewModel : ObservableObject
     public async Task ApplyDeltaPakUpdateAsync()
     {
         if (IsUpdating || CurrentUpdateManifest == null) return;
+        if (_pakRecoveryBlocked)
+        {
+            UpdateStatusMessage = "Chưa thể cập nhật: có bản PAK cũ cần khôi phục thủ công.";
+            return;
+        }
         var pakEnUrl = CurrentUpdateManifest.PakEnUrl;
         var pakHvUrl = CurrentUpdateManifest.PakHanVietUrl;
 
@@ -193,19 +215,22 @@ public partial class MainViewModel : ObservableObject
         }
 
         IsUpdating = true;
+        var pakStaging = Path.Combine(Path.GetTempPath(), "WuWa_PakStage_" + Guid.NewGuid().ToString("N"));
         UpdateProgress = 0;
-        UpdateStatusMessage = "Đang tải tệp Việt hóa mới nhất...";
+        UpdateStatusMessage = "Đang tải và xác minh đủ PAK...";
 
         try
         {
             var appDir = AppContext.BaseDirectory;
             var contentDir = Path.Combine(appDir, "content");
-            Directory.CreateDirectory(contentDir);
+            // Do not overwrite the live content directory while a second PAK is still downloading.
+            Directory.CreateDirectory(pakStaging);
+            var verifiedPaks = new List<PakContentBatchPublisher.Payload>();
 
             if (!string.IsNullOrWhiteSpace(pakEnUrl))
             {
                 UpdateStatusMessage = "Đang tải tệp Việt hóa (Tiếng Anh)...";
-                var destEn = Path.Combine(contentDir, "WuWaVH_EN_99_P.pak");
+                var destEn = Path.Combine(pakStaging, "WuWaVH_EN_99_P.pak");
                 var progress = new Progress<double>(p =>
                 {
                     UpdateProgress = p;
@@ -214,12 +239,14 @@ public partial class MainViewModel : ObservableObject
                 var rEn = await _update.DownloadFileAsync(pakEnUrl, CurrentUpdateManifest.PakEnSha256, destEn, progress);
                 if (!rEn.Success)
                     throw new Exception("Lỗi tải bản dịch EN: " + rEn.Error);
+                verifiedPaks.Add(new PakContentBatchPublisher.Payload(
+                    "WuWaVH_EN_99_P.pak", destEn, CurrentUpdateManifest.PakEnSha256));
             }
 
             if (!string.IsNullOrWhiteSpace(pakHvUrl))
             {
                 UpdateStatusMessage = "Đang tải tệp Việt hóa (Hán Việt)...";
-                var destHv = Path.Combine(contentDir, "WuWaVH_HanViet_99_P.pak");
+                var destHv = Path.Combine(pakStaging, "WuWaVH_HanViet_99_P.pak");
                 var progress = new Progress<double>(p =>
                 {
                     UpdateProgress = p;
@@ -228,7 +255,12 @@ public partial class MainViewModel : ObservableObject
                 var rHv = await _update.DownloadFileAsync(pakHvUrl, CurrentUpdateManifest.PakHanVietSha256, destHv, progress);
                 if (!rHv.Success)
                     throw new Exception("Lỗi tải bản dịch Hán Việt: " + rHv.Error);
+                verifiedPaks.Add(new PakContentBatchPublisher.Payload(
+                    "WuWaVH_HanViet_99_P.pak", destHv, CurrentUpdateManifest.PakHanVietSha256));
             }
+
+            UpdateStatusMessage = "Đã xác minh PAK, đang thay thế an toàn...";
+            PakContentBatchPublisher.Publish(contentDir, verifiedPaks);
 
             var gamePath = _settings.Settings.GamePath;
             var appliedToGame = false;
@@ -277,10 +309,11 @@ public partial class MainViewModel : ObservableObject
         {
             _log.Error("Update", "Lỗi cập nhật nhanh: " + ex.Message, ex);
             UpdateStatusMessage = "Lỗi cập nhật nhanh: " + ex.Message;
-            System.Windows.MessageBox.Show("Cập nhật nhanh thất bại:\n" + ex.Message, "VHWuWa", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+            System.Windows.MessageBox.Show("Cập nhật nhanh thất bại:\n" + ex.Message, "WuWa Việt Hóa", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
         }
         finally
         {
+            TryDeleteUpdateTemp(pakStaging);
             IsUpdating = false;
         }
     }
@@ -378,7 +411,7 @@ public partial class MainViewModel : ObservableObject
             UpdateStatusMessage = "Lỗi tự động cập nhật: " + ex.Message;
             System.Windows.MessageBox.Show(
                 "Lỗi tự động cập nhật:\n" + ex.Message,
-                "VHWuWa",
+                "WuWa Việt Hóa",
                 System.Windows.MessageBoxButton.OK,
                 System.Windows.MessageBoxImage.Error);
         }

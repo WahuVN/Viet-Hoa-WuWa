@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using VHWuWa.Core.Abstractions;
 using VHWuWa.Core.Models;
+using VHWuWa.Core.Services;
 using VHWuWa.Infrastructure;
 
 namespace VHWuWa.App.ViewModels;
@@ -16,21 +17,29 @@ public partial class InstallViewModel : ObservableObject
     private readonly IUpdateService _update;
     private string _lastHanVietDownloadError = "";
     private CancellationTokenSource? _cts;
+    private bool _r29Mode;
+    private bool _r29InstallReady;
+    private bool _r29Installed;
 
     // Gói nhẹ mặc định dùng bản Việt hóa giữ tên quốc tế. Hán Việt tải khi cần.
     [ObservableProperty] private bool _variantHanViet;
     [ObservableProperty] private bool _variantEnglish = true;
     [ObservableProperty] private bool _applyFont = true;
+    // R29 installs text plus an independent verified Lexend 660 font mount.
+    [ObservableProperty] private bool _usesNativeFont;
 
     [ObservableProperty] private string _gamePathText = "";
     [ObservableProperty] private string _statusText = "";
     [ObservableProperty] private string _contentText = "";
     [ObservableProperty] private string _summary = "Chọn kiểu tên nhân vật rồi bấm Cài Việt hóa.";
+    [ObservableProperty] private string _installButtonText = "Cài Việt hóa";
     [ObservableProperty] private int _progress;
     [ObservableProperty] private string _progressText = "";
     [ObservableProperty] private bool _busy;
     [ObservableProperty] private bool _canInstall;
     [ObservableProperty] private bool _fontAvailable;
+    [ObservableProperty] private bool _isHanVietAvailable = true;
+    [ObservableProperty] private string _optionHelpText = "";
     [ObservableProperty] private bool _hasConflicts;
     [ObservableProperty] private string _conflictText = "✔ Không phát hiện mod khác.";
     [ObservableProperty] private bool _hasQuarantine;
@@ -57,9 +66,12 @@ public partial class InstallViewModel : ObservableObject
             : (valid ? "🎮 Game: " + game : "⚠ Đường dẫn game chưa hợp lệ: " + game);
 
         var content = _viet.InspectContent();
-        var conflicts = valid ? _viet.FindConflicts(game) : Array.Empty<string>();
+        var r29Present = R29MountedPak.ReleaseRequired(AppContext.BaseDirectory)
+            || R29MountedPak.PackagePresent(AppContext.BaseDirectory);
+        UsesNativeFont = false;
+        var conflicts = valid && !r29Present ? _viet.FindConflicts(game) : Array.Empty<string>();
         HasConflicts = conflicts.Count > 0;
-        var oldTranslationFiles = valid ? _viet.FindOldTranslationConflicts(game) : Array.Empty<string>();
+        var oldTranslationFiles = valid && !r29Present ? _viet.FindOldTranslationConflicts(game) : Array.Empty<string>();
         var oldScanError = oldTranslationFiles.FirstOrDefault(x =>
             x.StartsWith("Không thể kiểm tra mod:", StringComparison.OrdinalIgnoreCase));
         HasOldTranslationConflicts = oldScanError is null && oldTranslationFiles.Count > 0;
@@ -78,12 +90,51 @@ public partial class InstallViewModel : ObservableObject
             : "";
         FontAvailable = content.FontPak is not null;
         HasHanViet = File.Exists(HanVietPakPath);
-        ShowHanVietDownload = !HasHanViet;
+        var staged = StagedPakInspector.Inspect(AppContext.BaseDirectory);
+        // R29 is mounted without the old DLL/font PAK; never claim that the
+        // separate font option is installed when the R29 branch ignores it.
+        // Only expose installable variants. R29 ships names in English only.
+        IsHanVietAvailable = !r29Present;
+        if (r29Present)
+        {
+            // R29 chỉ cách ly mod có nguồn xác minh và không sửa file game chính thức.
+            if (HasConflicts || HasOldTranslationConflicts)
+                ConflictText = "Có mod khác nhưng Cài Việt hóa sẽ không đụng tới chúng.";
+            VariantEnglish = true;
+            ApplyFont = true; // Install contract: R29 always includes Lexend 660.
+            FontAvailable = content.FontPak is not null;
+            HasHanViet = false;
+        }
+        var r29Installed = valid && R29MountedPak.IsInstalled(game);
+        _r29Mode = r29Present;
+        _r29InstallReady = valid; // Only the actual game path gates the button.
+        _r29Installed = r29Installed;
+        if (!r29Present) OptionHelpText = "";
+        InstallButtonText = !valid ? "Chưa có game PC"
+            : r29Present ? (r29Installed ? "Cài lại Việt hóa" : "Cài Việt hóa")
+            : staged.Present ? "PAK R28 chưa tương thích" : "Cài Việt hóa";
+        ShowHanVietDownload = !HasHanViet && !staged.Present && !r29Present;
         HanVietDownloadBtnText = HasHanViet ? "Đã có bản Hán Việt" : "Tải bản Hán Việt (~60 MB)";
 
-        if (!content.HasLoader)
+        if (r29Present)
         {
-            ContentText = "❌ Thiếu bộ loader Việt hóa trong thư mục content\\loader. Không thể cài.";
+            ContentText = "R29 · cách ly mod xung đột có SHA-256 trước khi cài đè.";
+            CanInstall = valid;
+            Summary = r29Installed ? "Đã cài Việt hóa. Bấm Cài để ghi đè lại."
+                : !valid ? "Hãy chọn đúng thư mục game."
+                : "Sẵn sàng ghi đè Việt hóa R29.";
+        }
+        else if (staged.Present)
+        {
+            ContentText = staged.Message;
+            CanInstall = false;
+            Summary = staged.ShaVerified
+                ? "PAK R28 đã vượt kiểm tra offline nhưng game PC thực tế báo Corrupt pak index. Không cài gói này vào game."
+                : "Gói R28 chưa vượt kiểm tra an toàn. Không cài vào game.";
+        }
+        else if (!content.HasLoader)
+        {
+            ContentText = "Thiếu bộ cài Việt hóa tương thích. Chưa thể cài.";
             CanInstall = false;
         }
         else
@@ -95,6 +146,8 @@ public partial class InstallViewModel : ObservableObject
             // trước khi chèn bản VHWuWa mới; legacy VHWuWa được bảo vệ riêng.
             CanInstall = valid;
         }
+
+        if (r29Present) RefreshR29Options();
 
         if (valid)
         {
@@ -111,11 +164,32 @@ public partial class InstallViewModel : ObservableObject
         InstallationStateChanged?.Invoke(this, EventArgs.Empty);
     }
 
+    private void RefreshR29Options()
+    {
+        if (!_r29Mode) return;
+
+        var missingHanViet = VariantHanViet;
+        OptionHelpText = missingHanViet
+            ? "R29 hiện dùng tên Anh. Khi cài, ứng dụng tự chuyển về tên Anh và áp font Lexend 660."
+            : "Mặc định cài kèm Lexend 660 bằng Mount font riêng; mod xác minh được được cách ly có SHA-256.";
+        CanInstall = _r29InstallReady;
+        if (_r29InstallReady)
+            Summary = _r29Installed ? "Đã cài R29. Có thể ghi đè lại hoặc gỡ." : "Sẵn sàng ghi đè Việt hóa.";
+    }
+
     partial void OnVariantHanVietChanged(bool value)
     {
         if (value) VariantEnglish = false;
+        RefreshR29Options();
     }
-    partial void OnVariantEnglishChanged(bool value) { if (value) VariantHanViet = false; }
+
+    partial void OnVariantEnglishChanged(bool value)
+    {
+        if (value) VariantHanViet = false;
+        RefreshR29Options();
+    }
+
+    partial void OnApplyFontChanged(bool value) => RefreshR29Options();
     private bool CanStartInstall() => CanInstall && !Busy;
     private bool CanManageConflicts() => HasConflicts && !Busy;
     private bool CanRemoveOldTranslationConflicts() => HasOldTranslationConflicts && !Busy;
@@ -394,10 +468,20 @@ public partial class InstallViewModel : ObservableObject
     {
         var game = _settings.Settings.GamePath;
         if (string.IsNullOrWhiteSpace(game)) { Summary = "Chưa chọn thư mục game (ở Trang chủ)."; return; }
+        var r29 = R29MountedPak.ReleaseRequired(AppContext.BaseDirectory)
+            || R29MountedPak.PackagePresent(AppContext.BaseDirectory);
+        // Never block Install because an optional R29 variant/font is missing.
+        // Make the selected UI match the variant actually being installed.
+        var optionsAdjusted = r29 && VariantHanViet;
+        if (r29)
+        {
+            VariantEnglish = true;
+            ApplyFont = true;
+        }
         var variant = VariantEnglish ? NameVariant.English : NameVariant.HanViet;
         _cts = new CancellationTokenSource();
         Busy = true; Progress = 0; ProgressText = "Bắt đầu...";
-        Summary = "⚠ HÃY TẮT GAME trước khi cài.";
+        Summary = r29 ? "Đang ghi đè R29 vào game..." : "Đang cài Việt hóa...";
         var progress = new Progress<InstallProgress>(p =>
         {
             Progress = p.Percent;
@@ -419,7 +503,9 @@ public partial class InstallViewModel : ObservableObject
             var r = await _viet.InstallAsync(game, variant, ApplyFont && FontAvailable, progress, _cts.Token);
             if (r.Success)
             {
-                Summary = "✅ Cài xong! Vào game đặt Text Language = English. Có thể dùng DirectX 11 hoặc 12.";
+                Summary = optionsAdjusted
+                    ? "✅ Đã cài R29 tên Anh + Lexend 660 (Hán Việt chưa có cho R29)."
+                    : "✅ Cài xong R29 + Lexend 660! Vào game đặt Text Language = English. Có thể dùng DirectX 11 hoặc 12.";
             }
             else
             {
