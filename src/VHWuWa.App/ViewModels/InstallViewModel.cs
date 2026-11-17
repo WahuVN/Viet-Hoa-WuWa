@@ -97,7 +97,7 @@ public partial class InstallViewModel : ObservableObject
         IsHanVietAvailable = !r29Present;
         if (r29Present)
         {
-            // R29 chỉ cách ly mod có nguồn xác minh và không sửa file game chính thức.
+            // R29 chỉ ghi các tệp WAHU quản lý; không quét, cách ly hoặc thay đổi mod khác.
             if (HasConflicts || HasOldTranslationConflicts)
                 ConflictText = "Có mod khác nhưng Cài Việt hóa sẽ không đụng tới chúng.";
             VariantEnglish = true;
@@ -118,7 +118,7 @@ public partial class InstallViewModel : ObservableObject
 
         if (r29Present)
         {
-            ContentText = "R29 · cách ly mod xung đột có SHA-256 trước khi cài đè.";
+            ContentText = "R29 · ghi đè trực tiếp các tệp WAHU quản lý; không quét hoặc đụng mod khác.";
             CanInstall = valid;
             Summary = r29Installed ? "Đã cài Việt hóa. Bấm Cài để ghi đè lại."
                 : !valid ? "Hãy chọn đúng thư mục game."
@@ -171,7 +171,7 @@ public partial class InstallViewModel : ObservableObject
         var missingHanViet = VariantHanViet;
         OptionHelpText = missingHanViet
             ? "R29 hiện dùng tên Anh. Khi cài, ứng dụng tự chuyển về tên Anh và áp font Lexend 660."
-            : "Mặc định cài kèm Lexend 660 bằng Mount font riêng; mod xác minh được được cách ly có SHA-256.";
+            : "Mặc định cài kèm Lexend 660 bằng Mount font riêng; sau đó có thể đổi font tùy ý, không quét mod khác.";
         CanInstall = _r29InstallReady;
         if (_r29InstallReady)
             Summary = _r29Installed ? "Đã cài R29. Có thể ghi đè lại hoặc gỡ." : "Sẵn sàng ghi đè Việt hóa.";
