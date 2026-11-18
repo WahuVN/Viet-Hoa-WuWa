@@ -62,7 +62,7 @@ public partial class HomeViewModel : ObservableObject
         ForceCSharpEnvironment = false;
         settings.Settings.ForceCSharpEnvironment = false;
         settings.Save();
-        LaunchButtonText = "Mở launcher";
+        LaunchButtonText = "Mở game";
         LoadFeaturedRelease();
         OnActivated();
     }

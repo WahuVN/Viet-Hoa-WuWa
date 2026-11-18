@@ -127,7 +127,13 @@
                 </ControlTemplate>
             </Setter.Value></Setter>
         </Style>
-        <Style x:Key="LauncherRoundButton" TargetType="{x:Type Button}" BasedOn="{StaticResource Wahu.SecondaryButton}">
+        <!-- Make the third step to open the game as obvious as the install action. -->
+        <Style x:Key="LauncherPlayButton" TargetType="{x:Type Button}" BasedOn="{StaticResource LauncherGameButton}">
+            <Setter Property="MinHeight" Value="52"/>
+            <Setter Property="Padding" Value="12,7"/>
+            <Setter Property="Background" Value="#E92B3D63"/>
+            <Setter Property="BorderBrush" Value="#C5D5E5FF"/>
+        </Style>        <Style x:Key="LauncherRoundButton" TargetType="{x:Type Button}" BasedOn="{StaticResource Wahu.SecondaryButton}">
             <Setter Property="Width" Value="48"/><Setter Property="Height" Value="48"/><Setter Property="MinHeight" Value="48"/>
             <Setter Property="Padding" Value="0"/><Setter Property="Background" Value="#C2151D31"/>
             <Setter Property="Template"><Setter.Value>
@@ -441,23 +447,32 @@
                             </Button>
                         </Grid>
 
+                        <!-- Step 3: a visible play action. Existing game launch command stays unchanged. -->
                         <Grid Margin="0,11,2,0">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
-                            <Button Grid.Column="0" Style="{StaticResource LauncherLinkButton}"
+                            <Button Grid.Column="0" Style="{StaticResource LauncherPlayButton}"
                                     Command="{Binding DataContext.LaunchGameCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
-                                    ToolTip="Mở launcher Wuthering Waves">
-                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                    <TextBlock Text="↗" FontSize="17" Foreground="#D9D8FF" Margin="0,0,8,0"
-                                               VerticalAlignment="Center" FontFamily="Segoe UI Symbol"/>
-                                    <TextBlock Text="Mở launcher" Foreground="#F6F5FF"
-                                               FontFamily="{StaticResource WahuAppFontFamily}" FontSize="13.5"
-                                               FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                    ToolTip="Bước 3: Mở Wuthering Waves qua launcher chính thức hoặc Steam; nhấn Start trong launcher để vào game."
+                                    AutomationProperties.Name="Mở game Wuthering Waves"
+                                    HorizontalAlignment="Stretch">
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                    <Path Data="M 7,4 L 20,12 L 7,20 Z" Width="19" Height="19" Stretch="Uniform"
+                                          Fill="#F5FFFF" Stroke="#F5FFFF" StrokeThickness="0.6"
+                                          VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding DataContext.LaunchButtonText, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
+                                                   Foreground="#FFFFFF" FontFamily="{StaticResource WahuHeadingFontFamily}"
+                                                   FontSize="17" FontWeight="Bold" />
+                                        <TextBlock Text="Qua launcher · bấm Start"
+                                                   Foreground="#D8E5FF" FontFamily="{StaticResource WahuAppFontFamily}"
+                                                   FontSize="11.5" Margin="0,1,0,0"/>
+                                    </StackPanel>
                                 </StackPanel>
                             </Button>
-                            <TextBlock Grid.Column="1"
+                            <TextBlock Grid.Column="1" Margin="12,0,0,0"
                                        Text="{Binding DataContext.FeaturedReleaseBadge, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
                                        Foreground="#F6ECFF" FontFamily="{StaticResource WahuAppFontFamily}"
                                        FontSize="13.5" FontWeight="SemiBold" HorizontalAlignment="Right"
@@ -466,8 +481,7 @@
                                     <DropShadowEffect Color="#181134" BlurRadius="3" ShadowDepth="1" Opacity="0.75"/>
                                 </TextBlock.Effect>
                             </TextBlock>
-                        </Grid>
-                        <Button Command="{Binding UninstallCommand}"
+                        </Grid>                        <Button Command="{Binding UninstallCommand}"
                                 Visibility="{Binding DataContext.IsInstalled, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}, Converter={StaticResource BoolToVis}}"
                                 Style="{StaticResource LauncherSecondaryButton}" MinHeight="30"
                                 Padding="8,4" FontSize="12.5" HorizontalAlignment="Right" Margin="0,4,0,0">
