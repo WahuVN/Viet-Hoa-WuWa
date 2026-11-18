@@ -6,7 +6,7 @@
 
 Bộ công cụ mã nguồn mở hỗ trợ cài đặt, tùy biến phông chữ và quản lý bản dịch tiếng Việt cho **Wuthering Waves (PC / Windows)**.
 
-[![Phiên bản](https://img.shields.io/badge/phiên_bản-3.0.22-blue?style=flat-square)](https://github.com/WahuVN/Viet-Hoa-WuWa/releases/latest)
+[![Phiên bản](https://img.shields.io/badge/phiên_bản-3.0.23-blue?style=flat-square)](https://github.com/WahuVN/Viet-Hoa-WuWa/releases/latest)
 [![Game đã kiểm thử](https://img.shields.io/badge/Wuthering_Waves-R29_3.8.11-informational?style=flat-square)](https://github.com/WahuVN/Viet-Hoa-WuWa/releases/latest)
 [![Nền tảng](https://img.shields.io/badge/Nền_tảng-Windows_10_%7C_11_x64-0078D4?style=flat-square&logo=windows&logoColor=white)](https://github.com/WahuVN/Viet-Hoa-WuWa/releases/latest)
 [![Giấy phép](https://img.shields.io/badge/Giấy_phép-MIT-green?style=flat-square)](LICENSE)
