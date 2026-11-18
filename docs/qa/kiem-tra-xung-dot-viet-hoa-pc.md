@@ -8,25 +8,25 @@ Nếu launcher mở được nhưng game không chạy, hoặc gỡ Việt hóa 
 2. **Kiểm tra**, không thay đổi tệp:
 
 ```powershell
-.\scripts\FIX_WUWA_CONFLICT.ps1 -GameRoot "D:\Games\Wuthering Waves Game"
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\FIX_WUWA_CONFLICT.ps1 -GameRoot "D:\Games\Wuthering Waves Game"
 ```
 
 3. **Sửa các xung đột xác minh được**, có sao lưu và khả năng khôi phục:
 
 ```powershell
-.\scripts\FIX_WUWA_CONFLICT.ps1 -GameRoot "D:\Games\Wuthering Waves Game" -Mode Repair -Apply
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\FIX_WUWA_CONFLICT.ps1 -GameRoot "D:\Games\Wuthering Waves Game" -Mode Repair -Apply
 ```
 
 4. Mở game thử lại. Nếu chưa vào được, có thể **tắt riêng font Việt hóa** để khoanh vùng:
 
 ```powershell
-.\scripts\FIX_WUWA_CONFLICT.ps1 -GameRoot "D:\Games\Wuthering Waves Game" -Mode DisableFont -Apply
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\FIX_WUWA_CONFLICT.ps1 -GameRoot "D:\Games\Wuthering Waves Game" -Mode DisableFont -Apply
 ```
 
 5. Nếu muốn tạm tắt toàn bộ bản dịch R29 để xác định nguyên nhân, dùng `-Mode DisableR29 -Apply`. **Khôi phục** tệp đã cách ly bằng lệnh sau, thay phần đường dẫn sao lưu bằng giá trị `BACKUP_PATH` mà công cụ cung cấp:
 
 ```powershell
-.\scripts\FIX_WUWA_CONFLICT.ps1 -GameRoot "D:\Games\Wuthering Waves Game" -Mode Restore -BackupPath "C:\Duong-dan-sao-luu" -Apply
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\FIX_WUWA_CONFLICT.ps1 -GameRoot "D:\Games\Wuthering Waves Game" -Mode Restore -BackupPath "C:\Duong-dan-sao-luu" -Apply
 ```
 
 **Lưu ý:** Thay đường dẫn ví dụ bằng đúng thư mục game có `Client`. Công cụ chỉ xử lý tệp Việt hóa nhận diện chắc chắn; tệp không xác định sẽ được giữ nguyên và báo cần kiểm tra. Nếu bản dịch chưa tương thích với tài nguyên game đang dùng, dọn xung đột **không thể tự làm cho bản dịch tương thích**.
