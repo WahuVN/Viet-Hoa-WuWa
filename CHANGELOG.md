@@ -2,6 +2,12 @@
 
 Tất cả các thay đổi đáng chú ý của dự án VHWuWa được ghi lại tại đây theo chuẩn [SemVer](https://semver.org/lang/vi/).
 
+## [3.0.24] - 2026-11-18
+
+- Trang chủ tự điều chỉnh nội dung theo chiều cao và chiều rộng cửa sổ, không cần cuộn xuống để mở game.
+- Giữ menu và chức năng như trước; cải thiện hiển thị trên cửa sổ nhỏ.
+- Rút gọn README, sửa đường dẫn logo và đồng bộ hướng dẫn tải PC/Android.
+
 ## [3.0.23] - 2026-11-18
 
 - Làm mới trang chủ với nhóm thao tác **Chọn game → Cài Việt hóa → Mở game**, trạng thái game rõ hơn.

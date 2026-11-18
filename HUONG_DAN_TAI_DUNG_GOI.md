@@ -1,28 +1,26 @@
-# Hướng dẫn tải và cài Việt hóa WuWa
+# Hướng dẫn cài Việt hóa Wuthering Waves
 
-**PC mới nhất:** [v3.0.23](https://github.com/WahuVN/Viet-Hoa-WuWa/releases/tag/v3.0.23) — Wuthering Waves R29 / resource 3.8.11.
+**Bản PC mới nhất:** [v3.0.24](https://github.com/WahuVN/Viet-Hoa-WuWa/releases/tag/v3.0.24) — R29, dữ liệu game 3.8.11.
 
-**Android công khai mới nhất:** [v0.2.0-alpha.24](https://github.com/WahuVN/VHWuWa-Mobile/releases/tag/v0.2.0-alpha.24) — game 3.8.1, bản dịch Tên Anh R28 (resource 3.8.10); cần Android 10+ và Shizuku.
+**Bản Android công khai:** [v0.2.0-alpha.24](https://github.com/WahuVN/VHWuWa-Mobile/releases/tag/v0.2.0-alpha.24) — R28 (tên tiếng Anh); yêu cầu Android 10+ và Shizuku.
 
-## Cài hoặc cập nhật PC
+## Windows PC
 
-1. Tải VietHoa-WuWa-v3.0.23.zip, giải nén vào thư mục riêng, mở VHWuWa.exe.
-2. Đóng game, chọn **Tự tìm game** hoặc chỉ định thư mục game có Client.
-3. Nhấn **Cài Việt hóa**. R29 hiện dùng **Tên Anh**, mặc định **Lexend 660**. Hán Việt R29 chưa có gói QA.
-4. Bấm **Mở game** để mở launcher hoặc Steam, rồi nhấn **Start**. Trong game chọn **Text Language = English**.
+1. Tải `VietHoa-WuWa-v3.0.24.zip` trong [Releases](https://github.com/WahuVN/Viet-Hoa-WuWa/releases/latest), giải nén và chạy `VHWuWa.exe`.
+2. Đóng Wuthering Waves. Nhấn **Tự tìm** hoặc **Chọn game** và chọn thư mục chứa `Client`.
+3. Chọn **Cài Việt hóa**. R29 dùng tên tiếng Anh; font mặc định Lexend 660. Gói Hán Việt R29 chưa phát hành.
+4. Nhấn **Mở game**, rồi **Start** trong launcher; đặt **Text Language = English** trong game.
 
-Đã dùng phiên bản cũ: cập nhật trong **Cài đặt → Kiểm tra cập nhật**. Updater kiểm tra SHA-256 gói ZIP, có sao lưu và khôi phục khi cập nhật lỗi.
+**Cập nhật:** Vào **Cài đặt → Kiểm tra cập nhật**. Ứng dụng có cơ chế xác minh và khôi phục khi cập nhật thất bại.
 
-Với R29, chương trình chỉ thay đổi tệp thuộc WAHU, không tự xóa hay cách ly mod khác. Bản dịch và font được gắn bằng Mount riêng; giữ nguyên file tài nguyên gốc của game.
-
-File .sig thuộc tài nguyên game **không phải** chữ ký nhà phát hành ứng dụng Windows (Authenticode). Nếu máy không có SIG chính thức phù hợp, chương trình không tự tạo SIG giả hay ghi đè tệp game không rõ nguồn.
-
-## Dịch giả
-
-[App-Dich-WuWa v3.0.16](https://github.com/WahuVN/Viet-Hoa-WuWa/releases/download/v3.0.16/App-Dich-WuWa-v3.0.16.zip) là bộ công cụ dịch độc lập; **không** đổi version này theo bản PC.
+**Không tìm thấy game?** Chọn lại đúng thư mục cài game thay vì thư mục chứa riêng launcher.
 
 ## Android
 
-Tải APK alpha.24 và cài đè bản cũ; bật Shizuku trước khi cài Việt hóa. Android alpha.24 dùng **Tên Anh**; Hán Việt 3.8 chưa cập nhật. Việc tự cập nhật APK từ các bản Android cũ qua kênh công khai chưa được xác nhận hoạt động, nên sử dụng trang Releases.
+Tải APK từ trang [VHWuWa Mobile](https://github.com/WahuVN/VHWuWa-Mobile/releases/tag/v0.2.0-alpha.24), cấp quyền Shizuku theo hướng dẫn trong ứng dụng. Đây là bản thử nghiệm R28, **không phải R29 PC**.
 
-Hỗ trợ: https://discord.gg/Gy5YQ84Yc2
+## Dành cho dịch giả
+
+[App-Dich-WuWa v3.0.16](https://github.com/WahuVN/Viet-Hoa-WuWa/releases/tag/v3.0.16) là công cụ riêng để biên dịch và kiểm tra bản dịch.
+
+**Hỗ trợ:** [Discord VHWuWa](https://discord.gg/Gy5YQ84Yc2) · [Báo lỗi GitHub](https://github.com/WahuVN/Viet-Hoa-WuWa/issues).

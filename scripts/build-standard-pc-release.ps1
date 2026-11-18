@@ -1,6 +1,6 @@
 #requires -Version 5.1
 param(
- [string]$Version = '3.0.23',
+ [string]$Version = '3.0.24',
  [string]$OutputRoot = '',
  [string]$R29TemplateStage = 'D:\WAHU_WORK\WUWA_PC_V321_ONECLICK_HOTFIX_RELEASE_WT_20261116\dist\V321_RELEASE_CANDIDATE\PATCH_STAGE',
  [switch]$VerifyOnly,
@@ -8,11 +8,11 @@ param(
 )
 $ErrorActionPreference='Stop'
 $repo=Split-Path -Parent $PSScriptRoot
-if($Version -ne '3.0.23'){throw 'This prep branch is pinned to 3.0.23; review content hashes before changing version'}
+if($Version -ne '3.0.24'){throw 'This prep branch is pinned to 3.0.24; review content hashes before changing version'}
 
 if(-not $OutputRoot){
- if($VerifyOnly){$OutputRoot='C:\WAHU_VH_V323_STANDARD_VERIFY'}
- else{$OutputRoot='C:\WAHU_VH_V323_STANDARD_'+(Get-Date -Format yyyyMMdd_HHmmss)}
+ if($VerifyOnly){$OutputRoot='C:\WAHU_VH_V324_STANDARD_VERIFY'}
+ else{$OutputRoot='C:\WAHU_VH_V324_STANDARD_'+(Get-Date -Format yyyyMMdd_HHmmss)}
 }
 $out=[IO.Path]::GetFullPath($OutputRoot)
 $stage=Join-Path $out 'stage'

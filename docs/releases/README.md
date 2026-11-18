@@ -1,9 +1,10 @@
 # Tài liệu phát hành
 
-**Bản PC công khai mới nhất:** [v3.0.23](https://github.com/WahuVN/Viet-Hoa-WuWa/releases/tag/v3.0.23)
+**Bản PC công khai mới nhất:** [v3.0.24](https://github.com/WahuVN/Viet-Hoa-WuWa/releases/tag/v3.0.24)
 
 | Phiên bản | Ghi chú |
 | --- | --- |
+| v3.0.24 | [Trang chủ tự vừa cửa sổ, không cần cuộn](v3.0.24/RELEASE_NOTES.md) |
 | v3.0.23 | [Trang chủ, mở game và đóng tiến trình an toàn](v3.0.23/RELEASE_NOTES.md) |
 | v3.0.22 | [R29, Lexend 660, cập nhật và hiển thị](v3.0.22/RELEASE_NOTES.md) |
 | v3.0.21 | [Sửa cài đặt R29](v3.0.21/RELEASE_NOTES.md) |

@@ -201,9 +201,14 @@
         <Rectangle IsHitTestVisible="False" Fill="{DynamicResource Wahu.HomeHeroHorizontalShade}" />
         <Rectangle IsHitTestVisible="False" Fill="{DynamicResource Wahu.HomeHeroVerticalShade}" />
 
-        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"
-                      Background="Transparent">
-            <Grid Margin="27,52,27,22" MinHeight="600">
+        <!-- Auto fit all home actions to the available window. Never require scrolling
+             to reach install, play, language choice or the close-game action. -->
+        <Viewbox Stretch="Uniform" StretchDirection="Both"
+                 HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+                 SnapsToDevicePixels="True">
+            <!-- Width is the full content design size, not the physical window size.
+                 Auto height grows if status text expands, then Viewbox fits it all. -->
+            <Grid Width="1000" MinHeight="720" Margin="20,39,20,16">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
@@ -212,7 +217,7 @@
                 </Grid.RowDefinitions>
 
                 <!-- Header: immediately recognisable launcher branding and status. -->
-                <Grid Grid.Row="0" Margin="0,0,0,19">
+                <Grid Grid.Row="0" Margin="0,0,0,12">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="Auto" />
@@ -347,7 +352,7 @@
                 </Grid>
 
                 <!-- Actual installer commands live in the existing InstallViewModel. -->
-                <Grid x:Name="InstallPanel" Grid.Row="2" Margin="0,16,0,0">
+                <Grid x:Name="InstallPanel" Grid.Row="2" Margin="0,10,0,0">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="308" />
                         <ColumnDefinition Width="*" />
@@ -579,7 +584,7 @@
                     </StackPanel>
                 </Grid>
 
-                <Grid Grid.Row="3" Margin="0,9,0,0">
+                <Grid Grid.Row="3" Margin="0,5,0,0">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="Auto" />
@@ -598,6 +603,6 @@
                     </Button>
                 </Grid>
             </Grid>
-        </ScrollViewer>
+        </Viewbox>
     </Grid>
 </UserControl>
