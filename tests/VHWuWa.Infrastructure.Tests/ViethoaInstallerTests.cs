@@ -67,6 +67,58 @@ public sealed class ViethoaInstallerTests : IDisposable
     }
 
     [Fact]
+    public void OldV316Marker_WithOldPakAndLoader_IsNotMistakenForR29()
+    {
+        SeedLegacyVhwuwaInstall();
+        File.WriteAllText(Path.Combine(Mods, "vhwuwa_install.json"),
+            "{\"schemaVersion\":2,\"packageVersion\":\"3.0.16\",\"variant\":\"en\",\"managedFiles\":{}}");
+
+        var status = _viet.GetStatus(_game);
+
+        Assert.True(status.Installed);
+        Assert.True(status.LegacyFilesPresent);
+        Assert.Equal("3.0.16", status.Version);
+        Assert.False(R29MountedPak.IsInstalled(_game));
+    }
+
+    [Fact]
+    public void OrphanedOldPak_IsReportedEvenWithoutLegacyMarker()
+    {
+        Directory.CreateDirectory(Mods);
+        File.WriteAllText(Path.Combine(Mods, "WuWaVH_99_P.pak"), "OLD_PAK_ONLY");
+
+        var status = _viet.GetStatus(_game);
+
+        Assert.True(status.LegacyFilesPresent);
+        Assert.False(status.Installed);
+        Assert.False(R29MountedPak.IsInstalled(_game));
+    }
+
+    [Fact]
+    public void ForeignVersionDllAlone_MustNotBeMisreportedAsOldWAHUFiles()
+    {
+        File.WriteAllText(Path.Combine(_win64, "version.dll"), "ANOTHER_MOD");
+
+        var status = _viet.GetStatus(_game);
+
+        Assert.False(status.LegacyFilesPresent);
+        Assert.False(status.Installed);
+    }
+
+    [Fact]
+    public void OldMarkerWithoutActiveFiles_IsNotReportedAsAnInstalledTranslation()
+    {
+        Directory.CreateDirectory(Mods);
+        File.WriteAllText(Path.Combine(Mods, "vhwuwa_install.json"),
+            "{\"schemaVersion\":2,\"packageVersion\":\"3.0.16\",\"variant\":\"en\",\"managedFiles\":{}}");
+
+        var status = _viet.GetStatus(_game);
+
+        Assert.False(status.LegacyFilesPresent);
+        Assert.False(status.Installed);
+    }
+
+    [Fact]
     public void R29DirectInsert_HasNoCleanupScannerAndLeavesStockFixtureIntact()
     {
         var resources = Path.Combine(_game, "Client", "Saved", "Resources", "3.8.0");

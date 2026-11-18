@@ -25,6 +25,8 @@ public sealed class ViethoaContent
 public sealed class ViethoaStatus
 {
     public bool Installed { get; set; }
+    /// <summary>PAK hoặc loader Việt hóa cũ còn trong thư mục game; không đồng nghĩa đã cài R29.</summary>
+    public bool LegacyFilesPresent { get; set; }
     /// <summary>Phiên bản gói Việt hóa đã được ứng dụng cài.</summary>
     public string Version { get; set; } = "";
     /// <summary>"hanviet" | "en" | "".</summary>

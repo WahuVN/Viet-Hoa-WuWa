@@ -251,11 +251,24 @@ public sealed class ViethoaInstaller : IViethoaInstaller
         return null;
     }
 
+    private static bool HasLegacyInstallFiles(string gamePath)
+    {
+        var mods = ModsOf(gamePath);
+        var win64 = Win64Of(gamePath);
+        // Các file thuộc cơ chế cài cũ. Không coi version.dll đứng một mình là của WAHU.
+        // Chỉ phát hiện ở bước này, tuyệt đối không xóa hoặc ghi đè file/mod không rõ nguồn.
+        return File.Exists(Path.Combine(mods, PakName))
+            || File.Exists(Path.Combine(mods, Path.ChangeExtension(PakName, ".sig")))
+            || File.Exists(Path.Combine(win64, "WuWaVH.dll"))
+            || File.Exists(Path.Combine(win64, "verorg.dll"));
+    }
+
     public ViethoaStatus GetStatus(string gamePath)
     {
         var st = new ViethoaStatus { GamePath = gamePath };
         try
         {
+            st.LegacyFilesPresent = HasLegacyInstallFiles(gamePath);
             if (R29MountedPak.IsInstalled(gamePath))
             {
                 st.Installed = true;
@@ -1498,6 +1511,12 @@ public sealed class ViethoaInstaller : IViethoaInstaller
                 if (r29Lock is null)
                     return Result.Fail("Đang có thao tác cài/gỡ khác. Hãy thử lại.");
                 ct.ThrowIfCancellationRequested();
+
+                // R29 ghi vào Resources, còn loader/PAK cũ ở Win64/~WuWaMods vẫn có thể được game nạp.
+                // Dừng trước khi ghi: người dùng phải gỡ bộ cũ có xác minh thay vì cài song song.
+                if (HasLegacyInstallFiles(gamePath))
+                    return Result.Fail("Phát hiện PAK hoặc loader Việt hóa cũ. Hãy chọn Gỡ Việt hóa trước, "
+                        + "kiểm tra lại trạng thái rồi cài R29. Không tự xóa mod khác.");
 
                 var textWasInstalled = R29MountedPak.IsInstalled(gamePath);
                 var installed = await Task.Run(() =>

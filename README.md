@@ -35,6 +35,8 @@ Trang chủ tự vừa kích thước cửa sổ, **không cần cuộn để t�
 
 Khi có phiên bản mới, mở **Cài đặt → Kiểm tra cập nhật**. Bản R29 hiện chưa có gói tên Hán Việt được phát hành.
 
+**Nếu góc “BẢN DỊCH” còn hiện v3.0.16:** đó là dấu cài đặt cũ, không phải phiên bản PAK R29 của ZIP mới. Đóng game, sao lưu mod nếu có, dùng **Gỡ Việt hóa** để xử lý bộ cũ rồi cài R29. Nếu gỡ báo xung đột, dừng thao tác và gửi log để kiểm tra; **không xóa file game thủ công**. Dữ liệu game 3.8.12 khác gói R29 (3.8.11), chưa có xác nhận tương thích.
+
 ## Chức năng chính
 
 - **Việt hóa PC:** cài, kiểm tra, cập nhật hoặc gỡ bản dịch.

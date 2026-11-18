@@ -126,17 +126,35 @@ public partial class HomeViewModel : ObservableObject
         DetectedVersion = (v.DetectedVersion ?? "Chưa xác định")
             + (resourceVersion is null ? "" : " · dữ liệu " + resourceVersion);
         var r28KnownFailure = v.DetectedVersion == "3.8.0" && resourceVersion == "3.8.11";
+        var r29Present = R29MountedPak.ReleaseRequired(AppContext.BaseDirectory)
+            || R29MountedPak.PackagePresent(AppContext.BaseDirectory);
+        // Số 3.8.12 là dữ liệu tải từ game; gói R29 đang phân phối được xác thực cho 3.8.11.
+        // Không tự kết luận hỏng/tương thích từ chênh lệch số; chỉ cảnh báo để đối soát.
+        var r29ResourceDifferent = r29Present && PathOk
+            && !string.IsNullOrWhiteSpace(resourceVersion)
+            && !string.Equals(resourceVersion, R29MountedPak.ResourceVersion,
+                StringComparison.Ordinal);
 
         // A stale package record cannot confirm an installation in a missing game folder.
         var vst = PathOk ? _viet.GetStatus(GamePath) : null;
         if (vst is { Installed: true })
         {
             IsInstalled = true;
-            TranslationStatus = "Đã cài";
-            TranslationVersion = string.IsNullOrWhiteSpace(vst.Version)
+            TranslationStatus = r29Present && vst.LegacyFilesPresent
+                ? "R29 và bản cũ cùng tồn tại"
+                : r29Present && !string.Equals(vst.Version, R29MountedPak.Release,
+                    StringComparison.Ordinal)
+                    ? "Cần cài R29"
+                    : "Đã cài";
+            var statusVersion = string.IsNullOrWhiteSpace(vst.Version)
                 ? "-"
                 : vst.Version.StartsWith("R", StringComparison.Ordinal) ? vst.Version
                 : "v" + vst.Version.TrimStart('v', 'V');
+            TranslationVersion = r29Present && vst.LegacyFilesPresent
+                ? (string.Equals(vst.Version, R29MountedPak.Release, StringComparison.Ordinal)
+                    ? "R29 + bản cũ"
+                    : statusVersion + " (cũ)")
+                : statusVersion;
             CurrentVariant = vst.VariantLabel;
             CurrentFont = (PathOk ? _fonts.CurrentFontPak(GamePath) : null) ?? "Mặc định";
             CanOneClickInstall = false;
@@ -161,12 +179,12 @@ public partial class HomeViewModel : ObservableObject
         }
 
         var staged = StagedPakInspector.Inspect(AppContext.BaseDirectory);
-        var r29Present = R29MountedPak.ReleaseRequired(AppContext.BaseDirectory)
-            || R29MountedPak.PackagePresent(AppContext.BaseDirectory);
         HasStagedContent = r29Present || staged.Present;
         StagedContentText = r29Present
             ? (!PathOk ? "Chọn thư mục game để cài."
-                : "R29 sẵn sàng ghi đè trực tiếp.")
+                : r29ResourceDifferent
+                    ? $"Gói R29 dùng dữ liệu {R29MountedPak.ResourceVersion}; game hiện {resourceVersion}. Chưa xác minh tương thích."
+                    : "R29 sẵn sàng để cài.")
             : staged.ShaVerified
             ? (r28KnownFailure
                 ? "PAK R28 (dữ liệu 3.8.10) đã gây lỗi Corrupt pak index trên PC 3.8.0/dữ liệu 3.8.11. Chưa cài được."
@@ -174,10 +192,21 @@ public partial class HomeViewModel : ObservableObject
             : staged.Message;
         if (r29Present)
         {
-            // Always allow the user to press Install once the game client is found.
-            // The installer will self-repair optional folders and handle conflicts.
-            CanOneClickInstall = PathOk;
-            Message = IsInstalled ? "Đã cài Việt hóa R29 qua Mount." : StagedContentText;
+            if (PathOk && vst?.LegacyFilesPresent == true)
+            {
+                // Không gọi file/marker v3.0.16 là đã cài R29. Gỡ bộ cũ có kiểm tra trước.
+                CanOneClickInstall = false;
+                Message = "Còn PAK hoặc loader Việt hóa cũ. Hãy Gỡ Việt hóa, kiểm tra lại rồi cài R29.";
+            }
+            else
+            {
+                CanOneClickInstall = PathOk;
+                Message = IsInstalled && !r29ResourceDifferent
+                    ? "Đã cài Việt hóa R29."
+                    : IsInstalled
+                        ? $"Đã cài R29; dữ liệu game {resourceVersion} khác gói {R29MountedPak.ResourceVersion}, chưa xác minh."
+                        : StagedContentText;
+            }
         }
         else if (staged.Present)
         {
