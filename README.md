@@ -46,6 +46,6 @@ Khi có phiên bản mới, mở **Cài đặt → Kiểm tra cập nhật**. B�
 
 ## Hỗ trợ và mã nguồn
 
-[Hướng dẫn chi tiết](HUONG_DAN_TAI_DUNG_GOI.md) · [Lịch sử phiên bản](docs/releases/README.md) · [Báo lỗi](https://github.com/WahuVN/Viet-Hoa-WuWa/issues) · [Discord](https://discord.gg/Gy5YQ84Yc2)
+[Hướng dẫn chi tiết](HUONG_DAN_TAI_DUNG_GOI.md) · [Kiểm tra lỗi không vào game](docs/qa/kiem-tra-xung-dot-viet-hoa-pc.md) · [Lịch sử phiên bản](docs/releases/README.md) · [Báo lỗi](https://github.com/WahuVN/Viet-Hoa-WuWa/issues) · [Discord](https://discord.gg/Gy5YQ84Yc2)
 
 *Đây là công cụ do cộng đồng phát triển, không thuộc nhà phát hành Wuthering Waves. Hãy tải ứng dụng từ trang Releases của repository này.*
