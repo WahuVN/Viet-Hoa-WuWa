@@ -162,19 +162,26 @@ public sealed class ViethoaInstallerTests : IDisposable
     }
 
     [Fact]
-    public async Task InstallingWithUnknownThirdPartyMod_StopsBeforeWritingGame()
+    public async Task DirectInstall_AutomaticallyDisablesOwnConflictingMod_WithBackup()
     {
         var foreign = Path.Combine(_paks, "~mods", "ExternalShader_99_P.pak");
         Directory.CreateDirectory(Path.GetDirectoryName(foreign)!);
-        File.WriteAllText(foreign, "UNRELATED_GAME_MOD");
+        File.WriteAllText(foreign, "USER_MOD");
         var hash = TestSha256(foreign);
+        var stock = Path.Combine(_paks, "pakchunk0optional-WindowsNoEditor.sig");
+        var stockHash = TestSha256(stock);
 
         var result = await _viet.InstallAsync(_game, NameVariant.English, withFont: false);
 
-        Assert.False(result.Success);
-        Assert.Equal(hash, TestSha256(foreign));
-        Assert.False(File.Exists(Path.Combine(Mods, "WuWaVH_99_P.pak")));
-        Assert.Null(_viet.LastQuarantineDirectory);
+        Assert.True(result.Success, result.Error);
+        Assert.False(File.Exists(foreign));
+        Assert.True(File.Exists(Path.Combine(Mods, "WuWaVH_99_P.pak")));
+        Assert.Equal(stockHash, TestSha256(stock));
+        Assert.True(_viet.LastAutoDeletedConflictCount >= 1);
+        var backup = _viet.LastQuarantineDirectory!;
+        Assert.NotNull(backup);
+        Assert.Equal(hash, TestSha256(Path.Combine(backup, Path.GetRelativePath(_game, foreign))));
+        Assert.True(File.Exists(Path.Combine(backup, "quarantine-manifest.json")));
     }
 
     [Fact]
@@ -281,6 +288,28 @@ public sealed class ViethoaInstallerTests : IDisposable
         Assert.Equal("OTHER_TRANSLATION_PAK", File.ReadAllText(Path.Combine(_viet.LastQuarantineDirectory!,
             Path.GetRelativePath(_game, foreignPak))));
 
+    }
+
+    [Fact]
+    public async Task QuickUpdate_AutomaticallyClearsNewConflictingUserMod_AndKeepsBackup()
+    {
+        var installed = await _viet.InstallAsync(_game, NameVariant.English, withFont: true);
+        Assert.True(installed.Success, installed.Error);
+        var proxy = Path.Combine(_win64, "winhttp.dll");
+        File.WriteAllText(proxy, "MY_CONFLICTING_PROXY");
+        var hash = TestSha256(proxy);
+        var stock = Path.Combine(_paks, "pakchunk0optional-WindowsNoEditor.sig");
+        var stockHash = TestSha256(stock);
+
+        var updated = await _viet.UpdateTranslationPakAsync(_game, NameVariant.English);
+
+        Assert.True(updated.Success, updated.Error);
+        Assert.False(File.Exists(proxy));
+        Assert.True(_viet.LastAutoDeletedConflictCount >= 1);
+        Assert.NotNull(_viet.LastQuarantineDirectory);
+        Assert.Equal(hash, TestSha256(Path.Combine(
+            _viet.LastQuarantineDirectory!, Path.GetRelativePath(_game, proxy))));
+        Assert.Equal(stockHash, TestSha256(stock));
     }
 
     [Fact]

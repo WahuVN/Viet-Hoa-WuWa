@@ -99,12 +99,12 @@ public partial class InstallViewModel : ObservableObject
         IsHanVietAvailable = !r29Present;
         if (r29Present)
         {
-            // R29 does not silently touch mods: show the suspected files and
-            // explicitly ask before any optional quarantine.
-            if (HasConflicts)
-                ConflictText = "Phát hiện mod khác. Khi cài, ứng dụng sẽ hỏi trước "
-                    + "khi sao lưu và tạm vô hiệu hóa:\n• "
-                    + string.Join("\n• ", conflicts.Take(8));
+            // Conflict cleanup is automatic on Install/Update. Keep backups so
+            // a failed install never permanently destroys the user's mods.
+            if (HasConflicts || hasLegacyFiles)
+                ConflictText = "Khi cài, ứng dụng tự dọn " + conflicts.Count
+                    + " mục nghi xung đột và file Việt hóa cũ (nếu có). "
+                    + "Mod được sao lưu trước khi dọn.";
             VariantEnglish = true;
             ApplyFont = true; // Install contract: R29 always includes Lexend 660.
             FontAvailable = content.FontPak is not null;
@@ -112,11 +112,10 @@ public partial class InstallViewModel : ObservableObject
         }
         var r29Installed = valid && installStatus is { Installed: true, Version: R29MountedPak.Release };
         _r29Mode = r29Present;
-        _r29InstallReady = valid && !hasLegacyFiles;
+        _r29InstallReady = valid;
         _r29Installed = r29Installed;
         if (!r29Present) OptionHelpText = "";
         InstallButtonText = !valid ? "Chưa có game PC"
-            : hasLegacyFiles ? "Gỡ bản cũ trước"
             : r29Present ? (r29Installed ? "Cài lại Việt hóa" : "Cài Việt hóa")
             : staged.Present ? "PAK R28 chưa tương thích" : "Cài Việt hóa";
         ShowHanVietDownload = !HasHanViet && !staged.Present && !r29Present;
@@ -124,13 +123,10 @@ public partial class InstallViewModel : ObservableObject
 
         if (r29Present)
         {
-            ContentText = hasLegacyFiles
-                ? "Phát hiện PAK/loader Việt hóa cũ. Không cài R29 chồng lên bộ cũ."
-                : "R29 chỉ ghi tệp Việt hóa do WAHU quản lý, không thay đổi mod khác.";
-            CanInstall = valid && !hasLegacyFiles;
-            Summary = hasLegacyFiles
-                ? "Hãy sao lưu mod nếu có, chọn Gỡ Việt hóa rồi kiểm tra lại trước khi cài R29."
-                : r29Installed ? "Đã cài Việt hóa. Bấm Cài để ghi đè lại."
+            ContentText = "Ứng dụng tự dọn mod xung đột và bộ Việt hóa cũ trước khi cài R29. "
+                + "File được sao lưu để có thể khôi phục.";
+            CanInstall = valid;
+            Summary = r29Installed ? "Đã cài Việt hóa. Bấm Cài để ghi đè lại."
                 : !valid ? "Hãy chọn đúng thư mục game."
                 : "Sẵn sàng cài Việt hóa R29.";
         }
@@ -163,7 +159,7 @@ public partial class InstallViewModel : ObservableObject
         {
             var st = installStatus!;
             StatusText = hasLegacyFiles
-                ? "⚠ Còn PAK hoặc loader Việt hóa cũ; cần gỡ trước khi cài R29."
+                ? "Có bản Việt hóa cũ; sẽ tự dọn khi cài R29."
                 : st.Installed
                     ? $"● Đã cài Việt hóa ({st.VariantLabel}){(st.FontPak is not null ? " · font: " + st.FontPak : "")}"
                     : "○ Chưa cài Việt hóa.";
@@ -530,46 +526,8 @@ public partial class InstallViewModel : ObservableObject
             ApplyFont = true;
         }
         var variant = VariantEnglish ? NameVariant.English : NameVariant.HanViet;
-        string? quarantinedForInstall = null;
-        if (r29)
-        {
-            if (_viet.GetStatus(game).LegacyFilesPresent)
-            {
-                Summary = "Còn PAK hoặc loader Việt hóa cũ. Hãy gỡ bộ cũ trước khi cài R29.";
-                return;
-            }
-            var detected = _viet.FindConflicts(game);
-            var scanError = detected.FirstOrDefault(x =>
-                x.StartsWith("Không thể kiểm tra mod:", StringComparison.OrdinalIgnoreCase));
-            if (scanError is not null) { Summary = "Không thể kiểm tra: " + scanError; return; }
-            if (detected.Count > 0)
-            {
-                var preview = string.Join("\n• ", detected.Take(14));
-                var confirm = System.Windows.MessageBox.Show(
-                    "Phát hiện " + detected.Count + " tệp/bộ mod có thể xung đột:\n• "
-                    + preview + (detected.Count > 14 ? "\n... và các mục khác." : "")
-                    + "\n\nCác mod này không chắc đều gây lỗi. Nếu tiếp tục, chương trình sẽ "
-                    + "SAO LƯU và TẠM VÔ HIỆU HÓA trước khi cài. Không xóa vĩnh viễn.\n\n"
-                    + "Bạn đồng ý cách ly những mod được liệt kê?",
-                    "Kiểm tra mod trước khi cài R29", System.Windows.MessageBoxButton.YesNo,
-                    System.Windows.MessageBoxImage.Warning,
-                    System.Windows.MessageBoxResult.No);
-                if (confirm != System.Windows.MessageBoxResult.Yes)
-                {
-                    Summary = "Đã hủy cài. Không thay đổi mod hoặc tệp game.";
-                    return;
-                }
-                var quarantine = _viet.QuarantineConflicts(game);
-                if (!quarantine.Success || quarantine.Value is null)
-                {
-                    Summary = "Không thể sao lưu mod xung đột: " + quarantine.Error;
-                    return;
-                }
-                quarantinedForInstall = quarantine.Value.QuarantineDirectory;
-                LastQuarantinePath = quarantinedForInstall;
-                HasQuarantine = true;
-            }
-        }
+        // All automatic cleanup is performed by the installer AFTER preflight,
+        // under the per-game operation lock. No separate confirmation dialog.
         _cts = new CancellationTokenSource();
         Busy = true; Progress = 0; ProgressText = "Bắt đầu...";
         Summary = r29 ? "Đang ghi đè R29 vào game..." : "Đang cài Việt hóa...";
@@ -597,14 +555,14 @@ public partial class InstallViewModel : ObservableObject
                 Summary = optionsAdjusted
                     ? "✅ Đã cài R29 tên Anh + Lexend 660 (Hán Việt chưa có cho R29)."
                     : "✅ Cài xong R29 + Lexend 660! Vào game đặt Text Language = English. Có thể dùng DirectX 11 hoặc 12.";
-                if (quarantinedForInstall is not null)
-                    Summary += " Đã cách ly mod có sao lưu. Dùng Khôi phục mod nếu cần.";
+                if (_viet.LastAutoDeletedConflictCount > 0)
+                    Summary += $" Đã tự dọn {_viet.LastAutoDeletedConflictCount} file mod xung đột (có sao lưu).";
             }
             else
             {
                 var error = r.Error?.StartsWith("❌") == true ? r.Error! : "❌ " + r.Error;
-                if (quarantinedForInstall is not null)
-                    error += "\nMod đã cách ly vẫn được sao lưu. Chọn Khôi phục mod để trả lại.";
+                if (_viet.LastAutoDeletedConflictCount > 0)
+                    error += "\nMod xung đột đã được chuyển khỏi game và lưu bản sao; có thể dùng Khôi phục mod.";
                 Summary = error;
                 System.Windows.MessageBox.Show(
                     error,

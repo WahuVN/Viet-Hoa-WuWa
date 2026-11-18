@@ -255,6 +255,29 @@ public static class R29MountedPak
         return false;
     }
 
+    // Read-only preflight before auto-cleanup: a missing stock SIG or invalid
+    // game path must never cause the installer to remove existing mods first.
+    public static Result PreflightGame(string appDirectory, string gameRoot)
+    {
+        try
+        {
+            if (!PackageVerified(appDirectory))
+                return Result.Fail("R29 thiếu gói hoặc SHA-256 sai; chưa dọn mod.");
+            var sig = StockSig(gameRoot);
+            if (sig is null || !File.Exists(sig) || HasUnsafeAncestor(sig, gameRoot))
+                return Result.Fail("Không xác minh được SIG gốc của game; chưa dọn mod.");
+            if (new[] { DestinationDir(gameRoot), MountDir(gameRoot) }
+                .Any(p => HasUnsafeAncestor(p, gameRoot)))
+                return Result.Fail("Đường dẫn tài nguyên chứa liên kết ngoài; chưa dọn mod.");
+            return Result.Ok();
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException
+            or ArgumentException or InvalidDataException)
+        {
+            return Result.Fail("Không kiểm tra được tài nguyên game: " + ex.Message, ex);
+        }
+    }
+
     public static Result Install(string appDirectory, string gameRoot)
     {
         var staged = new List<string>();

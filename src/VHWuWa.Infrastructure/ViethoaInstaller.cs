@@ -554,6 +554,56 @@ public sealed class ViethoaInstaller : IViethoaInstaller
             || name.EndsWith(".old", StringComparison.OrdinalIgnoreCase);
     }
 
+    // Extra resource mounts can load another localization PAK even if the legacy
+    // Win64 and ~WuWaMods locations are empty. Never touch MountLang_* or WAHU's
+    // valid R29/font mounts. References must stay inside Resources/3.8.0.
+    private IReadOnlyList<string> ResourceMountConflictFiles(string gamePath)
+    {
+        var resources = Path.Combine(gamePath, "Client", "Saved", "Resources", "3.8.0");
+        var mounts = Path.Combine(resources, "Mount");
+        if (!Directory.Exists(mounts)) return Array.Empty<string>();
+        if (IsLinkedDirectory(mounts))
+            throw new IOException("Thư mục Mount có liên kết ngoài, không tự dọn mod.");
+        var targets = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var sidecar in Directory.EnumerateFiles(mounts, "*.txt", SearchOption.TopDirectoryOnly))
+        {
+            var name = Path.GetFileName(sidecar);
+            if (name.StartsWith("MountLang_", StringComparison.OrdinalIgnoreCase)
+                || name.Equals("wahuviethoa.txt", StringComparison.OrdinalIgnoreCase)
+                || name.Equals("wahufont.txt", StringComparison.OrdinalIgnoreCase)
+                || IsOfficialGameFile(gamePath, sidecar)
+                || IsProtectedBackupFile(sidecar))
+                continue;
+
+            targets.Add(Path.GetFullPath(sidecar));
+            // A third-party sidecar points to its own PAK and SIG. Quarantine the
+            // referenced pair too, but NEVER touch official Lang_* or pakchunk.
+            foreach (var line in File.ReadAllLines(sidecar))
+            {
+                var fields = line.Split(',');
+                if (fields.Length < 4) continue;
+                var relative = fields[0].Trim().Replace('/', Path.DirectorySeparatorChar);
+                if (!PathValidation.IsSafeRelativePath(relative)
+                    || relative.StartsWith("Lang_", StringComparison.OrdinalIgnoreCase)
+                    || relative.Contains("pakchunk", StringComparison.OrdinalIgnoreCase)
+                    || relative.StartsWith("wahuviethoa" + Path.DirectorySeparatorChar,
+                        StringComparison.OrdinalIgnoreCase)
+                    || relative.StartsWith("wahufont" + Path.DirectorySeparatorChar,
+                        StringComparison.OrdinalIgnoreCase))
+                    continue;
+                foreach (var ext in new[] { ".pak", ".sig" })
+                {
+                    var candidate = PathValidation.ResolveInsideRoot(resources, relative + ext);
+                    if (File.Exists(candidate)
+                        && !IsProtectedBackupFile(candidate)
+                        && !IsOfficialGameFile(gamePath, candidate))
+                        targets.Add(candidate);
+                }
+            }
+        }
+        return targets.ToList();
+    }
+
     /// <summary>Dò mod phổ biến nhưng tránh quét nhầm pakchunk chính thức ở gốc Paks.</summary>
     public IReadOnlyList<string> FindConflicts(string gamePath)
     {
@@ -629,6 +679,9 @@ public sealed class ViethoaInstaller : IViethoaInstaller
                     }
                 }
             }
+
+            foreach (var path in ResourceMountConflictFiles(gamePath))
+                conflicts.Add("Gói dữ liệu mod xung đột: " + Path.GetRelativePath(gamePath, path));
 
             var win64 = Win64Of(gamePath);
             foreach (var name in ProxyLoaders)
@@ -726,6 +779,99 @@ public sealed class ViethoaInstaller : IViethoaInstaller
 
     public Result<ModQuarantineReport> QuarantineOldTranslationConflicts(string gamePath) =>
         QuarantineConflictsCore(gamePath, acquireLock: true, oldTranslationOnly: true);
+
+    // All pre-R29 files in the old WAHU installation locations must leave the
+    // active game before R29 mounts. Includes the user's own old translation/font.
+    // The same verified backup manifest is used for external conflicting mods.
+    private static IReadOnlyList<string> OldWahuFilesToDeactivate(string gamePath)
+    {
+        var mods = ModsOf(gamePath);
+        var win64 = Win64Of(gamePath);
+        var names = new[]
+        {
+            Path.Combine(mods, PakName),
+            Path.Combine(mods, Path.ChangeExtension(PakName, ".sig")),
+            Path.Combine(mods, "WahuFont_100_P.pak"),
+            Path.Combine(mods, "WahuFont_100_P.sig"),
+            Path.Combine(mods, MarkerName),
+            Path.Combine(win64, "version.dll"),
+            Path.Combine(win64, "verorg.dll"),
+            Path.Combine(win64, "WuWaVH.dll")
+        };
+        return HasLegacyInstallFiles(gamePath)
+            ? names.Where(File.Exists)
+                .Where(path => !IsProtectedBackupFile(path)
+                    && !IsOfficialGameFile(gamePath, path))
+                .ToList()
+            : Array.Empty<string>();
+    }
+
+    // Repair leftover incomplete R29 files as conflicts. They may have been
+    // modified by the user or another mod; retain a byte-for-byte backup.
+    private IReadOnlyList<string> IncompleteR29Files(string gamePath)
+    {
+        var root = Path.Combine(gamePath, "Client", "Saved", "Resources", "3.8.0");
+        var textRoot = Path.Combine(root, "wahuviethoa");
+        var fontRoot = Path.Combine(root, "wahufont");
+        var mounts = Path.Combine(root, "Mount");
+        var files = new List<string>();
+        if (!R29MountedPak.IsInstalled(gamePath))
+            files.AddRange(new[]
+            {
+                Path.Combine(textRoot, "WuWaVH_99_P.pak"),
+                Path.Combine(textRoot, "WuWaVH_99_P.sig"),
+                Path.Combine(mounts, "wahuviethoa.txt")
+            });
+        if (R29FontMountedPak.CurrentFontPak(gamePath) is null)
+            files.AddRange(new[]
+            {
+                Path.Combine(fontRoot, "WahuFont_100_P.pak"),
+                Path.Combine(fontRoot, "WahuFont_100_P.sig"),
+                Path.Combine(fontRoot, "font-receipt.json"),
+                Path.Combine(mounts, "wahufont.txt")
+            });
+        return files.Where(File.Exists)
+            .Where(path => !IsOfficialGameFile(gamePath, path)
+                && !IsProtectedBackupFile(path))
+            .ToList();
+    }
+
+    // Call only after package/permissions are checked and the per-game lock is held.
+    // Delete from the *active game* automatically; backup and SHA-verify each mod
+    // before disabling it so unrelated game files cannot be removed silently.
+    private Result AutoDeactivateConflictingMods(string gamePath, bool includeOldWahu)
+    {
+        var found = FindConflicts(gamePath);
+        var error = found.FirstOrDefault(x =>
+            x.StartsWith("Không thể kiểm tra mod:", StringComparison.OrdinalIgnoreCase));
+        if (error is not null)
+            return Result.Fail(error);
+
+        var oldFiles = includeOldWahu
+            ? OldWahuFilesToDeactivate(gamePath)
+            : Array.Empty<string>();
+        var stale = includeOldWahu ? IncompleteR29Files(gamePath) : Array.Empty<string>();
+        var extraFiles = oldFiles.Concat(stale).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+        if (found.Count == 0 && extraFiles.Count == 0)
+            return Result.Ok();
+
+        var removal = QuarantineConflictsCore(gamePath,
+            acquireLock: false, extraFiles: extraFiles);
+        if (!removal.Success || removal.Value is null)
+            return Result.Fail("Không thể tự dọn mod xung đột: " + removal.Error);
+
+        LastAutoDeletedConflictCount += removal.Value.MovedFiles.Count;
+        var remaining = FindConflicts(gamePath);
+        var remainingOld = includeOldWahu && HasLegacyInstallFiles(gamePath);
+        if (remaining.Count > 0 || remainingOld)
+            return Result.Fail("Đã lưu bản sao mod, nhưng vẫn còn file chưa thể dọn. "
+                + "Dừng cài để tránh xung đột. Vùng sao lưu: "
+                + removal.Value.QuarantineDirectory);
+        _log.Info("Conflict", $"Tự cách ly {removal.Value.MovedFiles.Count} mod trước khi cài/cập nhật.");
+        return Result.Ok();
+    }
+
+
 
     private Result<ModQuarantineReport> QuarantineConflictsCore(string gamePath, bool acquireLock,
         bool oldTranslationOnly = false, IReadOnlyList<string>? extraFiles = null,
@@ -1140,6 +1286,9 @@ public sealed class ViethoaInstaller : IViethoaInstaller
                 && !MatchesLegacyManagedFile(marker, "win64", installed))
                 AddFile(installed);
         }
+        foreach (var path in ResourceMountConflictFiles(gamePath))
+            AddFile(path);
+
         foreach (var name in KnownForeignWin64Files)
             AddFile(Path.Combine(win64, name));
         // Backup files are never candidates for automatic cleanup.
@@ -1458,9 +1607,11 @@ public sealed class ViethoaInstaller : IViethoaInstaller
                 x.StartsWith("Không thể kiểm tra mod:", StringComparison.OrdinalIgnoreCase));
             if (scanError is not null)
                 return Result.Fail(scanError);
-            if (conflicts.Count > 0)
-                return Result.Fail("Phát hiện mod khác có thể xung đột. Không tự thay đổi file "
-                    + "khi cập nhật. Hãy xem danh sách và chọn Cách ly mod trước nếu muốn tiếp tục.");
+            // User opted into automatic cleanup for ALL conflicting mods,
+            // including their own, on each install/update. Never alter stock game files.
+            var autoCleanup = AutoDeactivateConflictingMods(gamePath, includeOldWahu: false);
+            if (!autoCleanup.Success)
+                return autoCleanup;
 
             // A known foreign loader must not survive into the new installation.
             if (HasForeignWinHttpPakLoader(gamePath))
@@ -1577,24 +1728,16 @@ public sealed class ViethoaInstaller : IViethoaInstaller
                 if (r29Lock is null)
                     return Result.Fail("Đang có thao tác cài/gỡ khác. Hãy thử lại.");
                 ct.ThrowIfCancellationRequested();
+                var gamePreflight = R29MountedPak.PreflightGame(AppContext.BaseDirectory, gamePath);
+                if (!gamePreflight.Success)
+                    return gamePreflight;
 
-                // R29 ghi vào Resources, còn loader/PAK cũ ở Win64/~WuWaMods vẫn có thể được game nạp.
-                // Dừng trước khi ghi: người dùng phải gỡ bộ cũ có xác minh thay vì cài song song.
-                if (HasLegacyInstallFiles(gamePath))
-                    return Result.Fail("Phát hiện PAK hoặc loader Việt hóa cũ. Hãy chọn Gỡ Việt hóa trước, "
-                        + "kiểm tra lại trạng thái rồi cài R29. Không tự xóa mod khác.");
-
-                // R29 and old proxy/PAK loaders can be loaded together. Never silently
-                // remove another person's mods, or install through an unresolved conflict.
-                var suspectedMods = FindConflicts(gamePath);
-                var scanFailure = suspectedMods.FirstOrDefault(s =>
-                    s.StartsWith("Không thể kiểm tra mod:", StringComparison.OrdinalIgnoreCase));
-                if (scanFailure is not null)
-                    return Result.Fail(scanFailure);
-                if (suspectedMods.Count > 0)
-                    return Result.Fail("Phát hiện " + suspectedMods.Count
-                        + " mod/file có thể xung đột. Chưa thay đổi game. "
-                        + "Hãy xem danh sách và chọn Cách ly mod có sao lưu trước khi cài.");
+                // First remove ALL detected conflicting mods, including an older
+                // WAHU install. Files leave the game automatically but remain in
+                // SHA-verified backup outside the game for recovery.
+                var cleanup = AutoDeactivateConflictingMods(gamePath, includeOldWahu: true);
+                if (!cleanup.Success)
+                    return cleanup;
 
                 var textWasInstalled = R29MountedPak.IsInstalled(gamePath);
                 var installed = await Task.Run(() =>
@@ -1671,9 +1814,9 @@ public sealed class ViethoaInstaller : IViethoaInstaller
                 x.StartsWith("Không thể kiểm tra mod:", StringComparison.OrdinalIgnoreCase));
             if (scanError is not null)
                 return Result.Fail(scanError);
-            if (conflicts.Count > 0)
-                return Result.Fail("Phát hiện mod khác có thể xung đột. Chưa ghi file Việt hóa, "
-                    + "chưa thay đổi mod nào. Hãy kiểm tra và chọn Cách ly mod nếu đồng ý.");
+            var autoCleanup = AutoDeactivateConflictingMods(gamePath, includeOldWahu: false);
+            if (!autoCleanup.Success)
+                return autoCleanup;
 
             // A known foreign loader must not survive into the new installation.
             if (HasForeignWinHttpPakLoader(gamePath))

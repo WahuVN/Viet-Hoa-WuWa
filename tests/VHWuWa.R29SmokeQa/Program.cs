@@ -3,8 +3,9 @@ using VHWuWa.Core.Abstractions;
 using VHWuWa.Core.Models;
 using VHWuWa.Infrastructure;
 
-if (args.Length != 1)
-    throw new ArgumentException("Usage: VHWuWa.R29SmokeQa <real-R29-pak>");
+if (args.Length is < 1 or > 2 || (args.Length == 2 && args[1] != "--auto-conflicts-only"))
+    throw new ArgumentException("Usage: VHWuWa.R29SmokeQa <real-R29-pak> [--auto-conflicts-only]");
+var onlyAutoConflicts = args.Length == 2;
 var realPak = Path.GetFullPath(args[0]);
 const string expected = "38527e34ffeb8ef7538206d3d4dbd5cbac54a1e6cd9d0957501035ff41a8e598";
 using (var source = File.OpenRead(realPak))
@@ -268,35 +269,42 @@ async Task ForceInstallScenario()
         File.SetAttributes(foreignPak, FileAttributes.ReadOnly);
 
         var installer = new ViethoaInstaller(new NullLog(), quarantineRoot: Path.Combine(work, "quarantine-force"), isGameRunning: () => false);
-        // Active, unverified sidecar is not proof of WAHU ownership; fail closed.
-        var blocked = await installer.InstallAsync(game, NameVariant.English, withFont: false);
-        if (blocked.Success || R29MountedPak.IsInstalled(game))
-            throw new Exception("Unknown language Mount was allowed");
-        if (!File.Exists(foreignLoader) || !File.Exists(foreignSidecar)
-            || !File.Exists(foreignPak) || !File.Exists(foreignSig))
-            throw new Exception("Unknown language Mount preflight mutated game files");
-        Console.WriteLine("PASS R29_UNKNOWN_MOUNT_BLOCKED_AND_PRESERVED=true");
+        // Old WAHU R28/3.7 files, another translation loader, and a resource
+        // Mount sidecar all coexist. Auto install must remove all conflicts
+        // from the live game and retain verified backups for every file.
+        var oldMods = Path.Combine(game, "Client", "Content", "Paks", "~WuWaMods");
+        Directory.CreateDirectory(oldMods);
+        var legacyPak = Path.Combine(oldMods, "WuWaVH_99_P.pak");
+        var legacySig = Path.Combine(oldMods, "WuWaVH_99_P.sig");
+        var legacyFont = Path.Combine(oldMods, "WahuFont_100_P.pak");
+        var legacyFontSig = Path.Combine(oldMods, "WahuFont_100_P.sig");
+        var oldWin64Loader = Path.Combine(game, "Client", "Binaries", "Win64", "version.dll");
+        var original = new Dictionary<string, string>();
+        foreach (var file in new[] { legacyPak, legacySig, legacyFont, legacyFontSig, oldWin64Loader,
+            foreignLoader, foreignPak, foreignSig, foreignSidecar })
+        {
+            if (!File.Exists(file)) File.WriteAllText(file, "LEGACY_USER_MOD");
+            original[file] = Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(file)));
+        }
 
-        // Explicit opt-in isolation of a known conflicting loader; this only
-        // runs inside the disposable QA fixture, not against a real game.
-        var approved = installer.QuarantineConflicts(game);
-        if (!approved.Success || approved.Value is null)
-            throw new Exception("Approved quarantine failed: " + approved.Error);
-        File.Delete(foreignSidecar);
         var result = await installer.InstallAsync(game, NameVariant.English, withFont: false);
-        if (!result.Success) throw new Exception("Force install failed: " + result.Error);
-        if (!R29MountedPak.IsInstalled(game)) throw new Exception("Force install did not activate R29");
-        if (File.Exists(foreignLoader))
-            throw new Exception("Known conflicting Win64 loader was not quarantined");
-        if (!File.Exists(foreignPak) || !File.Exists(foreignSig))
-            throw new Exception("Unreferenced foreign pak/sig were deleted without provenance");
-        if (installer.LastAutoDeletedConflictCount != 0)
-            throw new Exception("Installer silently modified unrelated mods");
-        if (string.IsNullOrWhiteSpace(installer.LastQuarantineDirectory)
-            || !File.Exists(Path.Combine(installer.LastQuarantineDirectory, "quarantine-manifest.json"))
-            || Directory.GetFiles(installer.LastQuarantineDirectory, "*", SearchOption.AllDirectories).Length < 2)
-            throw new Exception("R29 quarantine did not preserve known loader backups");
-        Console.WriteLine("PASS R29_QUARANTINE_HAS_SHA_MANIFEST=true");
+        if (!result.Success) throw new Exception("Automatic conflict cleanup failed: " + result.Error);
+        if (!R29MountedPak.IsInstalled(game)) throw new Exception("Automatic cleanup failed to activate R29");
+        if (installer.LastAutoDeletedConflictCount < original.Count)
+            throw new Exception("Not all conflicting user and legacy mods were cleared");
+        var backup = installer.LastQuarantineDirectory;
+        if (backup is null || !File.Exists(Path.Combine(backup, "quarantine-manifest.json")))
+            throw new Exception("Missing automatic SHA-verified conflict backup");
+        foreach (var (file, hash) in original)
+        {
+            if (File.Exists(file)) throw new Exception("Conflicting mod still active: " + file);
+            var saved = Path.Combine(backup, Path.GetRelativePath(game, file));
+            if (!File.Exists(saved)
+                || Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(saved))) != hash)
+                throw new Exception("Missing or altered backup of conflicting mod: " + file);
+        }
+        Console.WriteLine("PASS R29_AUTO_CLEARS_ALL_CONFLICTING_USER_AND_OLD_MODS_WITH_BACKUPS=" + original.Count);
+
         if (!SHA256.HashData(File.ReadAllBytes(exe)).SequenceEqual(exeBefore))
             throw new Exception("Stock EXE changed during force install");
         if (!SHA256.HashData(File.ReadAllBytes(officialMount)).SequenceEqual(mountBefore))
@@ -323,6 +331,13 @@ async Task ForceInstallScenario()
 
 try
 {
+    if (onlyAutoConflicts)
+    {
+        await ForceInstallScenario();
+        Console.WriteLine("R29_AUTOMATIC_ALL_CONFLICTING_MODS_SMOKE=PASS");
+    }
+    else
+    {
     Scenario("base", officialMount: false, englishSig: true, staleWahu: false);
     Scenario("versioned", officialMount: true, englishSig: true, staleWahu: false);
     Scenario("steam-ja", officialMount: true, englishSig: false, staleWahu: false, japaneseSig: true);
@@ -336,6 +351,7 @@ try
     await InvalidPackagePreflightScenario();
     await ForceInstallScenario();
     Console.WriteLine("R29_REAL_PAK_FILESYSTEM_SMOKE=PASS");
+    }
 }
 finally
 {
