@@ -449,88 +449,116 @@
                             </Grid>
                         </StackPanel>
 
-                        <!-- Dedicated two-button row: same action labels and handlers, never swap modes. -->
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="146"/>
-                                <ColumnDefinition Width="11"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <Button Grid.Column="0" Click="ChooseGameFolderFromInstall"
-                                    ToolTip="Bước 1: Chọn thư mục game PC chứa Client."
-                                    AutomationProperties.Name="Chọn game"
-                                    Style="{StaticResource LauncherGameButton}">
-                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                    <Path Data="M 6.5,7 C 4.6,7 3.3,8.4 3.1,10.2 L 2.7,15.6 C 2.5,18 4.4,19 6,17.7 L 9.2,15 H 14.8 L 18,17.7 C 19.6,19 21.5,18 21.3,15.6 L 20.9,10.2 C 20.7,8.4 19.4,7 17.5,7 Z M 7,10 L 7,14 M 5,12 L 9,12 M 16,11 L 16,11.2 M 18,13 L 18,13.2"
-                                          Width="21" Height="21" Stretch="Uniform" Stroke="#F3EFFF" StrokeThickness="1.8"
-                                          StrokeLineJoin="Round" StrokeStartLineCap="Round" StrokeEndLineCap="Round"
-                                          Fill="Transparent" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                    <TextBlock Text="Chọn game" FontFamily="{StaticResource WahuHeadingFontFamily}"
-                                               Foreground="#FFFFFF" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                                </StackPanel>
-                            </Button>
-                            <Button Grid.Column="2" Click="InstallFromHome"
-                                    ToolTip="Bước 2: Cài Việt hóa. Nếu chưa có game, ứng dụng sẽ mở hộp thoại chọn thư mục trước."
-                                    AutomationProperties.Name="Cài Việt hóa"
-                                    Style="{StaticResource LauncherInstallButton}">
-                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                    <Path Data="M 12,3 L 12,15 M 7,10 L 12,15 L 17,10 M 4,17 L 4,20 L 20,20 L 20,17"
-                                          Width="23" Height="23" Stretch="Uniform" Stroke="#0B2A48" StrokeThickness="2.5"
-                                          StrokeLineJoin="Round" StrokeStartLineCap="Round" StrokeEndLineCap="Round"
-                                          Fill="Transparent" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                                    <TextBlock Text="Cài Việt hóa" FontFamily="{StaticResource WahuHeadingFontFamily}"
-                                               Foreground="#0C2743" FontSize="17" FontWeight="Bold" VerticalAlignment="Center"/>
-                                </StackPanel>
-                            </Button>
-                        </Grid>
-
-                        <!-- Third step matches the 60px height of the first two choices. -->
-                        <Grid Margin="0,10,0,0">
-                            <Button Style="{StaticResource LauncherPlayButton}" HorizontalAlignment="Stretch"
-                                    Command="{Binding DataContext.LaunchGameCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
-                                    ToolTip="Mở Wuthering Waves qua launcher chính thức hoặc Steam; bấm Start để chơi."
-                                    AutomationProperties.Name="Mở game Wuthering Waves">
+                        <!-- Clear three-action workflow with grounded state; no game hooks changed. -->
+                        <Border Background="#B31B2946" BorderBrush="#77C6D5F0" BorderThickness="1"
+                                CornerRadius="20" Padding="11,10,11,11" SnapsToDevicePixels="True">
+                            <StackPanel>
+                                <Grid Margin="2,0,2,9">
+                                    <TextBlock Text="CHỌN  ·  CÀI  ·  CHƠI"
+                                               Foreground="#E7EAFB" FontWeight="SemiBold" FontSize="11"
+                                               FontFamily="{StaticResource WahuAppFontFamily}" VerticalAlignment="Center"/>
+                                    <TextBlock HorizontalAlignment="Right" Foreground="#D4F4FC"
+                                               FontWeight="Medium" FontSize="11" VerticalAlignment="Center"
+                                               FontFamily="{StaticResource WahuAppFontFamily}">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Text" Value="Chưa chọn game"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding DataContext.PathOk, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}" Value="True">
+                                                        <Setter Property="Text" Value="Đã nhận game"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding DataContext.IsInstalled, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}" Value="True">
+                                                        <Setter Property="Text" Value="Sẵn sàng chơi"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </Grid>
+                                <!-- Dedicated two-button row: same action labels and handlers, never swap modes. -->
                                 <Grid>
                                     <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="146"/>
+                                        <ColumnDefinition Width="11"/>
                                         <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="Auto"/>
                                     </Grid.ColumnDefinitions>
-                                    <Border Width="36" Height="36" CornerRadius="12" Background="#634C72A8"
-                                            BorderBrush="#83CDD6FF" BorderThickness="1" VerticalAlignment="Center">
-                                        <Path Data="M 8,5.8 L 19.5,12 L 8,18.2 Z"
-                                              Width="19" Height="19" Stretch="Uniform" Fill="#FFFFFF"
-                                              VerticalAlignment="Center" HorizontalAlignment="Center" Margin="2,0,0,0"/>
-                                    </Border>
-                                    <StackPanel Grid.Column="1" Margin="13,0,5,0" VerticalAlignment="Center">
-                                        <TextBlock Text="{Binding DataContext.LaunchButtonText, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
-                                                   Foreground="#FFFFFF" FontFamily="{StaticResource WahuHeadingFontFamily}"
-                                                   FontSize="17" FontWeight="Bold"/>
-                                        <TextBlock Foreground="#DBE7FA" FontFamily="{StaticResource WahuAppFontFamily}"
-                                                   FontSize="11.5" Margin="0,1,0,0">
-                                            <TextBlock.Style>
-                                                <Style TargetType="TextBlock">
-                                                    <Setter Property="Text" Value="Mở launcher · nhấn Start"/>
-                                                    <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding DataContext.PathOk, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}" Value="False">
-                                                            <Setter Property="Text" Value="Chọn thư mục game trước"/>
-                                                        </DataTrigger>
-                                                    </Style.Triggers>
-                                                </Style>
-                                            </TextBlock.Style>
-                                        </TextBlock>
-                                    </StackPanel>
-                                    <Border Grid.Column="2" Width="30" Height="30" CornerRadius="15"
-                                            Background="#3DA8C2E4" VerticalAlignment="Center">
-                                        <Path Data="M 6,12 L 18,12 M 13,7 L 18,12 L 13,17"
-                                              Width="18" Height="18" Stretch="Uniform" Stroke="#F2F7FF"
-                                              StrokeThickness="2" StrokeStartLineCap="Round"
-                                              StrokeEndLineCap="Round" StrokeLineJoin="Round"
-                                              VerticalAlignment="Center" HorizontalAlignment="Center"/>
-                                    </Border>
+                                    <Button Grid.Column="0" Click="ChooseGameFolderFromInstall"
+                                            ToolTip="Bước 1: Chọn thư mục game PC chứa Client."
+                                            AutomationProperties.Name="Chọn game"
+                                            Style="{StaticResource LauncherGameButton}">
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                            <Path Data="M 6.5,7 C 4.6,7 3.3,8.4 3.1,10.2 L 2.7,15.6 C 2.5,18 4.4,19 6,17.7 L 9.2,15 H 14.8 L 18,17.7 C 19.6,19 21.5,18 21.3,15.6 L 20.9,10.2 C 20.7,8.4 19.4,7 17.5,7 Z M 7,10 L 7,14 M 5,12 L 9,12 M 16,11 L 16,11.2 M 18,13 L 18,13.2"
+                                                  Width="21" Height="21" Stretch="Uniform" Stroke="#F3EFFF" StrokeThickness="1.8"
+                                                  StrokeLineJoin="Round" StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                                                  Fill="Transparent" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                            <TextBlock Text="Chọn game" FontFamily="{StaticResource WahuHeadingFontFamily}"
+                                                       Foreground="#FFFFFF" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Button>
+                                    <Button Grid.Column="2" Click="InstallFromHome"
+                                            ToolTip="Bước 2: Cài Việt hóa. Nếu chưa có game, ứng dụng sẽ mở hộp thoại chọn thư mục trước."
+                                            AutomationProperties.Name="Cài Việt hóa"
+                                            Style="{StaticResource LauncherInstallButton}">
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                            <Path Data="M 12,3 L 12,15 M 7,10 L 12,15 L 17,10 M 4,17 L 4,20 L 20,20 L 20,17"
+                                                  Width="23" Height="23" Stretch="Uniform" Stroke="#0B2A48" StrokeThickness="2.5"
+                                                  StrokeLineJoin="Round" StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                                                  Fill="Transparent" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                            <TextBlock Text="Cài Việt hóa" FontFamily="{StaticResource WahuHeadingFontFamily}"
+                                                       Foreground="#0C2743" FontSize="17" FontWeight="Bold" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Button>
                                 </Grid>
-                            </Button>
-                        </Grid>
+
+                                <!-- Third step matches the 60px height of the first two choices. -->
+                                <Grid Margin="0,9,0,0">
+                                    <Button Style="{StaticResource LauncherPlayButton}" HorizontalAlignment="Stretch"
+                                            Command="{Binding DataContext.LaunchGameCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
+                                            ToolTip="Mở Wuthering Waves qua launcher chính thức hoặc Steam; bấm Start để chơi."
+                                            AutomationProperties.Name="Mở game Wuthering Waves">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <Border Width="36" Height="36" CornerRadius="12" Background="#634C72A8"
+                                                    BorderBrush="#83CDD6FF" BorderThickness="1" VerticalAlignment="Center">
+                                                <Path Data="M 8,5.8 L 19.5,12 L 8,18.2 Z"
+                                                      Width="19" Height="19" Stretch="Uniform" Fill="#FFFFFF"
+                                                      VerticalAlignment="Center" HorizontalAlignment="Center" Margin="2,0,0,0"/>
+                                            </Border>
+                                            <StackPanel Grid.Column="1" Margin="13,0,5,0" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding DataContext.LaunchButtonText, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
+                                                           Foreground="#FFFFFF" FontFamily="{StaticResource WahuHeadingFontFamily}"
+                                                           FontSize="17" FontWeight="Bold"/>
+                                                <TextBlock Foreground="#DBE7FA" FontFamily="{StaticResource WahuAppFontFamily}"
+                                                           FontSize="11.5" Margin="0,1,0,0">
+                                                    <TextBlock.Style>
+                                                        <Style TargetType="TextBlock">
+                                                            <Setter Property="Text" Value="Qua launcher · nhấn Start"/>
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding DataContext.PathOk, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}" Value="False">
+                                                                    <Setter Property="Text" Value="Chọn thư mục game trước"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </TextBlock.Style>
+                                                </TextBlock>
+                                            </StackPanel>
+                                            <Border Grid.Column="2" Width="30" Height="30" CornerRadius="15"
+                                                    Background="#3DA8C2E4" VerticalAlignment="Center">
+                                                <Path Data="M 6,12 L 18,12 M 13,7 L 18,12 L 13,17"
+                                                      Width="18" Height="18" Stretch="Uniform" Stroke="#F2F7FF"
+                                                      StrokeThickness="2" StrokeStartLineCap="Round"
+                                                      StrokeEndLineCap="Round" StrokeLineJoin="Round"
+                                                      VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                                            </Border>
+                                        </Grid>
+                                    </Button>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
                         <Button Command="{Binding UninstallCommand}"
                                 Visibility="{Binding DataContext.IsInstalled, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}, Converter={StaticResource BoolToVis}}"
                                 Style="{StaticResource LauncherSecondaryButton}" MinHeight="30"

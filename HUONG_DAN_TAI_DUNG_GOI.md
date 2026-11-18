@@ -1,15 +1,15 @@
 # Hướng dẫn tải và cài Việt hóa WuWa
 
-**PC mới nhất:** [v3.0.22](https://github.com/WahuVN/Viet-Hoa-WuWa/releases/tag/v3.0.22) — Wuthering Waves R29 / resource 3.8.11.
+**PC mới nhất:** [v3.0.23](https://github.com/WahuVN/Viet-Hoa-WuWa/releases/tag/v3.0.23) — Wuthering Waves R29 / resource 3.8.11.
 
 **Android công khai mới nhất:** [v0.2.0-alpha.24](https://github.com/WahuVN/VHWuWa-Mobile/releases/tag/v0.2.0-alpha.24) — game 3.8.1, bản dịch Tên Anh R28 (resource 3.8.10); cần Android 10+ và Shizuku.
 
 ## Cài hoặc cập nhật PC
 
-1. Tải VietHoa-WuWa-v3.0.22.zip, giải nén vào thư mục riêng, mở VHWuWa.exe.
+1. Tải VietHoa-WuWa-v3.0.23.zip, giải nén vào thư mục riêng, mở VHWuWa.exe.
 2. Đóng game, chọn **Tự tìm game** hoặc chỉ định thư mục game có Client.
 3. Nhấn **Cài Việt hóa**. R29 hiện dùng **Tên Anh**, mặc định **Lexend 660**. Hán Việt R29 chưa có gói QA.
-4. Trong game chọn **Text Language = English**.
+4. Bấm **Mở game** để mở launcher hoặc Steam, rồi nhấn **Start**. Trong game chọn **Text Language = English**.
 
 Đã dùng phiên bản cũ: cập nhật trong **Cài đặt → Kiểm tra cập nhật**. Updater kiểm tra SHA-256 gói ZIP, có sao lưu và khôi phục khi cập nhật lỗi.
 

@@ -2,6 +2,13 @@
 
 Tất cả các thay đổi đáng chú ý của dự án VHWuWa được ghi lại tại đây theo chuẩn [SemVer](https://semver.org/lang/vi/).
 
+## [3.0.23] - 2026-11-18
+
+- Làm mới trang chủ với nhóm thao tác **Chọn game → Cài Việt hóa → Mở game**, trạng thái game rõ hơn.
+- Mở game qua launcher chính thức hoặc Steam; hiển thị hướng dẫn bấm Start.
+- Đóng game an toàn hơn: xác nhận, xác minh đường dẫn tiến trình, không tự tắt launcher/Steam; watchdog kiểm tra 30 giây.
+- Giữ R29 resource 3.8.11, Lexend 660 và cập nhật có SHA-256/rollback. Không đổi nội dung dịch game.
+
 ## [3.0.22] - 2026-11-18
 
 - Phát hành R29 cho resource 3.8.11, chỉ hỗ trợ tên nhân vật Anh trong R29 hiện tại.

@@ -1,13 +1,20 @@
-# PC standard release baseline
+# PC v3.0.23 release baseline
 
-Public baseline: v3.0.22
-Public ZIP SHA-256: 7C7D7808655B0803394A6BE6A36C6D7120A301713731953E046586E3662EBA44
-Public main commit: ad146f86540c860eb3e18243739594baeb247bb7
+Previous public release: v3.0.22
+Previous ZIP SHA-256: 7C7D7808655B0803394A6BE6A36C6D7120A301713731953E046586E3662EBA44
 
-Next prepared candidate: v3.0.23.
+The v3.0.23 PC release retains the exact R29 translation PAK (resource 3.8.11),
+Lexend 660 font TTF/PAK, 73-font catalog and original launcher video,
+all hash-pinned by scripts/build-standard-pc-release.ps1.
 
-The R29 translation PAK, Lexend 660 TTF/PAK, 73-font catalog and video are hash-pinned by scripts/build-standard-pc-release.ps1.
+Only PC application/UI, user guidance and safer process-management code change.
+Windows Authenticode code signing is optional for this release at the owner's
+request; no signature is spoofed or required to run the app. Windows may display
+security prompts for an unsigned executable. This is distinct from game PAK SIG.
+SHA-256 integrity verification, correct EXE versions, byte-for-byte ZIP
+validation, release startup-health and QA tests must still pass.
 
-Candidate builds may be unsigned for QA. Production publishing must use -RequireAuthenticode and WAHU_WINDOWS_SIGN_CERT_THUMBPRINT pointing to a valid CurrentUser/My Code Signing certificate with private key.
-
-Do not publish if tests, VerifyOnly, ZIP byte verification, SHA-256, startup-health or required Authenticode checks fail.
+The real Wuthering Waves game shutdown behavior on WIN3 is not yet E2E-verified:
+there is an official launcher but no installed Client-Win64-Shipping.exe.
+Do not claim the real game is free of lingering process issues based only
+on synthetic process tests.

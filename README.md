@@ -48,7 +48,7 @@ VHWuWa được thiết kế nhằm hỗ trợ người chơi trải nghiệm tr
 
 | Gói tải về | Đối tượng | Mô tả |
 | :--- | :--- | :--- |
-| 🎮 [**VietHoa-WuWa-v3.0.22.zip**](https://github.com/WahuVN/Viet-Hoa-WuWa/releases/latest) | **Người chơi** | Ứng dụng cài đặt Việt hóa trên Windows (Khuyên dùng) |
+| 🎮 [**VietHoa-WuWa-v3.0.23.zip**](https://github.com/WahuVN/Viet-Hoa-WuWa/releases/latest) | **Người chơi** | Ứng dụng cài đặt Việt hóa trên Windows (Khuyên dùng) |
 | 🛠️ [**App-Dich-WuWa-v3.0.16.zip**](https://github.com/WahuVN/Viet-Hoa-WuWa/releases/download/v3.0.16/App-Dich-WuWa-v3.0.16.zip) | **Dịch giả / Modder** | Bộ công cụ WAHU Community hỗ trợ duyệt ngữ cảnh, QA và đóng gói PAK |
 | 📱 [**VHWuWa Mobile 0.2.0-alpha.24**](https://github.com/WahuVN/VHWuWa-Mobile/releases/tag/v0.2.0-alpha.24) | **Android** | Android 10+, cài patch qua Shizuku; game 3.8.1, content 3.8.10-R28 (Tên Anh) (bản thử nghiệm) |
 
