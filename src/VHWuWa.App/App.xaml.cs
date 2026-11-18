@@ -271,23 +271,8 @@ public partial class App : Application
         return result;
     }
 
-    private static string? ValidateUpdateCleanupDirectory(string? path)
-    {
-        if (string.IsNullOrWhiteSpace(path)) return null;
-
-        var cleanup = Path.GetFullPath(path)
-            .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
-        var temp = Path.GetFullPath(Path.GetTempPath())
-            .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
-        if (!string.Equals(Path.GetDirectoryName(cleanup), temp,
-                StringComparison.OrdinalIgnoreCase)
-            || !Path.GetFileName(cleanup).StartsWith("VHWuWa_Update_",
-                StringComparison.OrdinalIgnoreCase))
-            throw new InvalidDataException("Thư mục dọn cập nhật không hợp lệ.");
-
-        return cleanup;
-    }
-
+    private static string? ValidateUpdateCleanupDirectory(string? path) =>
+        ApplicationUpdateStaging.ValidateCleanupDirectory(path);
     private static void CleanupUpdateDirectory(
         string directory,
         int updaterPid,

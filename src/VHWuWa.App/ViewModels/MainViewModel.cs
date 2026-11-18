@@ -347,12 +347,13 @@ public partial class MainViewModel : ObservableObject
 
         IsUpdating = true;
         UpdateProgress = 0;
-        var tempDirectory = Path.Combine(
-            Path.GetTempPath(), "VHWuWa_Update_" + Guid.NewGuid().ToString("N"));
+        // Stage outside TEMP, which may be cleaned while a large ZIP is downloading.
+        var tempDirectory = ApplicationUpdateStaging.NewDirectoryPath();
         var handoffStarted = false;
 
         try
         {
+            Directory.CreateDirectory(tempDirectory);
             UpdateStatusMessage = "Đang kết nối và tải bản cập nhật...";
             var progress = new Progress<double>(value =>
             {
@@ -364,6 +365,10 @@ public partial class MainViewModel : ObservableObject
                 throw new InvalidOperationException(download.Error ?? "Không tải được ZIP cập nhật.");
 
             UpdateStatusMessage = "Đã xác minh gói; đang chuyển sang trình cập nhật an toàn...";
+            if (!File.Exists(download.Value))
+                throw new FileNotFoundException(
+                    "Gói ZIP vừa tải không còn tồn tại; có thể bị trình dọn dẹp bên ngoài xóa.", download.Value);
+            Directory.CreateDirectory(tempDirectory);
             var updaterCopy = Path.Combine(tempDirectory, "VHWuWa.Updater.run.exe");
             var readyFile = Path.Combine(tempDirectory, "updater-ready.txt");
             File.Copy(bundledUpdater, updaterCopy, overwrite: true);
