@@ -50,7 +50,7 @@ function CheckStage {
 if ($VerifyOnly) {
  CheckStage
  if(!(Test-Path $zip -PathType Leaf)){throw 'Missing candidate ZIP'}
- & python (Join-Path $repo 'scripts\verify-v322-package.py') --stage $stage --zip $zip --version $Version
+ & python (Join-Path $repo 'scripts\verify-standard-package.py') --stage $stage --zip $zip --version $Version
  if($LASTEXITCODE -ne 0){throw 'ZIP byte verification failed'}
  'VERIFY_ONLY=PASS'
  exit 0
@@ -96,7 +96,7 @@ try {
  $count=@(Get-ChildItem $stage -File -Recurse).Count
  & python 'scripts\pack-portable-zip.py' $stage $zip --version $Version --expected-files $count
  if($LASTEXITCODE -ne 0){throw 'Canonical package failed'}
- & python 'scripts\verify-v322-package.py' --stage $stage --zip $zip --version $Version
+ & python 'scripts\verify-standard-package.py' --stage $stage --zip $zip --version $Version
  if($LASTEXITCODE -ne 0){throw 'Byte-for-byte package QA failed'}
  'WIN3_RELEASE_CANDIDATE_BUILD_PASS'
  'OUTPUT='+$zip
