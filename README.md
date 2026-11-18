@@ -23,7 +23,7 @@ Trang chủ tự vừa kích thước cửa sổ, **không cần cuộn để t�
 | Nền tảng | Bản phát hành | Ghi chú |
 | --- | --- | --- |
 | **Windows PC** | [WuWa Việt Hóa v3.0.24](https://github.com/WahuVN/Viet-Hoa-WuWa/releases/latest) | R29, dữ liệu 3.8.11, tên nhân vật tiếng Anh |
-| **Android** | [VHWuWa Mobile alpha.24](https://github.com/WahuVN/VHWuWa-Mobile/releases/tag/v0.2.0-alpha.24) | Bản thử nghiệm R28, yêu cầu Shizuku |
+| **Android** | [VHWuWa Mobile alpha.29](https://github.com/WahuVN/VHWuWa-Mobile/releases/tag/v0.2.0-alpha.29) | Bản thử nghiệm R28, yêu cầu Shizuku |
 | **Công cụ dịch thuật** | [App-Dich-WuWa v3.0.16](https://github.com/WahuVN/Viet-Hoa-WuWa/releases/tag/v3.0.16) | Dành cho dịch giả; không phải bộ cài game |
 
 ## Cách cài Việt hóa PC

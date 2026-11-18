@@ -2,7 +2,7 @@
 
 **Bản PC mới nhất:** [v3.0.24](https://github.com/WahuVN/Viet-Hoa-WuWa/releases/tag/v3.0.24) — R29, dữ liệu game 3.8.11.
 
-**Bản Android công khai:** [v0.2.0-alpha.24](https://github.com/WahuVN/VHWuWa-Mobile/releases/tag/v0.2.0-alpha.24) — R28 (tên tiếng Anh); yêu cầu Android 10+ và Shizuku.
+**Bản Android công khai:** [v0.2.0-alpha.29](https://github.com/WahuVN/VHWuWa-Mobile/releases/tag/v0.2.0-alpha.29) — R28 (tên tiếng Anh); yêu cầu Android 10+ và Shizuku.
 
 ## Windows PC
 
@@ -17,7 +17,7 @@
 
 ## Android
 
-Tải APK từ trang [VHWuWa Mobile](https://github.com/WahuVN/VHWuWa-Mobile/releases/tag/v0.2.0-alpha.24), cấp quyền Shizuku theo hướng dẫn trong ứng dụng. Đây là bản thử nghiệm R28, **không phải R29 PC**.
+Tải APK từ trang [VHWuWa Mobile](https://github.com/WahuVN/VHWuWa-Mobile/releases/tag/v0.2.0-alpha.29), cấp quyền Shizuku theo hướng dẫn trong ứng dụng. Đây là bản thử nghiệm R28, **không phải R29 PC**.
 
 ## Dành cho dịch giả
 
