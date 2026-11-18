@@ -9,5 +9,5 @@ Cải thiện bố cục trang chủ và hiển thị ở nhiều kích thước
 
 **Cập nhật:** Vào **Cài đặt → Kiểm tra cập nhật** hoặc tải ZIP bên dưới, giải nén và chạy `VHWuWa.exe`.
 
-### Nếu hiện v3.0.16 ở mục “BẢN DỊCH”
-Đó là **dấu cài đặt cũ**, không phải PAK đi kèm ZIP v3.0.24. Hãy đóng game, sao lưu mod, chọn đúng thư mục game, **Gỡ Việt hóa** cũ trước khi cài lại R29. Nếu gỡ báo xung đột, dừng và gửi log; không xóa DLL/PAK của mod khác. **Dữ liệu game 3.8.12 mới hơn gói R29 (3.8.11), chưa được nghiệm thu tương thích.**
+### Hỗ trợ
+Nếu gặp lỗi không mở được game sau khi cài Việt hóa, xem [hướng dẫn kiểm tra và khắc phục](https://github.com/WahuVN/Viet-Hoa-WuWa/blob/main/docs/qa/kiem-tra-xung-dot-viet-hoa-pc.md).

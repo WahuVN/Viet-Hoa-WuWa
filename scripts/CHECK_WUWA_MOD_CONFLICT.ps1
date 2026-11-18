@@ -74,7 +74,7 @@ if (@($loaders|Where-Object {
   $_.name -eq 'winhttp.dll' -and
   $_.sha256 -eq 'e757622bb86041860cea04eb164d298c21b5ac3565ef7b44c0d6126939f4e083'
 }).Count -gt 0) {
-  $warnings.Add('winhttp.dll trung SHA ban chinh thuc DangDevVH 2.3.0 Wuwa: co the con loader tu bo Viet hoa khac.')
+  $warnings.Add('winhttp.dll trung SHA cua mot bo Viet hoa khac; co the gay xung dot.')
 }
 foreach($rec in $loaders) {
   if ($waSha.ContainsKey($rec.name) -and $rec.identifiedAs -ne 'WAHU_3.0.17') {
