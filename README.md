@@ -37,7 +37,7 @@ VHWuWa được thiết kế nhằm hỗ trợ người chơi trải nghiệm tr
 - **Làm mới 100% Danh Hiệu Nhân Vật:** Tinh chỉnh danh hiệu ngắn gọn, chuẩn tiếng Việt (2 - 4 từ), không bị tràn viền giao diện.
 - **Tùy chọn phong cách hiển thị tên nhân vật:**
   - **Bản Tiếng Việt (Tên EN):** Giữ nguyên tên nhân vật theo chuẩn quốc tế (`Jinhsi`, `Changli`, `Jiyan`, `Yangyang`...).
-  - **Bản Hán Việt:** Hiển thị tên nhân vật theo âm Hán Việt cổ phong (`Kim Tịch`, `Trường Ly`, `Kỵ Viêm`, `Ương Ương`...).
+  - **Bản Hán Việt (chỉ trên các gói có hỗ trợ):** Hiển thị tên nhân vật theo âm Hán Việt cổ phong (`Kim Tịch`, `Trường Ly`, `Kỵ Viêm`, `Ương Ương`...).
 - **Bộ sưu tập phông chữ đa dạng:** 73 phông chữ; R29 mặc định cài Lexend 660 bằng Mount font riêng, không ghi đè PAK dịch hoặc Mount ngôn ngữ gốc.
 - **Cập nhật nhanh chóng:** Tự động kiểm tra và cập nhật dữ liệu bản dịch mới từ GitHub Releases.
 - **Quản lý gói ngôn ngữ an toàn:** Cài đặt và gỡ bỏ bản Việt hóa dễ dàng, độc lập với dữ liệu gốc của trò chơi.
@@ -50,7 +50,7 @@ VHWuWa được thiết kế nhằm hỗ trợ người chơi trải nghiệm tr
 | :--- | :--- | :--- |
 | 🎮 [**VietHoa-WuWa-v3.0.22.zip**](https://github.com/WahuVN/Viet-Hoa-WuWa/releases/latest) | **Người chơi** | Ứng dụng cài đặt Việt hóa trên Windows (Khuyên dùng) |
 | 🛠️ [**App-Dich-WuWa-v3.0.16.zip**](https://github.com/WahuVN/Viet-Hoa-WuWa/releases/download/v3.0.16/App-Dich-WuWa-v3.0.16.zip) | **Dịch giả / Modder** | Bộ công cụ WAHU Community hỗ trợ duyệt ngữ cảnh, QA và đóng gói PAK |
-| 📱 [**VHWuWa Mobile 0.2.0-alpha.18**](https://github.com/WahuVN/VHWuWa-Mobile/releases/tag/v0.2.0-alpha.18) | **Android** | Android 10+, cài patch qua Shizuku; game 3.7.0, content 3.7.0-R6 (bản thử nghiệm) |
+| 📱 [**VHWuWa Mobile 0.2.0-alpha.24**](https://github.com/WahuVN/VHWuWa-Mobile/releases/tag/v0.2.0-alpha.24) | **Android** | Android 10+, cài patch qua Shizuku; game 3.8.1, content 3.8.10-R28 (Tên Anh) (bản thử nghiệm) |
 
 ### App-Dịch-WuWa — bộ công cụ dịch thuật và kiểm tra chất lượng
 
@@ -154,7 +154,7 @@ VHWuWa là dự án cộng đồng phi thương mại. Bạn có thể hỗ tr�
 
 - **Thảo luận & Hỗ trợ kỹ thuật:** [Server Discord VHWuWa](https://discord.gg/Gy5YQ84Yc2)
 - **Báo lỗi & Đóng góp ý kiến:** [Gửi phản hồi tại GitHub Issues](https://github.com/WahuVN/Viet-Hoa-WuWa/issues)
-- **Bản Việt hóa Android:** [VHWuWa Mobile — WahuVN](https://github.com/WahuVN/VHWuWa-Mobile/releases) · Android 10+ · Shizuku · game 3.7.0 / content 3.7.0-R6 (bản thử nghiệm)
+- **Bản Việt hóa Android:** [VHWuWa Mobile — WahuVN](https://github.com/WahuVN/VHWuWa-Mobile/releases) · Android 10+ · Shizuku · game 3.8.1 / content 3.8.10-R28 (Tên Anh) (bản thử nghiệm)
 
 ---
 

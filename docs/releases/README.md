@@ -1,38 +1,15 @@
-﻿# Tài liệu phát hành
+# Tài liệu phát hành
 
-Mỗi bản phát hành có một thư mục riêng để lưu ghi chú và tài liệu liên quan.
+**Bản PC công khai mới nhất:** [v3.0.22](https://github.com/WahuVN/Viet-Hoa-WuWa/releases/tag/v3.0.22)
 
-## Bản hiện tại
+| Phiên bản | Ghi chú |
+| --- | --- |
+| v3.0.22 | [R29, Lexend 660, cập nhật và hiển thị](v3.0.22/RELEASE_NOTES.md) |
+| v3.0.21 | [Sửa cài đặt R29](v3.0.21/RELEASE_NOTES.md) |
+| v3.0.20 | [Sửa cài đặt và cập nhật](v3.0.20/RELEASE_NOTES.md) |
+| v3.0.19 | [Phát hành R29 cho game 3.8](https://github.com/WahuVN/Viet-Hoa-WuWa/releases/tag/v3.0.19) |
+| v3.0.18 | [Font tiếng Việt](v3.0.18/RELEASE_NOTES.md) |
+| v3.0.17 | [Giao diện và thư viện font](v3.0.17/RELEASE_NOTES.md) |
+| v3.0.16 | [Hướng dẫn bản cũ](v3.0.16/RELEASE_NOTES.md) |
 
-### v3.0.16
-
-- [Ghi chú phát hành](v3.0.16/RELEASE_NOTES.md)
-
-### v3.0.13
-
-- [Ghi chú phát hành](v3.0.13/RELEASE_NOTES.md)
-
-### v3.0.12
-
-- [Ghi chú phát hành](v3.0.12/RELEASE_NOTES.md)
-
-### v3.0.11
-
-- [Ghi chú phát hành](v3.0.11/RELEASE_NOTES.md)
-
-### v3.0.10
-
-- [Ghi chú phát hành](v3.0.10/RELEASE_NOTES.md)
-
-### v3.0.9
-
-- [Ghi chú phát hành](v3.0.9/RELEASE_NOTES.md)
-- [Thay đổi bản dịch](v3.0.9/TRANSLATION_CHANGES.md)
-- [Thông báo GitHub](v3.0.9/GITHUB_ANNOUNCEMENT.md)
-- [Thông báo Discord](v3.0.9/DISCORD_ANNOUNCEMENT.md)
-
-Tệp build/upload nằm trong thư mục `dist/` và không lưu trực tiếp trong thư mục tài liệu.
-
-## Lịch sử
-
-Các tài liệu phát hành cũ được giữ trong [history](history/) để thư mục chính luôn gọn.
+[Xem tất cả bản phát hành](https://github.com/WahuVN/Viet-Hoa-WuWa/releases). **App-Dịch** dùng chu kỳ phiên bản độc lập. Tài liệu bản cũ giữ trong từng thư mục để tra cứu, không phải hướng dẫn cho bản hiện hành.

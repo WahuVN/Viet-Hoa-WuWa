@@ -11,10 +11,10 @@
 ## Cài Việt hóa R29 trong ba bước
 
 1. **Tắt game**, mở **Trang chủ → Tự tìm**. Nếu không nhận diện được game, dùng **Chọn game** hoặc **Chọn thư mục** và chọn đúng thư mục chứa `Client`.
-2. Bấm **Cài Việt hóa**. Nếu chưa có game, ứng dụng sẽ cho chọn thư mục trước; sau khi chọn, bấm **Cài Việt hóa** lần nữa. **R29 hiện chỉ có biến thể tên Anh và font mặc định của game.** Hán Việt và font PAK riêng chưa có trong gói này.
+2. Bấm **Cài Việt hóa**. Nếu chưa có game, ứng dụng sẽ cho chọn thư mục trước; sau khi chọn, bấm **Cài Việt hóa** lần nữa. **R29 hiện chỉ có biến thể tên Anh; mặc định cài Lexend 660 qua Mount font WAHU riêng.** Hán Việt R29 chưa có gói đã QA.
 3. Khi trạng thái xác nhận đã cài, mở launcher chính thức rồi vào game và chọn **Text Language = English**.
 
-Trước khi sửa file game, ứng dụng kiểm tra **SHA-256 gói R29** và đường dẫn Client. File mod xung đột đã nhận diện được **sao lưu SHA-256 vào vùng cách ly**, không xóa vĩnh viễn. Nếu báo lỗi, không ghi PAK thủ công; kiểm tra thư mục, quyền và gói cập nhật.
+Trước khi sửa file game, ứng dụng kiểm tra **SHA-256 gói R29** và đường dẫn Client. Với R29, bộ cài **không quét, xóa hoặc cách ly mod ngoài**; chỉ quản lý tệp Việt hóa/font do WAHU tạo. Nếu báo lỗi, không ghi PAK thủ công; kiểm tra thư mục, quyền và gói cập nhật.
 
 ## Cập nhật và gỡ
 

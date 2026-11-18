@@ -8,6 +8,6 @@ Bản v3.0.22 cập nhật R29/resource 3.8.11, mặc định Lexend 660 và ho�
 Đang dùng bản cũ: nếu bật Tự kiểm tra phiên bản ứng dụng khi khởi động, app sẽ báo v3.0.22 và cho phép bấm Cập nhật.
 Cài mới: tải VietHoa-WuWa-v3.0.22.zip, giải nén và mở VHWuWa.exe.
 
-SHA-256: 98B2256B17BD9218D055FE662DF5AFAA8F93941CD9C9FB05867AF53531710BF0
+SHA-256: 7C7D7808655B0803394A6BE6A36C6D7120A301713731953E046586E3662EBA44
 
 Hỗ trợ: https://discord.gg/Gy5YQ84Yc2

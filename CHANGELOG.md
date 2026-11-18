@@ -2,7 +2,21 @@
 
 Tất cả các thay đổi đáng chú ý của dự án VHWuWa được ghi lại tại đây theo chuẩn [SemVer](https://semver.org/lang/vi/).
 
-## [3.0.19] - CHƯA PHÁT HÀNH (bản nháp cập nhật 2026-11-15)
+## [3.0.22] - 2026-11-18
+
+- Phát hành R29 cho resource 3.8.11, chỉ hỗ trợ tên nhân vật Anh trong R29 hiện tại.
+- Lexend 660 được cài vào Mount font riêng; có 73 mục trong thư viện font.
+- Điều chỉnh launcher, thông báo cập nhật và xử lý chữ tiếng Việt.
+- Giữ cập nhật từ GitHub với kiểm tra SHA-256, rollback và startup-health.
+
+## [3.0.21] - 2026-11-16
+
+- Sửa nút cài R29 khi chọn font hoặc kiểu tên; R29 hiện dùng tên Anh.
+
+## [3.0.20] - 2026-11-16
+
+- Sửa nhận diện đường dẫn SIG và luồng cài R29; hoàn thiện xác minh cập nhật và rollback.
+## [3.0.19] - 2026-11-15 (ghi chú chuẩn bị trước khi phát hành)
 
 ### Chuẩn bị cập nhật tool Player
 - Nâng metadata của ứng dụng Player và Updater lên 3.0.19 từ bản phát hành v3.0.18; App-Dịch v3.0.16 có lịch phiên bản riêng.
@@ -11,7 +25,7 @@ Tất cả các thay đổi đáng chú ý của dự án VHWuWa được ghi l�
 - Đồng bộ màu sidebar PC với giao diện chính, thay logo thumbnail ICO bằng PNG nguồn lớn, bỏ khung phụ rườm rà. Kiểm tra độ tương phản, cửa sổ nhỏ và điều hướng thực tế.
 - Gói PC R28 tài nguyên 3.8.10 mới đạt QA tĩnh 62/62 mục; loader, font và hiển thị trong game 3.8.1 chưa được nghiệm thu, nên giữ khóa cài PAK.
 - Kiểm thử lại trên WIN3 ngày 15/11/2026: 162/162 bài test Release đạt; bản nâng cấp 3.0.18 → 3.0.19 đã được QA nội bộ.
-- Chưa xuất bản Release, chưa tạo tag chính thức hoặc đổi latest; chỉ chuẩn bị bản ứng dụng và nội dung công bố.
+- Ghi chú lịch sử này thuộc giai đoạn chuẩn bị; v3.0.19 đã được phát hành công khai ngày 15/11/2026.
 
 ## [3.0.18] - 2026-10-20
 
