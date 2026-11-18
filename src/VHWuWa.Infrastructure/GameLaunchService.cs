@@ -140,7 +140,7 @@ public sealed class GameLaunchService : IGameLaunchService
             {
                 // The watchdog launches the official wrapper when present, then
                 // follows the newly spawned Client-Win64-Shipping child PID.
-                startInfo = CreateWatchdogStartInfo(helperExe!, launchExe, effectiveForceCSharp);
+                startInfo = CreateWatchdogStartInfo(helperExe!, launchExe, effectiveForceCSharp, clientExe);
             }
             else
             {
@@ -176,7 +176,7 @@ public sealed class GameLaunchService : IGameLaunchService
     public static ProcessStartInfo CreateWatchdogStartInfo(
         string helperExecutablePath,
         string gameExecutablePath,
-        bool forceCSharpEnvironment)
+        bool forceCSharpEnvironment, string? expectedClientExecutable = null)
     {
         var info = new ProcessStartInfo
         {
@@ -190,6 +190,11 @@ public sealed class GameLaunchService : IGameLaunchService
         info.ArgumentList.Add(gameExecutablePath);
         info.ArgumentList.Add("--force-csharp");
         info.ArgumentList.Add(forceCSharpEnvironment ? "true" : "false");
+        if (!string.IsNullOrWhiteSpace(expectedClientExecutable))
+        {
+            info.ArgumentList.Add("--expected-client-exe");
+            info.ArgumentList.Add(expectedClientExecutable);
+        }
         return info;
     }
 

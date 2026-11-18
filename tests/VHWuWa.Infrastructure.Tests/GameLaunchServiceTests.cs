@@ -128,6 +128,20 @@ public sealed class GameLaunchServiceTests
     }
 
     [Fact]
+    public void CreateWatchdogStartInfo_ForwardsExpectedClientIdentity()
+    {
+        var expectedClient = @"D:\Games\WuWa\Client\Binaries\Win64\Client-Win64-Shipping.exe";
+        var info = GameLaunchService.CreateWatchdogStartInfo(
+            @"D:\Tools\VHWuWa.exe", @"D:\Games\WuWa\launcher.exe",
+            forceCSharpEnvironment: false, expectedClientExecutable: expectedClient);
+        Assert.Equal(new[]
+        {
+            "--game-exit-watchdog", "--game-exe", @"D:\Games\WuWa\launcher.exe",
+            "--force-csharp", "false", "--expected-client-exe", expectedClient
+        }, info.ArgumentList);
+    }
+
+    [Fact]
     public void CreateWatchdogStartInfo_ForwardsCSharpMode()
     {
         var info = GameLaunchService.CreateWatchdogStartInfo(

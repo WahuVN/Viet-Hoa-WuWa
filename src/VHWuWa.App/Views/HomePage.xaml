@@ -127,13 +127,44 @@
                 </ControlTemplate>
             </Setter.Value></Setter>
         </Style>
-        <!-- Make the third step to open the game as obvious as the install action. -->
-        <Style x:Key="LauncherPlayButton" TargetType="{x:Type Button}" BasedOn="{StaticResource LauncherGameButton}">
-            <Setter Property="MinHeight" Value="52"/>
-            <Setter Property="Padding" Value="12,7"/>
-            <Setter Property="Background" Value="#E92B3D63"/>
-            <Setter Property="BorderBrush" Value="#C5D5E5FF"/>
-        </Style>        <Style x:Key="LauncherRoundButton" TargetType="{x:Type Button}" BasedOn="{StaticResource Wahu.SecondaryButton}">
+        <!-- Full width indigo play action: original video/image remain untouched. -->
+        <Style x:Key="LauncherPlayButton" TargetType="{x:Type Button}" BasedOn="{StaticResource Wahu.SecondaryButton}">
+            <Setter Property="MinHeight" Value="60"/>
+            <Setter Property="Padding" Value="13,8"/>
+            <Setter Property="BorderBrush" Value="#9EB0D8F3"/>
+            <Setter Property="Background"><Setter.Value>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                    <GradientStop Color="#ED233452" Offset="0"/>
+                    <GradientStop Color="#EE36527E" Offset="1"/>
+                </LinearGradientBrush>
+            </Setter.Value></Setter>
+            <Setter Property="Template"><Setter.Value>
+                <ControlTemplate TargetType="{x:Type Button}">
+                    <Border x:Name="PlaySurface" Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1.3"
+                            CornerRadius="18" SnapsToDevicePixels="True">
+                        <ContentPresenter HorizontalAlignment="Stretch" VerticalAlignment="Center"
+                                          Margin="{TemplateBinding Padding}"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="PlaySurface" Property="BorderBrush" Value="#F4F5FF"/>
+                            <Setter TargetName="PlaySurface" Property="Background" Value="#F13B5782"/>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="PlaySurface" Property="Background" Value="#F11C3151"/>
+                        </Trigger>
+                        <Trigger Property="IsKeyboardFocused" Value="True">
+                            <Setter TargetName="PlaySurface" Property="BorderBrush" Value="#FFFFFF"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter TargetName="PlaySurface" Property="Opacity" Value="0.58"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value></Setter>
+        </Style>
+        <Style x:Key="LauncherRoundButton" TargetType="{x:Type Button}" BasedOn="{StaticResource Wahu.SecondaryButton}">
             <Setter Property="Width" Value="48"/><Setter Property="Height" Value="48"/><Setter Property="MinHeight" Value="48"/>
             <Setter Property="Padding" Value="0"/><Setter Property="Background" Value="#C2151D31"/>
             <Setter Property="Template"><Setter.Value>
@@ -409,6 +440,12 @@
                                 <TextBlock Text="✦" Foreground="#F3D8FF" Background="#60212A52"
                                            FontSize="16" FontFamily="Segoe UI Symbol"
                                            HorizontalAlignment="Center" VerticalAlignment="Center" Padding="6,0"/>
+                                <Border Background="#B51C2948" CornerRadius="6" Padding="6,1"
+                                        HorizontalAlignment="Right" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding DataContext.FeaturedReleaseBadge, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
+                                               Foreground="#F7ECFF" FontFamily="{StaticResource WahuAppFontFamily}"
+                                               FontSize="10.5" FontWeight="SemiBold"/>
+                                </Border>
                             </Grid>
                         </StackPanel>
 
@@ -447,41 +484,54 @@
                             </Button>
                         </Grid>
 
-                        <!-- Step 3: a visible play action. Existing game launch command stays unchanged. -->
-                        <Grid Margin="0,11,2,0">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="Auto" />
-                            </Grid.ColumnDefinitions>
-                            <Button Grid.Column="0" Style="{StaticResource LauncherPlayButton}"
+                        <!-- Third step matches the 60px height of the first two choices. -->
+                        <Grid Margin="0,10,0,0">
+                            <Button Style="{StaticResource LauncherPlayButton}" HorizontalAlignment="Stretch"
                                     Command="{Binding DataContext.LaunchGameCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
-                                    ToolTip="Bước 3: Mở Wuthering Waves qua launcher chính thức hoặc Steam; nhấn Start trong launcher để vào game."
-                                    AutomationProperties.Name="Mở game Wuthering Waves"
-                                    HorizontalAlignment="Stretch">
-                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
-                                    <Path Data="M 7,4 L 20,12 L 7,20 Z" Width="19" Height="19" Stretch="Uniform"
-                                          Fill="#F5FFFF" Stroke="#F5FFFF" StrokeThickness="0.6"
-                                          VerticalAlignment="Center" Margin="0,0,10,0"/>
-                                    <StackPanel VerticalAlignment="Center">
+                                    ToolTip="Mở Wuthering Waves qua launcher chính thức hoặc Steam; bấm Start để chơi."
+                                    AutomationProperties.Name="Mở game Wuthering Waves">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Border Width="36" Height="36" CornerRadius="12" Background="#634C72A8"
+                                            BorderBrush="#83CDD6FF" BorderThickness="1" VerticalAlignment="Center">
+                                        <Path Data="M 8,5.8 L 19.5,12 L 8,18.2 Z"
+                                              Width="19" Height="19" Stretch="Uniform" Fill="#FFFFFF"
+                                              VerticalAlignment="Center" HorizontalAlignment="Center" Margin="2,0,0,0"/>
+                                    </Border>
+                                    <StackPanel Grid.Column="1" Margin="13,0,5,0" VerticalAlignment="Center">
                                         <TextBlock Text="{Binding DataContext.LaunchButtonText, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
                                                    Foreground="#FFFFFF" FontFamily="{StaticResource WahuHeadingFontFamily}"
-                                                   FontSize="17" FontWeight="Bold" />
-                                        <TextBlock Text="Qua launcher · bấm Start"
-                                                   Foreground="#D8E5FF" FontFamily="{StaticResource WahuAppFontFamily}"
-                                                   FontSize="11.5" Margin="0,1,0,0"/>
+                                                   FontSize="17" FontWeight="Bold"/>
+                                        <TextBlock Foreground="#DBE7FA" FontFamily="{StaticResource WahuAppFontFamily}"
+                                                   FontSize="11.5" Margin="0,1,0,0">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Text" Value="Mở launcher · nhấn Start"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding DataContext.PathOk, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}" Value="False">
+                                                            <Setter Property="Text" Value="Chọn thư mục game trước"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
                                     </StackPanel>
-                                </StackPanel>
+                                    <Border Grid.Column="2" Width="30" Height="30" CornerRadius="15"
+                                            Background="#3DA8C2E4" VerticalAlignment="Center">
+                                        <Path Data="M 6,12 L 18,12 M 13,7 L 18,12 L 13,17"
+                                              Width="18" Height="18" Stretch="Uniform" Stroke="#F2F7FF"
+                                              StrokeThickness="2" StrokeStartLineCap="Round"
+                                              StrokeEndLineCap="Round" StrokeLineJoin="Round"
+                                              VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                                    </Border>
+                                </Grid>
                             </Button>
-                            <TextBlock Grid.Column="1" Margin="12,0,0,0"
-                                       Text="{Binding DataContext.FeaturedReleaseBadge, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
-                                       Foreground="#F6ECFF" FontFamily="{StaticResource WahuAppFontFamily}"
-                                       FontSize="13.5" FontWeight="SemiBold" HorizontalAlignment="Right"
-                                       VerticalAlignment="Center">
-                                <TextBlock.Effect>
-                                    <DropShadowEffect Color="#181134" BlurRadius="3" ShadowDepth="1" Opacity="0.75"/>
-                                </TextBlock.Effect>
-                            </TextBlock>
-                        </Grid>                        <Button Command="{Binding UninstallCommand}"
+                        </Grid>
+                        <Button Command="{Binding UninstallCommand}"
                                 Visibility="{Binding DataContext.IsInstalled, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}, Converter={StaticResource BoolToVis}}"
                                 Style="{StaticResource LauncherSecondaryButton}" MinHeight="30"
                                 Padding="8,4" FontSize="12.5" HorizontalAlignment="Right" Margin="0,4,0,0">
@@ -514,9 +564,9 @@
                             Visibility="{Binding PathOk, Converter={StaticResource BoolToVis}}"
                             Command="{Binding KillGameProcessesCommand}"
                             Style="{StaticResource LauncherSecondaryButton}"
-                            ToolTip="Đóng game và launcher nếu cần thao tác với tệp đang mở."
+                            ToolTip="Đóng game trong thư mục đã chọn. Không tắt launcher hoặc Steam; buộc dừng cần xác nhận riêng."
                             Padding="10,7" Margin="12,0,0,0">
-                        <TextBlock Text="Đóng game" Foreground="{DynamicResource Wahu.HomeText}" FontSize="12"/>
+                        <TextBlock Text="Đóng game…" Foreground="{DynamicResource Wahu.HomeText}" FontSize="12"/>
                     </Button>
                 </Grid>
             </Grid>

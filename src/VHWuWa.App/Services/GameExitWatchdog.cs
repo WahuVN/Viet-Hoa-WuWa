@@ -17,8 +17,7 @@ internal static class GameExitWatchdog
     private const int ClientSpawnTimeoutMs = 120_000;
     private const int FirstWindowTimeoutMs = 180_000;
     private const int StableWindowMs = 10_000;
-    private const int MissingWindowGraceMs = 5_000;
-    private const int WrapperExitGraceMs = 5_000;
+    private const int MissingWindowGraceMs = 30_000;
 
     private delegate bool EnumWindowsProc(nint hwnd, nint lParam);
 
@@ -31,6 +30,10 @@ internal static class GameExitWatchdog
 
     [DllImport("user32.dll")]
     private static extern uint GetWindowThreadProcessId(nint hwnd, out uint processId);
+
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool IsWindowVisible(nint hwnd);
 
     public static bool IsWatchdogInvocation(string[] args) =>
         args.Any(arg => string.Equals(arg, WatchdogFlag, StringComparison.OrdinalIgnoreCase));
@@ -49,6 +52,8 @@ internal static class GameExitWatchdog
 
             var forceCSharp = options.TryGetValue("force-csharp", out var forceText) &&
                               bool.TryParse(forceText, out var parsedForce) && parsedForce;
+            var expectedClient = options.TryGetValue("expected-client-exe", out var configuredClient)
+                ? configuredClient : string.Empty;
 
             var existingClientPids = CaptureClientPids();
             var startInfo = new ProcessStartInfo
@@ -78,10 +83,19 @@ internal static class GameExitWatchdog
             if (launchIsClient)
             {
                 game = launcher;
+                if (string.IsNullOrWhiteSpace(expectedClient))
+                    expectedClient = launchExe;
             }
             else
             {
-                game = WaitForNewClient(existingClientPids, ClientSpawnTimeoutMs);
+                // Old or malformed helpers still launch the game, but cannot track
+                // or terminate a client without its exact expected executable.
+                if (string.IsNullOrWhiteSpace(expectedClient))
+                {
+                    Log("expected client executable not provided; watchdog exits fail-open");
+                    return 0;
+                }
+                game = WaitForNewClient(existingClientPids, ClientSpawnTimeoutMs, expectedClient);
                 if (game is null)
                 {
                     Log("Client-Win64-Shipping did not appear within 120s; watchdog exits fail-open");
@@ -92,7 +106,7 @@ internal static class GameExitWatchdog
             try
             {
                 Log($"tracking client pid={game.Id} launcherPid={launcher.Id}");
-                return Watch(game, launcher);
+                return Watch(game, launcher, expectedClient);
             }
             finally
             {
@@ -107,7 +121,7 @@ internal static class GameExitWatchdog
         }
     }
 
-    private static int Watch(Process game, Process launcher)
+    private static int Watch(Process game, Process launcher, string expectedClient)
     {
         var firstWindowDeadline = Environment.TickCount64 + FirstWindowTimeoutMs;
         nint window = nint.Zero;
@@ -170,7 +184,7 @@ internal static class GameExitWatchdog
                 if (missingSince == 0)
                 {
                     missingSince = Environment.TickCount64;
-                    Log("UnrealWindow missing; starting 5s zombie grace");
+                    Log("UnrealWindow missing; starting conservative 30s grace");
                 }
                 else if (Environment.TickCount64 - missingSince >= MissingWindowGraceMs)
                 {
@@ -182,10 +196,15 @@ internal static class GameExitWatchdog
                         continue;
                     }
 
-                    if (!HasExited(game))
+                    if (!HasExited(game) && IsExpectedClientProcess(game, expectedClient)
+                        && !HasAnyVisibleWindow(game.Id))
                     {
-                        Log("confirmed no-window zombie; terminating tracked client process tree");
+                        Log("30s without any visible game window; terminating the exact tracked client only");
                         SafeKill(game, "client");
+                    }
+                    else
+                    {
+                        Log("window missing, but identity/window evidence insufficient; no process terminated");
                     }
                     CleanupWrapperAfterClientExit(launcher, game.Id);
                     return 0;
@@ -207,14 +226,15 @@ internal static class GameExitWatchdog
         return ids;
     }
 
-    private static Process? WaitForNewClient(HashSet<int> existingPids, int timeoutMs)
+    private static Process? WaitForNewClient(
+        HashSet<int> existingPids, int timeoutMs, string expectedClient)
     {
         var deadline = Environment.TickCount64 + timeoutMs;
         while (Environment.TickCount64 < deadline)
         {
             foreach (var process in Process.GetProcessesByName("Client-Win64-Shipping"))
             {
-                if (!existingPids.Contains(process.Id))
+                if (!existingPids.Contains(process.Id) && IsExpectedClientProcess(process, expectedClient))
                     return process;
                 process.Dispose();
             }
@@ -223,22 +243,43 @@ internal static class GameExitWatchdog
         return null;
     }
 
+    private static bool IsExpectedClientProcess(Process process, string expectedExecutable)
+    {
+        try
+        {
+            var actual = process.MainModule?.FileName;
+            return !string.IsNullOrWhiteSpace(actual)
+                   && !string.IsNullOrWhiteSpace(expectedExecutable)
+                   && string.Equals(Path.GetFullPath(actual), Path.GetFullPath(expectedExecutable),
+                       StringComparison.OrdinalIgnoreCase);
+        }
+        catch
+        {
+            // Access-denied and unverifiable paths fail closed.
+            return false;
+        }
+    }
+
+    private static bool HasAnyVisibleWindow(int processId)
+    {
+        var found = false;
+        EnumWindows((hwnd, _) =>
+        {
+            GetWindowThreadProcessId(hwnd, out var pid);
+            if (pid == (uint)processId && IsWindowVisible(hwnd))
+            {
+                found = true;
+                return false;
+            }
+            return true;
+        }, nint.Zero);
+        return found;
+    }
+
     private static void CleanupWrapperAfterClientExit(Process launcher, int clientPid)
     {
-        if (launcher.Id == clientPid || HasExited(launcher)) return;
-
-        var deadline = Environment.TickCount64 + WrapperExitGraceMs;
-        while (Environment.TickCount64 < deadline)
-        {
-            if (HasExited(launcher)) return;
-            Thread.Sleep(PollMs);
-        }
-
-        if (!HasExited(launcher))
-        {
-            Log("official wrapper still alive 5s after client exit; terminating owned wrapper");
-            SafeKill(launcher, "wrapper");
-        }
+        if (launcher.Id != clientPid && !HasExited(launcher))
+            Log("game client exited; leaving official launcher running (never auto-kill launcher)");
     }
 
     private static void SafeKill(Process process, string label)
@@ -246,7 +287,8 @@ internal static class GameExitWatchdog
         try
         {
             if (HasExited(process)) return;
-            process.Kill(entireProcessTree: true);
+            // The watchdog may only terminate its verified client PID, not child apps.
+            process.Kill(entireProcessTree: false);
             process.WaitForExit(5_000);
             Log($"{label} cleanup complete");
         }

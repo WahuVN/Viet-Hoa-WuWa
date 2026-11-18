@@ -407,28 +407,74 @@ public partial class HomeViewModel : ObservableObject
         else Message = "Thư mục game không tồn tại.";
     }
 
+    // Confirm a graceful WM_CLOSE first. Force-stop is a separate, explicit choice.
+    // Every candidate is checked against the selected game executable path.
     [RelayCommand]
-    private void KillGameProcesses()
+    private async Task KillGameProcessesAsync()
     {
+        if (!PathOk)
+        {
+            Message = "Hãy chọn đúng thư mục game trước khi đóng tiến trình.";
+            return;
+        }
+
         try
         {
-            var procs = Process.GetProcessesByName("Client-Win64-Shipping")
-                .Concat(Process.GetProcessesByName("Wuthering Waves")).ToList();
-            if (procs.Count == 0)
+            var gamePath = GamePath;
+            var inspection = await Task.Run(() => GameProcessCloseService.Inspect(gamePath));
+            if (inspection.Matched == 0)
             {
-                Message = "Game hiện không chạy.";
+                Message = "Không có tiến trình game thuộc thư mục đã chọn đang chạy.";
                 return;
             }
-            int count = 0;
-            foreach (var p in procs)
+
+            var answer = MessageBox.Show(
+                $"Đóng {inspection.Matched} tiến trình thuộc thư mục game đã chọn?\n" +
+                "Chương trình sẽ yêu cầu game thoát bình thường để kịp lưu dữ liệu. " +
+                "Không đóng Steam hoặc launcher chính thức.",
+                "Đóng Wuthering Waves",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question);
+            if (answer != MessageBoxResult.Yes)
             {
-                try { p.Kill(true); count++; } catch { }
+                Message = "Đã hủy đóng game.";
+                return;
             }
-            Message = count > 0 ? "Đã tắt game." : "Không thể đóng tiến trình game.";
+
+            var graceful = await Task.Run(() => GameProcessCloseService.RequestGracefulClose(gamePath));
+            if (graceful.Remaining == 0 && graceful.Failures == 0)
+            {
+                Message = graceful.Closed > 0
+                    ? $"Đã đóng an toàn {graceful.Closed} tiến trình game."
+                    : "Game đã thoát trước khi nhận yêu cầu.";
+                return;
+            }
+
+            // Never silently promote a failed WM_CLOSE into Kill().
+            var forceAnswer = MessageBox.Show(
+                $"Còn {graceful.Remaining} tiến trình chưa thoát; {graceful.Failures} tiến trình không truy cập được.\n\n" +
+                "Buộc dừng chỉ game thuộc thư mục đã chọn? Có thể mất dữ liệu chưa lưu.",
+                "Xác nhận buộc dừng game",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Warning);
+            if (forceAnswer != MessageBoxResult.Yes)
+            {
+                Message = "Game chưa thoát hoàn toàn; không buộc dừng.";
+                return;
+            }
+
+            var forced = await Task.Run(() => GameProcessCloseService.ForceCloseConfirmed(gamePath));
+            Message = forced.Matched == 0
+                ? "Game đã tự thoát trước khi buộc dừng."
+                : forced.Remaining == 0 && forced.Failures == 0
+                    ? $"Đã buộc dừng {forced.Closed} tiến trình game được xác minh."
+                    : $"Đã dừng {forced.Closed}; còn {forced.Remaining} tiến trình đang chạy, {forced.Failures} lỗi truy cập.";
         }
         catch (Exception ex)
         {
-            Message = "Lỗi khi đóng game: " + ex.Message;
+            Message = "Không thể kiểm tra hoặc đóng game: " + ex.Message;
+            _log.Warn("CloseGame", Message);
         }
     }
+
 }
