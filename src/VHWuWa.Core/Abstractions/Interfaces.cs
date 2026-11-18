@@ -75,8 +75,12 @@ public interface IViethoaInstaller
     IReadOnlyList<string> FindOldTranslationConflicts(string gamePath);
     /// <summary>Dọn riêng bộ Việt hóa WinHTTP cũ vào vùng cách ly có SHA và manifest, có thể phục hồi.</summary>
     Result<ModQuarantineReport> QuarantineOldTranslationConflicts(string gamePath);
-    /// <summary>Xóa vĩnh viễn các file mod xung đột sau khi người dùng xác nhận trên giao diện.</summary>
+    /// <summary>Tương thích API cũ: chuyển mod xung đột vào vùng cách ly, không xóa vĩnh viễn.</summary>
     Result<int> DeleteConflicts(string gamePath);
+    /// <summary>Khôi phục các file đã cách ly bằng manifest và SHA, không ghi đè mod đang tồn tại.</summary>
+    Result<int> RestoreQuarantine(string gamePath, string quarantineDirectory);
+    /// <summary>Tìm bản sao lưu gần nhất của đúng thư mục game sau khi khởi động lại.</summary>
+    string? FindLatestQuarantine(string gamePath);
     /// <summary>Cập nhật riêng PAK bản dịch đang hoạt động, giữ nguyên font/loader và đồng bộ marker SHA.</summary>
     Task<Result> UpdateTranslationPakAsync(string gamePath, NameVariant variant,
         CancellationToken ct = default);

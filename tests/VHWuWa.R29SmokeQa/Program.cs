@@ -108,6 +108,19 @@ void Scenario(string mode, bool officialMount, bool englishSig, bool staleWahu,
         Console.WriteLine("PASS R29_INVALID_SIG_FAIL_CLOSED=" + mode);
         return;
     }
+    // Changed or unverified files at the WAHU destination are now user-owned
+    // until provenance is proven; a stale sidecar must not be overwritten.
+    if (staleWahu)
+    {
+        if (result.Success) throw new Exception("Unverified R29 files were overwritten: " + mode);
+        if (oldPak is null || oldSig is null || oldSidecar is null
+            || !File.ReadAllBytes(dest).SequenceEqual(oldPak)
+            || !File.ReadAllBytes(destSig).SequenceEqual(oldSig)
+            || !File.ReadAllBytes(sidecar).SequenceEqual(oldSidecar))
+            throw new Exception("Unverified R29 preimages were modified: " + mode);
+        Console.WriteLine("PASS R29_STALE_UNVERIFIED_FILES_PRESERVED=" + mode);
+        return;
+    }
     if (!result.Success) throw new Exception("Install failed for " + mode + ": " + result.Error);
     if (!R29MountedPak.IsInstalled(game)) throw new Exception("Installed files not verified");
     if (!File.Exists(sidecar) || !File.Exists(dest) || !File.Exists(destSig))
@@ -194,6 +207,22 @@ async Task ForceInstallScenario()
     var baseDir = AppContext.BaseDirectory;
     var package = Path.Combine(baseDir, "content", "3.8.11", "WuWaVH_PC_R29_99_P.pak");
     var releaseMarker = Path.Combine(baseDir, "content", "r29-release.json");
+    var fontDestination = Path.Combine(baseDir, "content", "font", "Lexend-660_100_P.pak");
+    var fontExisted = File.Exists(fontDestination);
+    var oldFont = fontExisted ? File.ReadAllBytes(fontDestination) : null;
+    var ancestor = new DirectoryInfo(baseDir);
+    string? realFont = null;
+    while (ancestor is not null)
+    {
+        var candidate = Path.Combine(ancestor.FullName, "content", "font", "Lexend-660_100_P.pak");
+        if (File.Exists(candidate) && !candidate.Equals(fontDestination, StringComparison.OrdinalIgnoreCase))
+        {
+            realFont = candidate;
+            break;
+        }
+        ancestor = ancestor.Parent;
+    }
+    if (realFont is null) throw new FileNotFoundException("Missing packaged Lexend QA font");
     var packageExisted = File.Exists(package);
     var markerExisted = File.Exists(releaseMarker);
     byte[]? oldPackage = packageExisted ? File.ReadAllBytes(package) : null;
@@ -213,6 +242,8 @@ async Task ForceInstallScenario()
     try
     {
         Directory.CreateDirectory(Path.GetDirectoryName(package)!);
+        Directory.CreateDirectory(Path.GetDirectoryName(fontDestination)!);
+        File.Copy(realFont, fontDestination, overwrite: true);
         File.Copy(realPak, package, overwrite: true);
         File.WriteAllText(releaseMarker, "{\"translationRelease\":\"R29\"}");
 
@@ -246,8 +277,11 @@ async Task ForceInstallScenario()
             throw new Exception("Unknown language Mount preflight mutated game files");
         Console.WriteLine("PASS R29_UNKNOWN_MOUNT_BLOCKED_AND_PRESERVED=true");
 
-        // Fixture-only: user explicitly removes the unidentified sidecar.
-        // Unreferenced, unrelated pak/sig must still be preserved.
+        // Explicit opt-in isolation of a known conflicting loader; this only
+        // runs inside the disposable QA fixture, not against a real game.
+        var approved = installer.QuarantineConflicts(game);
+        if (!approved.Success || approved.Value is null)
+            throw new Exception("Approved quarantine failed: " + approved.Error);
         File.Delete(foreignSidecar);
         var result = await installer.InstallAsync(game, NameVariant.English, withFont: false);
         if (!result.Success) throw new Exception("Force install failed: " + result.Error);
@@ -256,8 +290,8 @@ async Task ForceInstallScenario()
             throw new Exception("Known conflicting Win64 loader was not quarantined");
         if (!File.Exists(foreignPak) || !File.Exists(foreignSig))
             throw new Exception("Unreferenced foreign pak/sig were deleted without provenance");
-        if (installer.LastAutoDeletedConflictCount < 1)
-            throw new Exception("Force install did not quarantine known conflicts");
+        if (installer.LastAutoDeletedConflictCount != 0)
+            throw new Exception("Installer silently modified unrelated mods");
         if (string.IsNullOrWhiteSpace(installer.LastQuarantineDirectory)
             || !File.Exists(Path.Combine(installer.LastQuarantineDirectory, "quarantine-manifest.json"))
             || Directory.GetFiles(installer.LastQuarantineDirectory, "*", SearchOption.AllDirectories).Length < 2)
@@ -280,6 +314,8 @@ async Task ForceInstallScenario()
             else if (File.Exists(package)) File.Delete(package);
             if (markerExisted && oldMarker is not null) File.WriteAllBytes(releaseMarker, oldMarker);
             else if (File.Exists(releaseMarker)) File.Delete(releaseMarker);
+            if (fontExisted && oldFont is not null) File.WriteAllBytes(fontDestination, oldFont);
+            else if (File.Exists(fontDestination)) File.Delete(fontDestination);
         }
         catch { }
     }

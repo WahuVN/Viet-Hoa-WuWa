@@ -235,45 +235,113 @@ public static class R29MountedPak
         if (cleaned != attributes) File.SetAttributes(path, cleaned);
     }
 
+    private static bool HasUnsafeAncestor(string path, string gameRoot)
+    {
+        var root = Path.GetFullPath(gameRoot)
+            .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+        var current = Path.GetFullPath(path);
+        while (current.StartsWith(root + Path.DirectorySeparatorChar,
+                   StringComparison.OrdinalIgnoreCase)
+               || current.Equals(root, StringComparison.OrdinalIgnoreCase))
+        {
+            if ((File.Exists(current) || Directory.Exists(current))
+                && (File.GetAttributes(current) & FileAttributes.ReparsePoint) != 0)
+                return true;
+            if (current.Equals(root, StringComparison.OrdinalIgnoreCase)) break;
+            var parent = Path.GetDirectoryName(current);
+            if (string.IsNullOrEmpty(parent)) break;
+            current = parent;
+        }
+        return false;
+    }
+
     public static Result Install(string appDirectory, string gameRoot)
     {
+        var staged = new List<string>();
+        var old = new List<(string Destination, string Backup)>();
+        var installed = new List<string>();
         try
         {
             if (!PackageVerified(appDirectory))
                 return Result.Fail("R29 thiếu gói hoặc SHA-256 sai. Không thay đổi file game.");
-            // Preflight SIG before creating or modifying any game-side folder/file.
             var sourceSig = StockSig(gameRoot);
             if (sourceSig is null || !File.Exists(sourceSig))
                 return Result.Fail("Không xác minh được SIG game. Chưa ghi file Việt hóa.");
-            var sourceSigHash = Sha(sourceSig, HashAlgorithmName.SHA256);
-            // Force-install phần R29 do WAHU quản lý: tạo phần thiếu, dọn file
-            // đích cũ nếu cần và ghi đè. File game official không nằm trong các đích này.
-            var modDir = DestinationDir(gameRoot);
-            var mountDir = MountDir(gameRoot);
+            if (HasUnsafeAncestor(sourceSig, gameRoot))
+                return Result.Fail("SIG game nằm trong đường dẫn có liên kết ngoài.");
+
             var pak = DestinationPak(gameRoot);
             var sig = DestinationSig(gameRoot);
             var sidecar = DestinationMount(gameRoot);
+            var destinations = new[] { pak, sig, sidecar };
+            if (destinations.Any(p => HasUnsafeAncestor(p, gameRoot)))
+                return Result.Fail("Thư mục Việt hóa chứa liên kết ngoài; từ chối ghi đè.");
 
-            Directory.CreateDirectory(mountDir);
-            Directory.CreateDirectory(modDir);
-            PrepareForOverwrite(pak);
-            PrepareForOverwrite(sig);
-            PrepareForOverwrite(sidecar);
-            File.Copy(Source(appDirectory), pak, overwrite: true);
+            // A foreign or partial installation in these same three paths must NOT be
+            // overwritten. Only a complete, SHA-verified WAHU R29 install is owned.
+            if (destinations.Any(File.Exists) && !IsInstalled(gameRoot))
+                return Result.Fail("Đã có tệp tại vị trí R29 nhưng không xác minh được chủ sở hữu. "
+                    + "Không ghi đè file lạ; hãy sao lưu và đối chiếu trước.");
 
-            File.Copy(sourceSig, sig, overwrite: true);
-            if (!ShaMatches(sig, sourceSigHash))
-                throw new IOException("SIG sao chép khác SHA-256 nguồn; dừng cài R29.");
+            var sourceSigHash = Sha(sourceSig, HashAlgorithmName.SHA256);
+            Directory.CreateDirectory(DestinationDir(gameRoot));
+            Directory.CreateDirectory(MountDir(gameRoot));
 
-            var content = SidecarText(Sha(pak, HashAlgorithmName.SHA1),
-                Sha(sig, HashAlgorithmName.SHA1));
-            File.WriteAllText(sidecar, content, new UTF8Encoding(false));
+            var suffix = ".wahu-" + Guid.NewGuid().ToString("N");
+            var stagePaths = destinations.Select(p => p + suffix + ".new").ToArray();
+            staged.AddRange(stagePaths);
+            File.Copy(Source(appDirectory), stagePaths[0], overwrite: false);
+            File.Copy(sourceSig, stagePaths[1], overwrite: false);
+            if (!ShaMatches(stagePaths[0], ArchiveSha256)
+                || !Sha(stagePaths[1], HashAlgorithmName.SHA256).Equals(sourceSigHash,
+                    StringComparison.OrdinalIgnoreCase))
+                throw new IOException("PAK hoặc SIG tạm không khớp SHA-256.");
+            File.WriteAllText(stagePaths[2],
+                SidecarText(Sha(stagePaths[0], HashAlgorithmName.SHA1),
+                    Sha(stagePaths[1], HashAlgorithmName.SHA1)),
+                new UTF8Encoding(false));
+
+            // Stage fully first; move verified WAHU-owned files aside before replacing.
+            for (var i = 0; i < destinations.Length; i++)
+            {
+                if (!File.Exists(destinations[i])) continue;
+                var backup = destinations[i] + suffix + ".old";
+                File.Move(destinations[i], backup);
+                old.Add((destinations[i], backup));
+            }
+            for (var i = 0; i < destinations.Length; i++)
+            {
+                File.Move(stagePaths[i], destinations[i]);
+                installed.Add(destinations[i]);
+            }
+            if (!IsInstalled(gameRoot))
+                throw new IOException("Kiểm tra bản dịch sau khi cài không khớp SHA.");
+
+            // Delete only backups of the R29 files we already verified as ours.
+            foreach (var (_, backup) in old)
+                try { if (File.Exists(backup)) File.Delete(backup); }
+                catch (IOException) { /* keep backup for manual cleanup */ }
+                catch (UnauthorizedAccessException) { /* retain recoverable backup */ }
             return Result.Ok();
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException
                                    or ArgumentException or InvalidDataException)
         {
-            return Result.Fail("Không thể ghi đè PAK R29: " + ex.Message, ex);
+            foreach (var file in installed.AsEnumerable().Reverse())
+                try { if (File.Exists(file)) File.Delete(file); } catch { }
+            foreach (var (destination, backup) in old.AsEnumerable().Reverse())
+                try
+                {
+                    if (File.Exists(backup) && !File.Exists(destination))
+                        File.Move(backup, destination);
+                }
+                catch { /* leave .old file for recovery; do not overwrite any file */ }
+            return Result.Fail("Cài PAK R29 thất bại, đã thử khôi phục: " + ex.Message, ex);
+        }
+        finally
+        {
+            foreach (var file in staged)
+                try { if (File.Exists(file)) File.Delete(file); } catch { }
         }
     }
 

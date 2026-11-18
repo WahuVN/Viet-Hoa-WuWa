@@ -71,7 +71,7 @@ public partial class InstallViewModel : ObservableObject
         var installStatus = valid ? _viet.GetStatus(game) : null;
         var hasLegacyFiles = r29Present && installStatus?.LegacyFilesPresent == true;
         UsesNativeFont = false;
-        var conflicts = valid && !r29Present ? _viet.FindConflicts(game) : Array.Empty<string>();
+        var conflicts = valid ? _viet.FindConflicts(game) : Array.Empty<string>();
         HasConflicts = conflicts.Count > 0;
         var oldTranslationFiles = valid && !r29Present ? _viet.FindOldTranslationConflicts(game) : Array.Empty<string>();
         var oldScanError = oldTranslationFiles.FirstOrDefault(x =>
@@ -82,11 +82,11 @@ public partial class InstallViewModel : ObservableObject
                 ? $"Phát hiện {oldTranslationFiles.Count} file từ bộ Việt hóa cũ có thể dọn riêng:\n• "
                   + string.Join("\n• ", oldTranslationFiles.Take(8))
                 : "✔ Không tìm thấy file Việt hóa Đặng Dev/fork có thể dọn tự động.";
-        if (!string.IsNullOrWhiteSpace(_viet.LastQuarantineDirectory))
-        {
-            LastQuarantinePath = _viet.LastQuarantineDirectory;
-            HasQuarantine = Directory.Exists(LastQuarantinePath);
-        }
+        var latestQuarantine = !string.IsNullOrWhiteSpace(_viet.LastQuarantineDirectory)
+            ? _viet.LastQuarantineDirectory : (valid ? _viet.FindLatestQuarantine(game) : null);
+        LastQuarantinePath = latestQuarantine ?? "";
+        HasQuarantine = !string.IsNullOrWhiteSpace(LastQuarantinePath)
+            && Directory.Exists(LastQuarantinePath);
         ConflictText = HasConflicts
             ? $"{conflicts.Count} file mod khác:\n• " + string.Join("\n• ", conflicts.Take(8))
             : "";
@@ -99,9 +99,12 @@ public partial class InstallViewModel : ObservableObject
         IsHanVietAvailable = !r29Present;
         if (r29Present)
         {
-            // R29 chỉ ghi các tệp WAHU quản lý; không quét, cách ly hoặc thay đổi mod khác.
-            if (HasConflicts || HasOldTranslationConflicts)
-                ConflictText = "Có mod khác nhưng Cài Việt hóa sẽ không đụng tới chúng.";
+            // R29 does not silently touch mods: show the suspected files and
+            // explicitly ask before any optional quarantine.
+            if (HasConflicts)
+                ConflictText = "Phát hiện mod khác. Khi cài, ứng dụng sẽ hỏi trước "
+                    + "khi sao lưu và tạm vô hiệu hóa:\n• "
+                    + string.Join("\n• ", conflicts.Take(8));
             VariantEnglish = true;
             ApplyFont = true; // Install contract: R29 always includes Lexend 660.
             FontAvailable = content.FontPak is not null;
@@ -216,6 +219,7 @@ public partial class InstallViewModel : ObservableObject
         InstallCommand.NotifyCanExecuteChanged();
         DeleteConflictsCommand.NotifyCanExecuteChanged();
         QuarantineConflictsCommand.NotifyCanExecuteChanged();
+        RestoreQuarantineCommand.NotifyCanExecuteChanged();
         RemoveOldTranslationConflictsCommand.NotifyCanExecuteChanged();
         CheckConflictsCommand.NotifyCanExecuteChanged();
         UninstallCommand.NotifyCanExecuteChanged();
@@ -237,8 +241,11 @@ public partial class InstallViewModel : ObservableObject
             return;
         }
         var answer = System.Windows.MessageBox.Show(
-            "VHWuWa sẽ chuyển các PAK/loader xung đột ra khỏi thư mục game vào vùng cách ly.\n\n"
-            + "Không file nào bị xóa vĩnh viễn. Bạn có muốn tiếp tục?",
+            "Danh sách cần xem trước:\n• " + string.Join("\n• ",
+                _viet.FindConflicts(game).Take(15))
+            + "\n\nCác file này có thể thuộc mod khác và không nhất thiết gây lỗi. "
+            + "Nếu đồng ý, ứng dụng sao lưu rồi tạm vô hiệu hóa chúng.\n"
+            + "Không xóa vĩnh viễn. Tiếp tục?",
             "Cách ly mod xung đột", System.Windows.MessageBoxButton.YesNo,
             System.Windows.MessageBoxImage.Warning);
         if (answer != System.Windows.MessageBoxResult.Yes) return;
@@ -327,6 +334,36 @@ public partial class InstallViewModel : ObservableObject
             Process.Start(new ProcessStartInfo(LastQuarantinePath) { UseShellExecute = true });
     }
 
+    private bool CanRestoreQuarantine() =>
+        HasQuarantine && !Busy && !string.IsNullOrWhiteSpace(LastQuarantinePath);
+
+    partial void OnHasQuarantineChanged(bool value) =>
+        RestoreQuarantineCommand.NotifyCanExecuteChanged();
+
+    [RelayCommand(CanExecute = nameof(CanRestoreQuarantine))]
+    private void RestoreQuarantine()
+    {
+        var game = _settings.Settings.GamePath;
+        var path = LastQuarantinePath;
+        if (string.IsNullOrWhiteSpace(game) || string.IsNullOrWhiteSpace(path)) return;
+
+        var confirm = System.Windows.MessageBox.Show(
+            "Khôi phục các mod đã cách ly vào thư mục game? "
+            + "File mới hoặc file khác nội dung sẽ KHÔNG bị ghi đè.",
+            "Khôi phục mod", System.Windows.MessageBoxButton.YesNo,
+            System.Windows.MessageBoxImage.Question, System.Windows.MessageBoxResult.No);
+        if (confirm != System.Windows.MessageBoxResult.Yes) return;
+        Busy = true;
+        try
+        {
+            var restored = _viet.RestoreQuarantine(game, path);
+            Summary = restored.Success
+                ? $"Đã khôi phục {restored.Value} file; bản sao lưu vẫn được giữ."
+                : "Không thể khôi phục: " + restored.Error;
+        }
+        finally { Busy = false; Refresh(); }
+    }
+
     [RelayCommand(CanExecute = nameof(CanManageConflicts))]
     private void DeleteConflicts()
     {
@@ -352,11 +389,11 @@ public partial class InstallViewModel : ObservableObject
         }
         var preview = string.Join("\n• ", currentConflicts.Take(15));
         var answer = System.Windows.MessageBox.Show(
-            "XÓA VĨNH VIỄN các file mod xung đột đã phát hiện:\n• " + preview
+            "CÁCH LY (KHÔNG XÓA VĨNH VIỄN) các file mod đã phát hiện:\n• " + preview
             + (currentConflicts.Count > 15 ? $"\n... và {currentConflicts.Count - 15} mục khác." : "")
-            + "\n\nKhông xóa file game gốc, file WAHU hợp lệ hoặc bản sao lưu .bak/.backup. "
-            + "Không thể hoàn tác. Muốn giữ bản sao mod cũ, hãy chọn Cách ly thay vì Xóa.",
-            "Xóa mod xung đột", System.Windows.MessageBoxButton.YesNo,
+            + "\n\nMột số mod có thể không thực sự xung đột. Sao lưu SHA-256 và tạm "
+            + "vô hiệu hóa các file trong danh sách, có thể khôi phục. Tiếp tục?",
+            "Cách ly mod", System.Windows.MessageBoxButton.YesNo,
             System.Windows.MessageBoxImage.Warning,
             System.Windows.MessageBoxResult.No);
         if (answer != System.Windows.MessageBoxResult.Yes) return;
@@ -365,8 +402,13 @@ public partial class InstallViewModel : ObservableObject
         try
         {
             var result = _viet.DeleteConflicts(game);
+            if (result.Success)
+            {
+                LastQuarantinePath = _viet.LastQuarantineDirectory ?? "";
+                HasQuarantine = Directory.Exists(LastQuarantinePath);
+            }
             Summary = result.Success
-                ? $"✅ Đã xóa vĩnh viễn {result.Value} file mod xung đột."
+                ? $"Đã cách ly {result.Value} file mod, có thể khôi phục."
                 : "❌ " + result.Error;
         }
         finally
@@ -488,6 +530,46 @@ public partial class InstallViewModel : ObservableObject
             ApplyFont = true;
         }
         var variant = VariantEnglish ? NameVariant.English : NameVariant.HanViet;
+        string? quarantinedForInstall = null;
+        if (r29)
+        {
+            if (_viet.GetStatus(game).LegacyFilesPresent)
+            {
+                Summary = "Còn PAK hoặc loader Việt hóa cũ. Hãy gỡ bộ cũ trước khi cài R29.";
+                return;
+            }
+            var detected = _viet.FindConflicts(game);
+            var scanError = detected.FirstOrDefault(x =>
+                x.StartsWith("Không thể kiểm tra mod:", StringComparison.OrdinalIgnoreCase));
+            if (scanError is not null) { Summary = "Không thể kiểm tra: " + scanError; return; }
+            if (detected.Count > 0)
+            {
+                var preview = string.Join("\n• ", detected.Take(14));
+                var confirm = System.Windows.MessageBox.Show(
+                    "Phát hiện " + detected.Count + " tệp/bộ mod có thể xung đột:\n• "
+                    + preview + (detected.Count > 14 ? "\n... và các mục khác." : "")
+                    + "\n\nCác mod này không chắc đều gây lỗi. Nếu tiếp tục, chương trình sẽ "
+                    + "SAO LƯU và TẠM VÔ HIỆU HÓA trước khi cài. Không xóa vĩnh viễn.\n\n"
+                    + "Bạn đồng ý cách ly những mod được liệt kê?",
+                    "Kiểm tra mod trước khi cài R29", System.Windows.MessageBoxButton.YesNo,
+                    System.Windows.MessageBoxImage.Warning,
+                    System.Windows.MessageBoxResult.No);
+                if (confirm != System.Windows.MessageBoxResult.Yes)
+                {
+                    Summary = "Đã hủy cài. Không thay đổi mod hoặc tệp game.";
+                    return;
+                }
+                var quarantine = _viet.QuarantineConflicts(game);
+                if (!quarantine.Success || quarantine.Value is null)
+                {
+                    Summary = "Không thể sao lưu mod xung đột: " + quarantine.Error;
+                    return;
+                }
+                quarantinedForInstall = quarantine.Value.QuarantineDirectory;
+                LastQuarantinePath = quarantinedForInstall;
+                HasQuarantine = true;
+            }
+        }
         _cts = new CancellationTokenSource();
         Busy = true; Progress = 0; ProgressText = "Bắt đầu...";
         Summary = r29 ? "Đang ghi đè R29 vào game..." : "Đang cài Việt hóa...";
@@ -515,10 +597,14 @@ public partial class InstallViewModel : ObservableObject
                 Summary = optionsAdjusted
                     ? "✅ Đã cài R29 tên Anh + Lexend 660 (Hán Việt chưa có cho R29)."
                     : "✅ Cài xong R29 + Lexend 660! Vào game đặt Text Language = English. Có thể dùng DirectX 11 hoặc 12.";
+                if (quarantinedForInstall is not null)
+                    Summary += " Đã cách ly mod có sao lưu. Dùng Khôi phục mod nếu cần.";
             }
             else
             {
                 var error = r.Error?.StartsWith("❌") == true ? r.Error! : "❌ " + r.Error;
+                if (quarantinedForInstall is not null)
+                    error += "\nMod đã cách ly vẫn được sao lưu. Chọn Khôi phục mod để trả lại.";
                 Summary = error;
                 System.Windows.MessageBox.Show(
                     error,

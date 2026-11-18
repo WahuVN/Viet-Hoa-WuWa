@@ -771,37 +771,31 @@ public sealed class ViethoaInstaller : IViethoaInstaller
 
             var quarantine = Path.Combine(_quarantineRoot,
                 DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss") + "_" + Guid.NewGuid().ToString("N")[..6]);
+            if (PathValidation.IsSubPathOf(_quarantineRoot, gameRoot))
+                throw new IOException("Vùng cách ly không được nằm bên trong game.");
             Directory.CreateDirectory(quarantine);
+            if (HasReparseAncestor(quarantine, _quarantineRoot))
+                throw new IOException("Vùng cách ly có liên kết ngoài.");
+            var prepared = new List<(string Source, string Target, string Relative,
+                string Hash, FileAttributes OriginalAttributes)>();
+
+            // Phase 1: stage and verify ALL backups and write a recoverable manifest
+            // before touching any installed mod. This survives process interruption.
             foreach (var source in targets)
             {
-                var relative = Path.GetRelativePath(gamePath, source);
-                if (relative.StartsWith("..", StringComparison.Ordinal))
-                    throw new InvalidOperationException("Đường dẫn mod nằm ngoài thư mục game: " + source);
+                var relative = Path.GetRelativePath(gameRoot, source);
+                if (!PathValidation.IsSafeRelativePath(relative)
+                    || HasReparseAncestor(source, gameRoot))
+                    throw new IOException("Đường dẫn mod không an toàn: " + relative);
                 var target = PathValidation.ResolveInsideRoot(quarantine, relative);
                 Directory.CreateDirectory(Path.GetDirectoryName(target)!);
                 var hash = ViethoaInstallMarker.Sha256(source);
-                File.Copy(source, target, overwrite: false);
-                if (!hash.Equals(ViethoaInstallMarker.Sha256(target), StringComparison.OrdinalIgnoreCase))
-                {
-                    File.Delete(target);
-                    throw new IOException("File cách ly sai SHA-256: " + relative);
-                }
                 var originalAttributes = File.GetAttributes(source);
-                try
-                {
-                    var writable = originalAttributes &
-                        ~(FileAttributes.ReadOnly | FileAttributes.Hidden | FileAttributes.System);
-                    if (originalAttributes != writable)
-                        File.SetAttributes(source, writable);
-                    File.Delete(source);
-                }
-                catch
-                {
-                    if (File.Exists(source))
-                        File.SetAttributes(source, originalAttributes);
-                    throw;
-                }
-                moved.Add((source, target, relative, hash, originalAttributes));
+                File.Copy(source, target, overwrite: false);
+                if (!hash.Equals(ViethoaInstallMarker.Sha256(target),
+                    StringComparison.OrdinalIgnoreCase))
+                    throw new IOException("Bản sao mod không trùng SHA-256: " + relative);
+                prepared.Add((source, target, relative, hash, originalAttributes));
             }
 
             var manifest = new
@@ -809,10 +803,39 @@ public sealed class ViethoaInstaller : IViethoaInstaller
                 schemaVersion = 1,
                 gamePath = Path.GetFullPath(gamePath),
                 quarantinedAt = DateTimeOffset.Now,
-                files = moved.Select(x => new { originalPath = x.Relative, sha256 = x.Hash, originalAttributes = (int)x.OriginalAttributes }).ToList()
+                files = prepared.Select(x => new
+                {
+                    originalPath = x.Relative,
+                    sha256 = x.Hash,
+                    originalAttributes = (int)x.OriginalAttributes
+                }).ToList()
             };
-            File.WriteAllText(Path.Combine(quarantine, "quarantine-manifest.json"),
+            var manifestFile = Path.Combine(quarantine, "quarantine-manifest.json");
+            File.WriteAllText(manifestFile,
                 JsonSerializer.Serialize(manifest, new JsonSerializerOptions { WriteIndented = true }));
+
+            // Phase 2: remove only the previously SHA-verified sources.
+            foreach (var item in prepared)
+            {
+                if (!item.Hash.Equals(ViethoaInstallMarker.Sha256(item.Source),
+                    StringComparison.OrdinalIgnoreCase))
+                    throw new IOException("Mod đã bị sửa sau khi sao lưu: " + item.Relative);
+                try
+                {
+                    var writable = item.OriginalAttributes &
+                        ~(FileAttributes.ReadOnly | FileAttributes.Hidden | FileAttributes.System);
+                    if (item.OriginalAttributes != writable)
+                        File.SetAttributes(item.Source, writable);
+                    File.Delete(item.Source);
+                }
+                catch
+                {
+                    if (File.Exists(item.Source))
+                        File.SetAttributes(item.Source, item.OriginalAttributes);
+                    throw;
+                }
+                moved.Add(item);
+            }
 
             RemoveEmptyModDirectories(gamePath);
             var report = new ModQuarantineReport
@@ -832,7 +855,8 @@ public sealed class ViethoaInstaller : IViethoaInstaller
                 {
                     if (!File.Exists(item.Target)) continue;
                     Directory.CreateDirectory(Path.GetDirectoryName(item.Source)!);
-                    File.Copy(item.Target, item.Source, overwrite: true);
+                    if (!File.Exists(item.Source))
+                        File.Copy(item.Target, item.Source, overwrite: false);
                     if (item.Hash.Equals(ViethoaInstallMarker.Sha256(item.Source), StringComparison.OrdinalIgnoreCase))
                     {
                         File.SetAttributes(item.Source, item.OriginalAttributes);
@@ -847,145 +871,201 @@ public sealed class ViethoaInstaller : IViethoaInstaller
         }
     }
 
+    // Legacy API: never permanently delete third-party mod files.
+    // Preserve the public contract while moving them into SHA-verified quarantine.
     public Result<int> DeleteConflicts(string gamePath)
+    {
+        var moved = QuarantineConflicts(gamePath);
+        return moved.Success && moved.Value is not null
+            ? Result<int>.Ok(moved.Value.MovedFiles.Count)
+            : Result<int>.Fail(moved.Error ?? "Không thể cách ly mod xung đột.");
+    }
+
+    public string? FindLatestQuarantine(string gamePath)
     {
         try
         {
-            if (IsGameRunning())
-                return Result<int>.Fail("Game hoặc launcher đang chạy. Hãy đóng hẳn trước khi xóa mod xung đột.");
-
-            using var operationLock = TryAcquireOperationLock(gamePath);
-            if (operationLock is null)
-                return Result<int>.Fail("Đang có một tiến trình VHWuWa khác cài/gỡ. Hãy chờ hoàn tất.");
-
-            return DeleteConflictsUnderLock(gamePath, failWhenEmpty: true, reason: "theo xác nhận của người dùng");
+            if (string.IsNullOrWhiteSpace(gamePath) || !Directory.Exists(_quarantineRoot))
+                return null;
+            var gameRoot = Path.GetFullPath(gamePath)
+                .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+            return Directory.EnumerateDirectories(_quarantineRoot)
+                .Where(dir => !HasReparseAncestor(dir, _quarantineRoot))
+                .OrderByDescending(dir => Path.GetFileName(dir), StringComparer.OrdinalIgnoreCase)
+                .FirstOrDefault(dir =>
+                {
+                    try
+                    {
+                        var marker = Path.Combine(dir, "quarantine-manifest.json");
+                        if (!File.Exists(marker)
+                            || (File.GetAttributes(marker) & FileAttributes.ReparsePoint) != 0)
+                            return false;
+                        using var json = JsonDocument.Parse(File.ReadAllText(marker));
+                        var j = json.RootElement;
+                        return j.GetProperty("schemaVersion").GetInt32() == 1
+                            && Path.GetFullPath(j.GetProperty("gamePath").GetString() ?? "")
+                                .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
+                                .Equals(gameRoot, StringComparison.OrdinalIgnoreCase)
+                            && j.GetProperty("files").ValueKind == JsonValueKind.Array
+                            && j.GetProperty("files").GetArrayLength() > 0;
+                    }
+                    catch (Exception ex) when (ex is IOException or UnauthorizedAccessException
+                        or JsonException or InvalidOperationException or ArgumentException
+                        or KeyNotFoundException)
+                    {
+                        return false;
+                    }
+                });
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException
+            or ArgumentException)
         {
-            _log.Error("Conflict", "Xóa mod xung đột thất bại: " + ex.Message, ex);
-            return Result<int>.Fail("Xóa mod xung đột thất bại: " + ex.Message, ex);
+            _log.Warn("Conflict", "Không thể tìm bản sao lưu: " + ex.Message);
+            return null;
         }
     }
 
     /// <summary>
-    /// Xóa đúng tập file đã được bộ dò conflict nhận diện. Caller phải giữ operation lock.
-    /// Không đụng các pakchunk gốc của game vì CollectConflictFiles đã loại chúng.
+    /// Restore a quarantined group only to its original game. Never overwrite
+    /// files another installer or mod manager has placed there since quarantine.
+    /// Backup copies are retained so restore can be retried.
     /// </summary>
-    private Result<int> DeleteConflictsUnderLock(
-        string gamePath,
-        bool failWhenEmpty,
-        string reason)
+    public Result<int> RestoreQuarantine(string gamePath, string quarantineDirectory)
     {
-        var targets = CollectConflictFiles(gamePath);
-        if (targets.Count == 0)
-            return failWhenEmpty
-                ? Result<int>.Fail("Không tìm thấy file mod xung đột để xóa.")
-                : Result<int>.Ok(0);
-
-        var gameRoot = Path.GetFullPath(gamePath);
-
-        // Hai pha: kiểm tra toàn bộ target trước khi xóa file đầu tiên. Nếu một file
-        // đang bị process khác khóa hoặc thư mục cha không ghi/xóa được thì dừng nguyên vẹn.
-        var preflightFailures = new List<string>();
-        var checkedParents = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        foreach (var target in targets)
+        try
         {
-            var relative = Path.GetRelativePath(gameRoot, target);
-            if (relative.StartsWith("..", StringComparison.Ordinal))
+            if (IsGameRunning())
+                return Result<int>.Fail("Hãy đóng game và launcher trước khi khôi phục mod.");
+            using var operationLock = TryAcquireOperationLock(gamePath);
+            if (operationLock is null)
+                return Result<int>.Fail("Có thao tác cài/gỡ khác đang chạy.");
+
+            var gameRoot = Path.GetFullPath(gamePath)
+                .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+            var archiveRoot = Path.GetFullPath(_quarantineRoot)
+                .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+            if (string.IsNullOrWhiteSpace(quarantineDirectory))
+                return Result<int>.Fail("Chưa chọn vùng cách ly để khôi phục.");
+
+            var archive = Path.GetFullPath(quarantineDirectory)
+                .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+            if (!PathValidation.IsSubPathOf(archive, archiveRoot)
+                || string.Equals(archive, archiveRoot, StringComparison.OrdinalIgnoreCase)
+                || !string.Equals(Path.GetDirectoryName(archive), archiveRoot,
+                    StringComparison.OrdinalIgnoreCase)
+                || PathValidation.IsSubPathOf(archiveRoot, gameRoot))
+                return Result<int>.Fail("Đường dẫn vùng cách ly không hợp lệ.");
+            if (!Directory.Exists(archive) || HasReparseAncestor(archive, archiveRoot))
+                return Result<int>.Fail("Vùng cách ly không tồn tại hoặc chứa liên kết ngoài.");
+
+            var manifestFile = Path.Combine(archive, "quarantine-manifest.json");
+            if (!File.Exists(manifestFile)
+                || (File.GetAttributes(manifestFile) & FileAttributes.ReparsePoint) != 0)
+                return Result<int>.Fail("Thiếu bản ghi sao lưu hợp lệ.");
+
+            using var document = JsonDocument.Parse(File.ReadAllText(manifestFile));
+            var manifest = document.RootElement;
+            if (manifest.GetProperty("schemaVersion").GetInt32() != 1
+                || !Path.GetFullPath(manifest.GetProperty("gamePath").GetString() ?? "")
+                    .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
+                    .Equals(gameRoot, StringComparison.OrdinalIgnoreCase))
+                return Result<int>.Fail("Bản sao lưu không thuộc thư mục game này.");
+
+            var items = manifest.GetProperty("files");
+            if (items.ValueKind != JsonValueKind.Array || items.GetArrayLength() is < 1 or > 4096)
+                return Result<int>.Fail("Danh sách tệp cách ly không hợp lệ.");
+
+            var entries = new List<(string Source, string Destination, string Hash, FileAttributes Attributes)>();
+            var names = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var item in items.EnumerateArray())
             {
-                preflightFailures.Add(relative + " (nằm ngoài thư mục game)");
-                continue;
+                var relative = item.GetProperty("originalPath").GetString() ?? "";
+                var expected = item.GetProperty("sha256").GetString() ?? "";
+                if (!names.Add(relative) || expected.Length != 64
+                    || !expected.All(Uri.IsHexDigit))
+                    return Result<int>.Fail("Bản ghi cách ly chứa đường dẫn hoặc SHA không hợp lệ.");
+
+                var source = PathValidation.ResolveInsideRoot(archive, relative);
+                var destination = PathValidation.ResolveInsideRoot(gameRoot, relative);
+                if (HasReparseAncestor(source, archive)
+                    || HasReparseAncestor(destination, gameRoot)
+                    || !File.Exists(source)
+                    || !ViethoaInstallMarker.Sha256(source).Equals(expected,
+                        StringComparison.OrdinalIgnoreCase))
+                    return Result<int>.Fail("Bản sao lưu bị thay đổi hoặc có liên kết không an toàn: "
+                        + relative);
+                if (Directory.Exists(destination)
+                    || (File.Exists(destination)
+                        && !ViethoaInstallMarker.Sha256(destination).Equals(expected,
+                            StringComparison.OrdinalIgnoreCase)))
+                    return Result<int>.Fail("File đích đã được thay đổi. Không ghi đè: " + relative);
+
+                var attributes = (FileAttributes)item.GetProperty("originalAttributes").GetInt32();
+                entries.Add((source, destination, expected, attributes));
             }
 
+            var created = new List<(string Path, string Hash)>();
             try
             {
-                if (!File.Exists(target)) continue;
-                var attributes = File.GetAttributes(target);
-                if ((attributes & FileAttributes.ReparsePoint) != 0)
+                foreach (var entry in entries)
                 {
-                    preflightFailures.Add(relative + " (reparse/symlink; từ chối dọn tự động)");
-                    continue;
+                    if (File.Exists(entry.Destination)) continue; // identical bytes verified above
+                    Directory.CreateDirectory(Path.GetDirectoryName(entry.Destination)!);
+                    if (HasReparseAncestor(entry.Destination, gameRoot))
+                        throw new IOException("Thư mục khôi phục chứa liên kết ngoài.");
+                    File.Copy(entry.Source, entry.Destination, overwrite: false);
+                    created.Add((entry.Destination, entry.Hash));
+                    if (!ViethoaInstallMarker.Sha256(entry.Destination).Equals(entry.Hash,
+                            StringComparison.OrdinalIgnoreCase))
+                        throw new IOException("Khôi phục không khớp SHA: " + entry.Destination);
+                    File.SetAttributes(entry.Destination, entry.Attributes);
                 }
-
-                using (new FileStream(target, FileMode.Open, FileAccess.Read, FileShare.None)) { }
-
-                var parent = Path.GetDirectoryName(target);
-                if (!string.IsNullOrWhiteSpace(parent) && checkedParents.Add(parent))
-                    EnsureDirectoryWritable(parent, "thư mục chứa mod xung đột");
             }
-            catch (Exception ex)
+            catch
             {
-                preflightFailures.Add(relative + " (" + ex.Message + ")");
-            }
-        }
-
-        if (preflightFailures.Count > 0)
-            return Result<int>.Fail("Chưa xóa file nào vì preflight dọn mod thất bại:\n- "
-                + string.Join("\n- ", preflightFailures.Take(8)));
-
-        // Preserve the previous version.dll before removing an unverified proxy.
-        // It stays inactive and is not automatically restored on uninstall unless
-        // the current official game manifest explicitly verifies version.dll.
-        var win64 = Win64Of(gamePath);
-        var installedVersion = Path.Combine(win64, "version.dll");
-        var versionBackup = Path.Combine(win64, "version_goc.dll");
-        if (targets.Contains(installedVersion, StringComparer.OrdinalIgnoreCase)
-            && File.Exists(installedVersion) && !File.Exists(versionBackup))
-        {
-            try
-            {
-                File.Copy(installedVersion, versionBackup, overwrite: false);
-                if (!SameFile(installedVersion, versionBackup))
+                foreach (var entry in created.AsEnumerable().Reverse())
                 {
-                    File.Delete(versionBackup);
-                    return Result<int>.Fail("Sao lưu version.dll không đạt SHA-256; chưa xóa mod nào.");
+                    try
+                    {
+                        if (File.Exists(entry.Path)
+                            && ViethoaInstallMarker.Sha256(entry.Path).Equals(entry.Hash,
+                                StringComparison.OrdinalIgnoreCase))
+                        {
+                            File.SetAttributes(entry.Path, FileAttributes.Normal);
+                            File.Delete(entry.Path);
+                        }
+                    }
+                    catch { /* keep backup for manual recovery */ }
                 }
+                throw;
             }
-            catch (Exception ex)
-            {
-                return Result<int>.Fail("Không thể sao lưu version.dll trước khi xóa mod; chưa xóa file nào: " + ex.Message);
-            }
+            _log.Info("Conflict", $"Khôi phục {entries.Count} file từ vùng cách ly {archive}.");
+            return Result<int>.Ok(entries.Count);
         }
-
-        var deleted = 0;
-        var failures = new List<string>();
-        foreach (var target in targets)
+        catch (Exception ex)
         {
-            var relative = Path.GetRelativePath(gameRoot, target);
-            if (relative.StartsWith("..", StringComparison.Ordinal))
-            {
-                failures.Add(relative + " (nằm ngoài thư mục game)");
-                continue;
-            }
-
-            try
-            {
-                if (!File.Exists(target)) continue;
-                var attributes = File.GetAttributes(target);
-                if ((attributes & FileAttributes.ReadOnly) != 0)
-                    File.SetAttributes(target, attributes & ~FileAttributes.ReadOnly);
-                File.Delete(target);
-                if (File.Exists(target))
-                    failures.Add(relative + " (Windows không cho xóa)");
-                else
-                    deleted++;
-            }
-            catch (Exception ex)
-            {
-                failures.Add(relative + " (" + ex.Message + ")");
-            }
+            _log.Error("Conflict", "Không thể khôi phục mod cách ly: " + ex.Message, ex);
+            return Result<int>.Fail("Không thể khôi phục: " + ex.Message, ex);
         }
+    }
 
-        RemoveEmptyModDirectories(gamePath);
-        if (failures.Count > 0)
+    private static bool HasReparseAncestor(string path, string root)
+    {
+        var current = Path.GetFullPath(path);
+        var boundary = Path.GetFullPath(root)
+            .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+        while (PathValidation.IsSubPathOf(current, boundary))
         {
-            _log.Warn("Conflict", $"Đã xóa {deleted} file; còn {failures.Count} file không xóa được.");
-            return Result<int>.Fail($"Đã xóa {deleted} file nhưng còn {failures.Count} file không xóa được:\n- "
-                + string.Join("\n- ", failures.Take(8)));
+            if ((File.Exists(current) || Directory.Exists(current))
+                && (File.GetAttributes(current) & FileAttributes.ReparsePoint) != 0)
+                return true;
+            if (string.Equals(current, boundary, StringComparison.OrdinalIgnoreCase))
+                break;
+            var parent = Path.GetDirectoryName(current);
+            if (string.IsNullOrEmpty(parent)) break;
+            current = parent;
         }
-
-        _log.Info("Conflict", $"Đã xóa vĩnh viễn {deleted} file mod xung đột {reason}.");
-        return Result<int>.Ok(deleted);
+        return false;
     }
 
     private IReadOnlyList<string> CollectConflictFiles(string gamePath,
@@ -1379,22 +1459,8 @@ public sealed class ViethoaInstaller : IViethoaInstaller
             if (scanError is not null)
                 return Result.Fail(scanError);
             if (conflicts.Count > 0)
-            {
-                var cleanup = QuarantineConflictsCore(gamePath, acquireLock: false,
-                    allowWhileGameRunning: true);
-                if (!cleanup.Success || cleanup.Value is null)
-                    return Result.Fail("Không thể xử lý mod xung đột trước cập nhật nhanh: " + cleanup.Error);
-                LastAutoDeletedConflictCount = cleanup.Value.MovedFiles.Count;
-
-                var remaining = FindConflicts(gamePath);
-                var remainingScanError = remaining.FirstOrDefault(x =>
-                    x.StartsWith("Không thể kiểm tra mod:", StringComparison.OrdinalIgnoreCase));
-                if (remainingScanError is not null)
-                    return Result.Fail(remainingScanError);
-                if (remaining.Count > 0)
-                    return Result.Fail("Dọn mod ngoài chưa sạch; chưa cập nhật PAK mới:\n- "
-                        + string.Join("\n- ", remaining.Take(8)));
-            }
+                return Result.Fail("Phát hiện mod khác có thể xung đột. Không tự thay đổi file "
+                    + "khi cập nhật. Hãy xem danh sách và chọn Cách ly mod trước nếu muốn tiếp tục.");
 
             // A known foreign loader must not survive into the new installation.
             if (HasForeignWinHttpPakLoader(gamePath))
@@ -1518,6 +1584,18 @@ public sealed class ViethoaInstaller : IViethoaInstaller
                     return Result.Fail("Phát hiện PAK hoặc loader Việt hóa cũ. Hãy chọn Gỡ Việt hóa trước, "
                         + "kiểm tra lại trạng thái rồi cài R29. Không tự xóa mod khác.");
 
+                // R29 and old proxy/PAK loaders can be loaded together. Never silently
+                // remove another person's mods, or install through an unresolved conflict.
+                var suspectedMods = FindConflicts(gamePath);
+                var scanFailure = suspectedMods.FirstOrDefault(s =>
+                    s.StartsWith("Không thể kiểm tra mod:", StringComparison.OrdinalIgnoreCase));
+                if (scanFailure is not null)
+                    return Result.Fail(scanFailure);
+                if (suspectedMods.Count > 0)
+                    return Result.Fail("Phát hiện " + suspectedMods.Count
+                        + " mod/file có thể xung đột. Chưa thay đổi game. "
+                        + "Hãy xem danh sách và chọn Cách ly mod có sao lưu trước khi cài.");
+
                 var textWasInstalled = R29MountedPak.IsInstalled(gamePath);
                 var installed = await Task.Run(() =>
                     R29MountedPak.Install(AppContext.BaseDirectory, gamePath), CancellationToken.None);
@@ -1594,22 +1672,8 @@ public sealed class ViethoaInstaller : IViethoaInstaller
             if (scanError is not null)
                 return Result.Fail(scanError);
             if (conflicts.Count > 0)
-            {
-                var cleanup = QuarantineConflictsCore(gamePath, acquireLock: false,
-                    allowWhileGameRunning: true);
-                if (!cleanup.Success || cleanup.Value is null)
-                    return Result.Fail("Không thể xử lý mod xung đột trước khi cài:\n" + cleanup.Error);
-                LastAutoDeletedConflictCount = cleanup.Value.MovedFiles.Count;
-
-                var remaining = FindConflicts(gamePath);
-                var remainingScanError = remaining.FirstOrDefault(x =>
-                    x.StartsWith("Không thể kiểm tra mod:", StringComparison.OrdinalIgnoreCase));
-                if (remainingScanError is not null)
-                    return Result.Fail(remainingScanError);
-                if (remaining.Count > 0)
-                    return Result.Fail("Dọn mod ngoài chưa sạch; chưa ghi bản Việt hóa mới:\n- "
-                        + string.Join("\n- ", remaining.Take(8)));
-            }
+                return Result.Fail("Phát hiện mod khác có thể xung đột. Chưa ghi file Việt hóa, "
+                    + "chưa thay đổi mod nào. Hãy kiểm tra và chọn Cách ly mod nếu đồng ý.");
 
             // A known foreign loader must not survive into the new installation.
             if (HasForeignWinHttpPakLoader(gamePath))

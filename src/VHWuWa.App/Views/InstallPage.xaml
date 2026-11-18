@@ -57,7 +57,7 @@
                                     Visibility="{Binding Busy, Converter={StaticResource BoolToVis}}"
                                     Margin="0,0,8,8" Padding="12,8" FontSize="12" />
                         </WrapPanel>
-                        <TextBlock Text="Hãy đóng game trước khi cài/gỡ R29. Mount không xác minh được sẽ bị chặn, không xóa."
+                        <TextBlock Text="Hãy đóng game trước khi cài/gỡ R29. File không xác minh được sẽ bị chặn, không tự xóa."
                                    TextWrapping="Wrap" Opacity="0.65" Margin="0,4,0,0" FontSize="12" />
                         <TextBlock Text="{Binding Summary}" TextWrapping="Wrap"
                                    FontWeight="SemiBold" Margin="0,10,0,0" FontSize="12" />
@@ -66,8 +66,21 @@
 
                 <Expander Header="Tùy chọn khác" IsExpanded="False" Margin="0,0,0,12" Padding="8,4">
                     <StackPanel Margin="8,8,8,4">
-                        <Button Style="{StaticResource WahuStandardButtonStyle}" Content="Gỡ Việt hóa" Command="{Binding UninstallCommand}"
-                                HorizontalAlignment="Left" Padding="12,8" FontSize="12" />
+                        <WrapPanel>
+                            <Button Style="{StaticResource WahuStandardButtonStyle}" Content="Quét mod" Command="{Binding CheckConflictsCommand}"
+                                    Margin="0,0,8,8" Padding="12,8" FontSize="12" />
+                            <Button Style="{StaticResource WahuStandardButtonStyle}" Content="Cách ly mod xung đột" Command="{Binding QuarantineConflictsCommand}"
+                                    Margin="0,0,8,8" Padding="12,8" FontSize="12" />
+                            <Button Style="{StaticResource WahuStandardButtonStyle}" Content="Khôi phục mod" Command="{Binding RestoreQuarantineCommand}"
+                                    Margin="0,0,8,8" Padding="12,8" FontSize="12" />
+                            <Button Style="{StaticResource WahuStandardButtonStyle}" Content="Gỡ Việt hóa" Command="{Binding UninstallCommand}"
+                                    Margin="0,0,8,8" Padding="12,8" FontSize="12" />
+                        </WrapPanel>
+                        <TextBlock Text="{Binding ConflictText}" TextWrapping="Wrap" FontSize="11"
+                                   Foreground="{DynamicResource Wahu.Muted}" />
+                        <TextBlock Text="{Binding LastQuarantinePath}" TextWrapping="Wrap" FontSize="10.5"
+                                   Foreground="{DynamicResource Wahu.Muted}"
+                                   Visibility="{Binding HasQuarantine, Converter={StaticResource BoolToVis}}" />
                     </StackPanel>
                 </Expander>
             </StackPanel>

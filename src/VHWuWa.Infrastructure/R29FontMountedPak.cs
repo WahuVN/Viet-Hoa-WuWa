@@ -122,6 +122,11 @@ public static class R29FontMountedPak
             if (current is not null
                 && sourceSha.Equals(current.PakSha256, StringComparison.OrdinalIgnoreCase))
                 return Result.Ok();
+            // Existing unverified font files may belong to another mod or a changed
+            // installation. Never overwrite them without a valid WAHU receipt.
+            if (current is null && paths.Any(File.Exists))
+                return Result.Fail("Có tệp font tại vị trí WAHU nhưng không xác minh được chủ sở hữu. "
+                    + "Không ghi đè; hãy kiểm tra bản sao lưu và mod đang dùng.");
 
             Directory.CreateDirectory(FontDir(game));
             Directory.CreateDirectory(MountDir(game));

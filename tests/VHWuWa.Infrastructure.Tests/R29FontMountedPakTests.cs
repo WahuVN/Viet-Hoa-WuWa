@@ -84,7 +84,7 @@ public sealed class R29FontMountedPakTests : IDisposable
     }
 
     [Fact]
-    public void InvalidFontFailsButValidInstallOverwritesTamperedOwnedTarget()
+    public void InvalidFontFailsAndTamperedOwnedTargetIsNeverOverwritten()
     {
         Assert.True(InstallFixture(RealFont("Verdana_100_P.pak")).Success);
         var ownPak = Path.Combine(_resources, "wahufont", "WahuFont_100_P.pak");
@@ -101,21 +101,23 @@ public sealed class R29FontMountedPakTests : IDisposable
         var originalSidecar = Path.Combine(_resources, "Mount", "wahufont.txt");
         File.AppendAllText(originalSidecar, "TAMPER");
         var repaired = InstallFixture(RealFont("Arial_100_P.pak"));
-        Assert.True(repaired.Success, repaired.Error);
-        Assert.DoesNotContain("TAMPER", File.ReadAllText(originalSidecar));
-        Assert.Equal("Arial_100_P.pak", R29FontMountedPak.CurrentFontPak(_game));
+        Assert.False(repaired.Success);
+        Assert.Contains("TAMPER", File.ReadAllText(originalSidecar));
+        Assert.Null(R29FontMountedPak.CurrentFontPak(_game));
+        Assert.Equal(hash, Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(
+            File.ReadAllBytes(ownPak))));
         Assert.True(File.Exists(_stockPak));
     }
 
     [Fact]
-    public void ExactWahuFontTarget_IsOverwrittenWithoutTouchingUnrelatedStockFiles()
+    public void UnknownWahuFontMount_IsNeverOverwrittenWithoutReceipt()
     {
         var foreign = Path.Combine(_resources, "Mount", "wahufont.txt");
         File.WriteAllText(foreign, "::Mount::\nFOREIGN\n");
         var result = InstallFixture(RealFont("Verdana_100_P.pak"));
-        Assert.True(result.Success, result.Error);
-        Assert.Contains("wahufont/WahuFont_100_P,100,", File.ReadAllText(foreign));
-        Assert.True(File.Exists(Path.Combine(_resources, "wahufont", "WahuFont_100_P.pak")));
+        Assert.False(result.Success);
+        Assert.Equal("::Mount::\nFOREIGN\n", File.ReadAllText(foreign));
+        Assert.False(File.Exists(Path.Combine(_resources, "wahufont", "WahuFont_100_P.pak")));
         Assert.True(File.Exists(_stockPak));
         Assert.Equal("IMMUTABLE_OFFICIAL_LANGUAGE_MOUNT", File.ReadAllText(_officialMount));
     }
