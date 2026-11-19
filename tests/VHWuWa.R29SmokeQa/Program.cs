@@ -252,6 +252,12 @@ async Task ForceInstallScenario()
         File.WriteAllBytes(exe, new byte[] { 4, 3, 2, 1 });
         Directory.CreateDirectory(Path.GetDirectoryName(officialMount)!);
         File.WriteAllText(officialMount, "::Mount::\r\n");
+        var optionMount = Path.Combine(resources, "Mount", "MountOption_Pack_LY_UHD.txt");
+        var launcherMount = Path.Combine(resources, "Mount", "MountLauncher.txt");
+        File.WriteAllText(optionMount, "::Mount::\r\nstock/option\r\n");
+        File.WriteAllText(launcherMount, "::Mount::\r\nstock/launcher\r\n");
+        var optionBefore = SHA256.HashData(File.ReadAllBytes(optionMount));
+        var launcherBefore = SHA256.HashData(File.ReadAllBytes(launcherMount));
         Directory.CreateDirectory(Path.GetDirectoryName(stockSig)!);
         File.WriteAllBytes(stockSig, new byte[] { 1, 2, 3, 4 });
         var exeBefore = SHA256.HashData(File.ReadAllBytes(exe));
@@ -309,10 +315,27 @@ async Task ForceInstallScenario()
             throw new Exception("Stock EXE changed during force install");
         if (!SHA256.HashData(File.ReadAllBytes(officialMount)).SequenceEqual(mountBefore))
             throw new Exception("Official MountLang_en changed during force install");
+        if (!File.Exists(optionMount) || !SHA256.HashData(File.ReadAllBytes(optionMount)).SequenceEqual(optionBefore))
+            throw new Exception("Official MountOption_Pack was removed or altered by auto cleanup");
+        if (!File.Exists(launcherMount) || !SHA256.HashData(File.ReadAllBytes(launcherMount)).SequenceEqual(launcherBefore))
+            throw new Exception("Official MountLauncher was removed or altered by auto cleanup");
         if (!SHA256.HashData(File.ReadAllBytes(stockSig)).SequenceEqual(sigBefore))
             throw new Exception("Stock English SIG changed during force install");
 
         Console.WriteLine("PASS R29_FORCE_INSTALL_CLEANS_CONFLICTS_PRESERVES_STOCK=true");
+
+        // No file in an active R29 installation may be touched while the
+        // game/launcher is running, even if no third-party conflicts remain.
+        var whileRunning = new ViethoaInstaller(new NullLog(),
+            quarantineRoot: Path.Combine(work, "quarantine-running"),
+            isGameRunning: () => true);
+        var reinstallWhileRunning = await whileRunning.InstallAsync(game, NameVariant.English, withFont: false);
+        if (reinstallWhileRunning.Success)
+            throw new Exception("R29 install modified an active running game");
+        var uninstallWhileRunning = await whileRunning.UninstallAsync(game);
+        if (uninstallWhileRunning.Success || !R29MountedPak.IsInstalled(game))
+            throw new Exception("R29 uninstall modified an active running game");
+        Console.WriteLine("PASS R29_RUNNING_GAME_INSTALL_AND_UNINSTALL_FAIL_CLOSED=true");
     }
     finally
     {

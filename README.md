@@ -35,7 +35,7 @@ Trang chủ tự vừa kích thước cửa sổ, **không cần cuộn để t�
 
 Khi có phiên bản mới, mở **Cài đặt → Kiểm tra cập nhật**. Bản R29 hiện chưa có gói tên Hán Việt được phát hành.
 
-**Game không mở sau khi cài Việt hóa?** Xem [hướng dẫn kiểm tra và sửa lỗi](docs/qa/kiem-tra-xung-dot-viet-hoa-pc.md). Công cụ có sao lưu và khôi phục; không tự xóa tệp không xác định.
+**Game không mở sau khi cài Việt hóa?** Xem [hướng dẫn kiểm tra và sửa lỗi](docs/qa/kiem-tra-xung-dot-viet-hoa-pc.md). Công cụ có sao lưu và khôi phục; không tự xóa tệp không xác định. **Quy trình kỹ thuật bắt buộc trước khi nâng cấp/phát hành:** [kiểm thử cài/gỡ, mod, PAK, font và runtime](docs/qa/quy-trinh-cap-nhat-pc-va-xung-dot-mod.md).
 
 ## Chức năng chính
 

@@ -147,7 +147,7 @@ if(($r29On -or $r29FontOn) -and ($names -contains 'version.dll') -and !$oldPak -
 $otherMounts=@()
 if(Test-Path -LiteralPath $r29Mount -PathType Container){
  $otherMounts=@(Get-ChildItem -LiteralPath $r29Mount -File -Filter '*.txt' |
-   Where-Object { $_.Name -notlike 'MountLang_*' -and $_.Name -notin @('wahuviethoa.txt','wahufont.txt') } |
+   Where-Object { $_.Name -notlike 'MountLang_*' -and $_.Name -notlike 'MountOption_Pack_*' -and $_.Name -notin @('MountLauncher.txt','wahuviethoa.txt','wahufont.txt') } |
    Select-Object -First 30 -ExpandProperty Name)
 }
 if($r29On -and $otherMounts.Count -gt 0){

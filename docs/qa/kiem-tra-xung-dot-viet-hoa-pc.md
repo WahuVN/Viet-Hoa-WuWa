@@ -2,6 +2,8 @@
 
 Nếu launcher mở được nhưng game không chạy, hoặc gỡ Việt hóa thì game chạy lại bình thường, hãy kiểm tra xung đột tệp Việt hóa và độ tương thích với phiên bản game.
 
+**Dành cho người chuẩn bị bản cập nhật:** đọc [quy trình QA bắt buộc để tránh lặp lỗi](quy-trinh-cap-nhat-pc-va-xung-dot-mod.md). Không coi việc dọn mod thành công là bằng chứng game đã vào được. ZIP PC v3.0.24 công khai chưa có các sửa nguồn 19/11.
+
 ## Cách xử lý
 
 1. **Đóng game và launcher.** Tải mã nguồn tại [GitHub](https://github.com/WahuVN/Viet-Hoa-WuWa) (**Code → Download ZIP**), giải nén rồi mở PowerShell ở thư mục vừa giải nén.

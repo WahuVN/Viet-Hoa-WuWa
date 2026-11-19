@@ -237,6 +237,43 @@ public sealed class ViethoaInstallerTests : IDisposable
     }
 
     [Fact]
+    public async Task AutoInstall_PreservesStockMountOptionAndLauncher_WithoutOfficialManifest()
+    {
+        var mount = Path.Combine(_game, "Client", "Saved", "Resources", "3.8.0", "Mount");
+        Directory.CreateDirectory(mount);
+        var stock = new[]
+        {
+            Path.Combine(mount, "MountOption_Pack_LY_UHD.txt"),
+            Path.Combine(mount, "MountOption_Pack_Volume.txt"),
+            Path.Combine(mount, "MountLauncher.txt"),
+            Path.Combine(mount, "MountLang_en.txt")
+        };
+        var hashes = new Dictionary<string, string>();
+        foreach (var file in stock)
+        {
+            File.WriteAllText(file, "::Mount::\\r\\nSTOCK_ONLY\\r\\n::Del::\\r\\n");
+            hashes[file] = TestSha256(file);
+        }
+
+        var extra = Path.Combine(mount, "ThirdPartyVisual.txt");
+        File.WriteAllText(extra, "::Mount::\\r\\naddon/visual,110,hash,sig,,\\r\\n::Del::\\r\\n");
+
+        var findings = _viet.FindConflicts(_game);
+        Assert.Contains(findings, f => f.Contains("ThirdPartyVisual.txt", StringComparison.OrdinalIgnoreCase));
+        foreach (var file in stock)
+            Assert.DoesNotContain(findings, f => f.Contains(Path.GetFileName(file), StringComparison.OrdinalIgnoreCase));
+
+        var installed = await _viet.InstallAsync(_game, NameVariant.English, withFont: false);
+        Assert.True(installed.Success, installed.Error);
+        foreach (var (file, hash) in hashes)
+            Assert.Equal(hash, TestSha256(file));
+        Assert.False(File.Exists(extra));
+        Assert.NotNull(_viet.LastQuarantineDirectory);
+        Assert.True(File.Exists(Path.Combine(_viet.LastQuarantineDirectory!,
+            Path.GetRelativePath(_game, extra))));
+    }
+
+    [Fact]
     public void R29DirectInsert_HasNoCleanupScannerAndLeavesStockFixtureIntact()
     {
         var resources = Path.Combine(_game, "Client", "Saved", "Resources", "3.8.0");

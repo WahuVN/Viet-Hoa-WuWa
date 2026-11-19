@@ -76,3 +76,19 @@ git add README.md VHWuWa\README.md
 git commit -m "docs: Update README for vX.X.X"
 git push origin main
 ```
+
+---
+
+## Bổ sung bắt buộc: QA cài/gỡ và mod xung đột (19/11/2026)
+
+**Nguồn chuẩn:** docs/qa/quy-trinh-cap-nhat-pc-va-xung-dot-mod.md
+
+- Phải kiểm tra độc lập EXE version, ZIP hash, PAK R29 SHA-256, bản dịch đã cài và resource version của game. Badge marker cũ không được coi là chứng cứ ZIP/PAK mới lỗi thời.
+- Trước khi cài/gỡ R29: đóng game và launcher; kiểm tra SIG gốc, đường dẫn, SHA gói, dung lượng sao lưu; quét proxy DLL, PAK, font, sidecar Mount. Chỉ vô hiệu hóa mod sau khi sao lưu đủ và xác minh SHA-256 từng file ngoài game.
+- Các file game phải bất biến: Client-Win64-Shipping.exe, pakchunk stock, MountLang_*, MountOption_Pack_*, MountLauncher.txt, SIG gốc, OriginResource.json và bản sao lưu version_goc.dll. Marker hỏng hoặc không biết chủ sở hữu thì HOLD.
+- Chạy kiểm thử hạ tầng/lõi, build WPF, smoke R29 PAK thật trong fixture và kiểm thử runtime trên máy có game thật. Lệnh kiểm thử nguồn:
+  powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\QA_TRUOC_PHAT_HANH_PC.ps1 -Mode SourceOnly -R29Pak "D:\QA\WuWaVH_PC_R29_99_P.pak"
+- Runtime bắt buộc: Kuro/Steam, DirectX 11/12 phù hợp, máy sạch và nâng cấp từ bản cũ, có/không mod, vào thế giới 2 lần khởi động lạnh; gỡ xong game gốc phải mở lại được. Thiếu bằng chứng runtime = HOLD, không release.
+- Phải kiểm tra trường hợp cài thất bại sau khi đã cách ly mod; không báo rollback PASS nếu backup chỉ đang nằm trong Quarantine. Nhân viên cần hướng dẫn Restore chính xác và không ghi đè mod mới.
+- Đến 19/11/2026 còn HOLD: chưa test máy người báo game không mở; R29 từ 3.8.11 so với game 3.8.12 chưa xác minh; chưa tự khôi phục tất cả mod đã cách ly nếu cài R29/font thất bại; nhánh R29 vẫn luôn áp dụng Lexend 660 dù người dùng tắt ApplyFont.
+- Gộp các bản sửa trước khi phát hành; không liên tục tăng version; không ghi đè hoặc tái dùng ZIP cũ dưới tag mới. Build và kiểm tra đúng mã nguồn cuối cùng trước khi tạo một release duy nhất.

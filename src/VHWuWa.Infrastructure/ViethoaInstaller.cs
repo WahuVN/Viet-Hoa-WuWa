@@ -554,9 +554,17 @@ public sealed class ViethoaInstaller : IViethoaInstaller
             || name.EndsWith(".old", StringComparison.OrdinalIgnoreCase);
     }
 
+    // Stock game sidecars are not third-party mods even when OriginResource.json
+    // is unavailable (e.g. Steam, an offline game, or an incomplete launcher cache).
+    // False positives here can stop the game from launching after translation install.
+    private static bool IsStockResourceMountName(string name) =>
+        name.StartsWith("MountLang_", StringComparison.OrdinalIgnoreCase)
+        || name.StartsWith("MountOption_Pack_", StringComparison.OrdinalIgnoreCase)
+        || name.Equals("MountLauncher.txt", StringComparison.OrdinalIgnoreCase);
+
     // Extra resource mounts can load another localization PAK even if the legacy
-    // Win64 and ~WuWaMods locations are empty. Never touch MountLang_* or WAHU's
-    // valid R29/font mounts. References must stay inside Resources/3.8.0.
+    // Win64 and ~WuWaMods locations are empty. Never touch stock game sidecars
+    // or WAHU's valid R29/font mounts. References must stay in Resources/3.8.0.
     private IReadOnlyList<string> ResourceMountConflictFiles(string gamePath)
     {
         var resources = Path.Combine(gamePath, "Client", "Saved", "Resources", "3.8.0");
@@ -568,7 +576,7 @@ public sealed class ViethoaInstaller : IViethoaInstaller
         foreach (var sidecar in Directory.EnumerateFiles(mounts, "*.txt", SearchOption.TopDirectoryOnly))
         {
             var name = Path.GetFileName(sidecar);
-            if (name.StartsWith("MountLang_", StringComparison.OrdinalIgnoreCase)
+            if (IsStockResourceMountName(name)
                 || name.Equals("wahuviethoa.txt", StringComparison.OrdinalIgnoreCase)
                 || name.Equals("wahufont.txt", StringComparison.OrdinalIgnoreCase)
                 || IsOfficialGameFile(gamePath, sidecar)
@@ -1723,6 +1731,10 @@ public sealed class ViethoaInstaller : IViethoaInstaller
                     return Result.Fail("Thiếu font mặc định Lexend 660; chưa thay đổi file game.");
                 if (!PakV12Converter.TryVerifyV12(DefaultR29FontPak, out var fontIssue))
                     return Result.Fail("Font mặc định Lexend 660 không hợp lệ: " + fontIssue);
+                // R29 mount/PAK edits must not race the game/launcher while files are in use.
+                // The legacy v3.7 branch has its own compatibility behavior.
+                if (IsGameRunning())
+                    return Result.Fail("Game hoặc launcher đang chạy. Đóng hẳn rồi mới cài/cập nhật R29; chưa thay đổi file game.");
 
                 using var r29Lock = TryAcquireOperationLock(gamePath);
                 if (r29Lock is null)
@@ -1955,6 +1967,10 @@ public sealed class ViethoaInstaller : IViethoaInstaller
     {
         try
         {
+            // Uninstall must never tear down an active R29 mount or a legacy loader
+            // while the game/launcher is running.
+            if (IsGameRunning())
+                return Result.Fail("Game hoặc launcher đang chạy. Đóng hẳn rồi mới gỡ Việt hóa.");
             if (R29MountedPak.IsInstalled(gamePath))
             {
                 using var r29Lock = TryAcquireOperationLock(gamePath);
