@@ -1094,6 +1094,16 @@ public sealed class ViethoaInstaller : IViethoaInstaller
             if (operationLock is null)
                 return Result<int>.Fail("Có thao tác cài/gỡ khác đang chạy.");
 
+            // Restoring a quarantined loader/PAK while R29 is mounted resurrects
+            // the exact conflict that the installer just removed. Block even if
+            // the R29 files are incomplete, because an activation sidecar is live.
+            var activeMounts = Path.Combine(gamePath, "Client", "Saved", "Resources", "3.8.0", "Mount");
+            if (File.Exists(Path.Combine(activeMounts, "wahuviethoa.txt"))
+                || File.Exists(Path.Combine(activeMounts, "wahufont.txt"))
+                || GetStatus(gamePath).Installed)
+                return Result<int>.Fail("Đang có Việt hóa hoặc Mount R29 hoạt động. "
+                    + "Hãy gỡ Việt hóa trước khi khôi phục mod cũ; chưa thay đổi file nào.");
+
             var gameRoot = Path.GetFullPath(gamePath)
                 .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
             var archiveRoot = Path.GetFullPath(_quarantineRoot)

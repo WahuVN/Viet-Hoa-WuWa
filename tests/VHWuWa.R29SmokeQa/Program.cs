@@ -324,6 +324,11 @@ async Task ForceInstallScenario()
 
         Console.WriteLine("PASS R29_FORCE_INSTALL_CLEANS_CONFLICTS_PRESERVES_STOCK=true");
 
+        var blockedRestore = installer.RestoreQuarantine(game, backup);
+        if (blockedRestore.Success || original.Keys.Any(File.Exists))
+            throw new Exception("Old loader/PAK was restored while R29 remained mounted");
+        Console.WriteLine("PASS R29_BLOCK_RESTORE_OLD_MODS_WHILE_ACTIVE=true");
+
         // No file in an active R29 installation may be touched while the
         // game/launcher is running, even if no third-party conflicts remain.
         var whileRunning = new ViethoaInstaller(new NullLog(),
@@ -336,6 +341,18 @@ async Task ForceInstallScenario()
         if (uninstallWhileRunning.Success || !R29MountedPak.IsInstalled(game))
             throw new Exception("R29 uninstall modified an active running game");
         Console.WriteLine("PASS R29_RUNNING_GAME_INSTALL_AND_UNINSTALL_FAIL_CLOSED=true");
+
+        var uninstalled = await installer.UninstallAsync(game);
+        if (!uninstalled.Success)
+            throw new Exception("R29 uninstall before restoring old mods failed: " + uninstalled.Error);
+        var recovered = installer.RestoreQuarantine(game, backup);
+        if (!recovered.Success || recovered.Value != original.Count)
+            throw new Exception("Restore after uninstall failed: " + recovered.Error);
+        foreach (var (file, hash) in original)
+            if (!File.Exists(file)
+                || Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(file))) != hash)
+                throw new Exception("Restored mod SHA does not match original: " + file);
+        Console.WriteLine("PASS R29_UNINSTALL_THEN_RESTORE_OLD_MODS_EXACT_SHA=" + original.Count);
     }
     finally
     {

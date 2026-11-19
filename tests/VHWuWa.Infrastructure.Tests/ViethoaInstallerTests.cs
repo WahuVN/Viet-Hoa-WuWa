@@ -144,6 +144,36 @@ public sealed class ViethoaInstallerTests : IDisposable
     }
 
     [Fact]
+    public void RestoreQuarantine_BlocksWhileR29MountActive_ThenRestoresAfterDeactivation()
+    {
+        var oldMod = Path.Combine(_paks, "~mods", "OldTranslation_99_P.pak");
+        Directory.CreateDirectory(Path.GetDirectoryName(oldMod)!);
+        File.WriteAllText(oldMod, "OLD_USER_TRANSLATION");
+        var hash = TestSha256(oldMod);
+
+        var saved = _viet.QuarantineConflicts(_game);
+        Assert.True(saved.Success, saved.Error);
+        Assert.False(File.Exists(oldMod));
+
+        // Even an incomplete R29 install may have an activation sidecar in Mount.
+        var mount = Path.Combine(_game, "Client", "Saved", "Resources", "3.8.0",
+            "Mount", "wahuviethoa.txt");
+        Directory.CreateDirectory(Path.GetDirectoryName(mount)!);
+        File.WriteAllText(mount, "::Mount::\\r\\nINCOMPLETE_QA\\r\\n");
+
+        var blocked = _viet.RestoreQuarantine(_game, saved.Value!.QuarantineDirectory);
+        Assert.False(blocked.Success);
+        Assert.False(File.Exists(oldMod));
+        Assert.Equal(hash, TestSha256(Path.Combine(saved.Value.QuarantineDirectory,
+            Path.GetRelativePath(_game, oldMod))));
+
+        File.Delete(mount);
+        var restored = _viet.RestoreQuarantine(_game, saved.Value.QuarantineDirectory);
+        Assert.True(restored.Success, restored.Error);
+        Assert.Equal(hash, TestSha256(oldMod));
+    }
+
+    [Fact]
     public void RestoreQuarantine_RejectsTamperedBackupAndWrongGame()
     {
         var foreign = Path.Combine(_win64, "dxgi.dll");

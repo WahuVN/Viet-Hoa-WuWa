@@ -169,6 +169,7 @@ public partial class InstallViewModel : ObservableObject
         // HomePage dùng HomeViewModel riêng cho badge/trạng thái tổng quan. Báo cho
         // nó refresh ngay sau mọi lần trạng thái cài đặt được quét lại, tránh panel
         // báo "Đã cài" nhưng badge phía trên vẫn giữ "Chưa cài".
+        RestoreQuarantineCommand.NotifyCanExecuteChanged();
         InstallationStateChanged?.Invoke(this, EventArgs.Empty);
     }
 
@@ -330,8 +331,19 @@ public partial class InstallViewModel : ObservableObject
             Process.Start(new ProcessStartInfo(LastQuarantinePath) { UseShellExecute = true });
     }
 
-    private bool CanRestoreQuarantine() =>
-        HasQuarantine && !Busy && !string.IsNullOrWhiteSpace(LastQuarantinePath);
+    private bool CanRestoreQuarantine()
+    {
+        if (!HasQuarantine || Busy || string.IsNullOrWhiteSpace(LastQuarantinePath))
+            return false;
+        var game = _settings.Settings.GamePath;
+        if (string.IsNullOrWhiteSpace(game)) return false;
+        var mounts = Path.Combine(game, "Client", "Saved", "Resources", "3.8.0", "Mount");
+        // Keep a restore button disabled while R29 is mounted, even when
+        // a quarantine exists. Restoring now would reactivate the old mod.
+        return !File.Exists(Path.Combine(mounts, "wahuviethoa.txt"))
+            && !File.Exists(Path.Combine(mounts, "wahufont.txt"))
+            && !_viet.GetStatus(game).Installed;
+    }
 
     partial void OnHasQuarantineChanged(bool value) =>
         RestoreQuarantineCommand.NotifyCanExecuteChanged();
