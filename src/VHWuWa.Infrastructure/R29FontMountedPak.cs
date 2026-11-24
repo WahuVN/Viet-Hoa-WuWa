@@ -6,17 +6,17 @@ using VHWuWa.Core.Models;
 namespace VHWuWa.Infrastructure;
 
 /// <summary>
-/// R29 font PAK mount. Owns only wahufont/{WahuFont_100_P.pak,.sig,receipt.json}
-/// and Mount/wahufont.txt. Never enumerates or modifies stock MountOption_Pack_*,
-/// MountLauncher, other font mods, or the translation's wahuviethoa sidecar.
+/// R29 font PAK mount. Owns only VietnameseFonts/{VietnameseFonts_100_P.pak,.sig,receipt.json}
+/// and Mount/VietnameseFonts.txt. Never enumerates or modifies stock MountOption_Pack_*,
+/// MountLauncher, other font mods, or the translation's Vietnamese sidecar.
 /// </summary>
 public static class R29FontMountedPak
 {
-    private const string Folder = "wahufont";
-    private const string PakFile = "WahuFont_100_P.pak";
-    private const string SigFile = "WahuFont_100_P.sig";
-    private const string MountFile = "wahufont.txt";
-    private const string ReceiptFile = "font-receipt.json";
+    private const string Folder = "VietnameseFonts";
+    private const string PakFile = "VietnameseFonts_100_P.pak";
+    private const string SigFile = "VietnameseFonts_100_P.sig";
+    private const string MountFile = "VietnameseFonts.txt";
+    private const string ReceiptFile = "receipt.json";
 
     private sealed record Receipt(int Schema, string SourceName, string PakSha256, string SigSha256);
 
@@ -37,7 +37,7 @@ public static class R29FontMountedPak
     }
 
     private static string MountText(string pakSha1, string sigSha1) =>
-        "::Mount::\r\nwahufont/WahuFont_100_P,100," +
+        "::Mount::\r\nVietnameseFonts/VietnameseFonts_100_P,100," +
         pakSha1 + "," + sigSha1 + ",,\r\n::Del::\r\n";
 
     private static bool IsLink(string path)

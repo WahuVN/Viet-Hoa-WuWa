@@ -57,4 +57,22 @@ public sealed class LegacyReleaseAssetMigrationTests : IDisposable
         try { if (Directory.Exists(_root)) Directory.Delete(_root, recursive: true); }
         catch { }
     }
+
+    [Fact]
+    public void PreservesUnknownFileAtKnownV324Path()
+    {
+        var app = Path.Combine(_root, "app-v324-unknown");
+        var backup = Path.Combine(_root, "backup-v324-unknown");
+        var file = Path.Combine(app, "content", "3.8.11", "WuWaVH_PC_R29_99_P.pak");
+        Directory.CreateDirectory(Path.GetDirectoryName(file)!);
+        File.WriteAllText(file, "USER_MODIFIED_NOT_RELEASE_BYTES");
+
+        var result = LegacyReleaseAssetMigration.BackupAndDeactivate(app, backup, verifiedR29: true);
+
+        Assert.Equal(0, result.BackedUp);
+        Assert.Equal(1, result.UnknownPreserved);
+        Assert.True(File.Exists(file));
+        Assert.False(File.Exists(Path.Combine(backup, "content", "3.8.11", "WuWaVH_PC_R29_99_P.pak")));
+    }
+
 }

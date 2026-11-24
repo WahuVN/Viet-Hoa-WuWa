@@ -12,7 +12,7 @@ public sealed class PakEditorBridge
 {
     public string EditorDirectory => Path.Combine(AppContext.BaseDirectory, "editor");
     public string AvatarDirectory => Path.Combine(EditorDirectory, "avatars");
-    private string ExecutablePath => Path.Combine(EditorDirectory, "WahuPakEditor.exe");
+    private string ExecutablePath => Path.Combine(EditorDirectory, "WuWaPakEditor.exe");
 
     public async Task<JsonObject> RequestAsync(object request, CancellationToken ct = default)
     {

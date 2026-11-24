@@ -37,10 +37,10 @@ if (Test-Path -LiteralPath $workRoot) { Remove-Item -LiteralPath $workRoot -Recu
 if (Test-Path -LiteralPath $Target) { Remove-Item -LiteralPath $Target -Recurse -Force }
 New-Item -ItemType Directory -Force -Path $workRoot, $Target | Out-Null
 
-Write-Host '   + Build WahuPakEditor.exe' -ForegroundColor Cyan
+Write-Host '   + Build WuWaPakEditor.exe' -ForegroundColor Cyan
 $pyInstallerArgs = @(
     '-m', 'PyInstaller', '--noconfirm', '--clean', '--onefile', '--console',
-    '--name', 'WahuPakEditor', '--paths', $wahuRoot,
+    '--name', 'WuWaPakEditor', '--paths', $wahuRoot,
     '--hidden-import', 'wahu_build', '--hidden-import', 'wahu_pack',
     '--hidden-import', 'wahu_merge', '--hidden-import', 'wahu_hanviet',
     '--hidden-import', 'wahu_qa', '--hidden-import', 'quick_term_customizer',
@@ -51,7 +51,7 @@ $pyInstallerArgs = @(
 if (Test-Path -LiteralPath $icon) { $pyInstallerArgs += @('--icon', $icon) }
 $pyInstallerArgs += $source
 & python @pyInstallerArgs
-if ($LASTEXITCODE -ne 0 -or -not (Test-Path -LiteralPath (Join-Path $Target 'WahuPakEditor.exe'))) {
+if ($LASTEXITCODE -ne 0 -or -not (Test-Path -LiteralPath (Join-Path $Target 'WuWaPakEditor.exe'))) {
     throw "PyInstaller Pak Editor loi voi ma $LASTEXITCODE"
 }
 
@@ -107,7 +107,7 @@ foreach ($item in $supportItems) {
 }
 
 $required = @(
-    (Join-Path $Target 'WahuPakEditor.exe'),
+    (Join-Path $Target 'WuWaPakEditor.exe'),
     (Join-Path $Target 'project.db'),
     ([IO.Path]::GetFullPath((Join-Path $Target '..\tools\repak.exe'))),
     (Join-Path $supportRoot 'Wahu\data\base_vi')

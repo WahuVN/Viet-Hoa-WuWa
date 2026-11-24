@@ -3,16 +3,16 @@ using System.Security.Cryptography;
 namespace VHWuWa.Core.Services;
 
 /// <summary>
-/// Migrates only six byte-for-byte known, owned v3.0.18 content assets after
-/// a verified R29-only release becomes active. Never touches game directories
-/// or unknown/user-modified files. The originals are backed up outside the app
+/// Migrates only byte-for-byte known, owned assets from prior public releases
+/// after a verified R29 release becomes active. Never touches game directories
+/// or unknown/user-modified files. Originals are backed up outside the app
 /// directory before being deactivated.
 /// </summary>
 public static class LegacyReleaseAssetMigration
 {
     public sealed record MigrationResult(int BackedUp, int UnknownPreserved, IReadOnlyList<string> Errors);
 
-    private static readonly IReadOnlyDictionary<string, string> V318OwnedAssets =
+    private static readonly IReadOnlyDictionary<string, string> OwnedLegacyAssets =
         new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
             ["content/WuWaVH_EN_99_P.pak"] = "44350c79cbf9cb307752682f0e0f3a31af983cdc1fea4b24403b7395237df547",
@@ -20,7 +20,12 @@ public static class LegacyReleaseAssetMigration
             ["content/font/WahuFont_100_P.pak"] = "ad51a1a0d3cc8abc1be43c13576d1b0f1adf2f3bf3b271c10aec836864dd14dc",
             ["content/loader/version.dll"] = "b328db7a57f3fba676b807112432d462ef7fe8c1b49e1572f89a1fbacaec48b3",
             ["content/loader/verorg.dll"] = "cea99f212af557a9613150c5509631403ed0f05f5d9a06ac42039bd59b40e39a",
-            ["content/loader/WuWaVH.dll"] = "ba4bcbea10ef98c268683df3f87bd1e5090cf9245eb886d84c84ac82e25e4e5b"
+            ["content/loader/WuWaVH.dll"] = "ba4bcbea10ef98c268683df3f87bd1e5090cf9245eb886d84c84ac82e25e4e5b",
+
+            // Public v3.0.24 files copied forward by the old overlay updater.
+            ["content/3.8.11/WuWaVH_PC_R29_99_P.pak"] = "38527e34ffeb8ef7538206d3d4dbd5cbac54a1e6cd9d0957501035ff41a8e598",
+            ["content/font/Lexend-660_100_P.pak"] = "6be60ffc39ce0ee0a31e7dfbda0acc9e243f395ef94a65609baa8146ba62ca68",
+            ["editor/WahuPakEditor.exe"] = "0c03d67908ae0b80dbb7c10af181af578e6452bd4dd32406a1bfc7aa7319f195"
         };
 
     public static MigrationResult BackupAndDeactivate(
@@ -38,7 +43,7 @@ public static class LegacyReleaseAssetMigration
         var errors = new List<string>();
         var preserved = 0;
         var backedUp = 0;
-        foreach (var entry in V318OwnedAssets)
+        foreach (var entry in OwnedLegacyAssets)
         {
             var relative = entry.Key.Replace('/', Path.DirectorySeparatorChar);
             var source = Path.Combine(root, relative);

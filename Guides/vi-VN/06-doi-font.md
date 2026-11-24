@@ -16,7 +16,7 @@
 
 ## Font trong game
 
-Bản R29 trên PC cài **Lexend 660** bằng Mount font `wahufont` riêng sau khi PAK Việt hóa được xác minh. Mount này không ghi đè PAK dịch hoặc Mount ngôn ngữ gốc. Khi chọn font khác trong tab **Font game**, ứng dụng chỉ thay Mount font do WAHU quản lý.
+Bản R29 trên PC cài **Lexend 660** bằng Mount font `VietnameseFonts` riêng sau khi PAK Việt hóa được xác minh. Mount này không ghi đè PAK dịch hoặc Mount ngôn ngữ gốc. Khi chọn font khác trong tab **Font game**, ứng dụng chỉ thay Mount font do ứng dụng quản lý.
 
 Nếu một gói hỗ trợ font cho phép bấm **Áp dụng**, hãy đóng game và xem thông báo thành công/thất bại trong ứng dụng trước khi mở game. Nếu gặp lỗi, giữ nguyên bản dịch và liên hệ hỗ trợ.
 

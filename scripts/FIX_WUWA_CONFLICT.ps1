@@ -50,13 +50,13 @@ $old=@(
  'Client\Content\Paks\~WuWaMods\WahuFont_100_P.sig',
  'Client\Content\Paks\~WuWaMods\vhwuwa_install.json'
 )
-$pak='Client\Saved\Resources\3.8.0\wahuviethoa\WuWaVH_99_P.pak'
-$sig='Client\Saved\Resources\3.8.0\wahuviethoa\WuWaVH_99_P.sig'
-$mount='Client\Saved\Resources\3.8.0\Mount\wahuviethoa.txt'
-$fPak='Client\Saved\Resources\3.8.0\wahufont\WahuFont_100_P.pak'
-$fSig='Client\Saved\Resources\3.8.0\wahufont\WahuFont_100_P.sig'
-$fMount='Client\Saved\Resources\3.8.0\Mount\wahufont.txt'
-$fReceipt='Client\Saved\Resources\3.8.0\wahufont\font-receipt.json'
+$pak='Client\Saved\Resources\3.8.0\Vietnamese\Vietnamese_99_P.pak'
+$sig='Client\Saved\Resources\3.8.0\Vietnamese\Vietnamese_99_P.sig'
+$mount='Client\Saved\Resources\3.8.0\Mount\Vietnamese.txt'
+$fPak='Client\Saved\Resources\3.8.0\VietnameseFonts\VietnameseFonts_100_P.pak'
+$fSig='Client\Saved\Resources\3.8.0\VietnameseFonts\VietnameseFonts_100_P.sig'
+$fMount='Client\Saved\Resources\3.8.0\Mount\VietnameseFonts.txt'
+$fReceipt='Client\Saved\Resources\3.8.0\VietnameseFonts\receipt.json'
 $allowed=@($old)+@($pak,$sig,$mount,$fPak,$fSig,$fMount,$fReceipt)
 function T([string]$rel){
  if($allowed -inotcontains $rel){throw "NOT_ALLOWED: $rel"}
@@ -75,7 +75,7 @@ function MountExpected([string]$name,[string]$priority,[string]$pack,[string]$si
 function VerifiedR29{
  if(!(Has $pak) -or !(Has $sig) -or !(Has $mount)){return $false}
  if((Sha (T $pak)) -ne '38527E34FFEB8EF7538206D3D4DBD5CBAC54A1E6CD9D0957501035FF41A8E598'){return $false}
- return [IO.File]::ReadAllText((T $mount)) -ceq (MountExpected 'wahuviethoa/WuWaVH_99_P' '99' (T $pak) (T $sig))
+ return [IO.File]::ReadAllText((T $mount)) -ceq (MountExpected 'Vietnamese/Vietnamese_99_P' '99' (T $pak) (T $sig))
 }
 function VerifiedFont{
  if(!(Has $fPak) -or !(Has $fSig) -or !(Has $fMount) -or !(Has $fReceipt)){return $false}
@@ -83,7 +83,7 @@ function VerifiedFont{
   $m=Get-Content -LiteralPath (T $fReceipt) -Encoding UTF8 -Raw|ConvertFrom-Json
   if($m.Schema -ne 1 -or !([string]$m.SourceName).EndsWith('_100_P.pak') -or
      $m.PakSha256 -ine (Sha (T $fPak)) -or $m.SigSha256 -ine (Sha (T $fSig))){return $false}
-  return [IO.File]::ReadAllText((T $fMount)) -ceq (MountExpected 'wahufont/WahuFont_100_P' '100' (T $fPak) (T $fSig))
+  return [IO.File]::ReadAllText((T $fMount)) -ceq (MountExpected 'VietnameseFonts/VietnameseFonts_100_P' '100' (T $fPak) (T $fSig))
  }catch{return $false}
 }
 if($Mode -eq 'Scan'){

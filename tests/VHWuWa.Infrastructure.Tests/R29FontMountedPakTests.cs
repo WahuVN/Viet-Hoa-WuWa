@@ -70,8 +70,8 @@ public sealed class R29FontMountedPakTests : IDisposable
         var next = InstallFixture(RealFont("Arial_100_P.pak"));
         Assert.True(next.Success, next.Error);
         Assert.Equal("Arial_100_P.pak", R29FontMountedPak.CurrentFontPak(_game));
-        var sidecar = Path.Combine(_resources, "Mount", "wahufont.txt");
-        Assert.Contains("wahufont/WahuFont_100_P,100,", File.ReadAllText(sidecar));
+        var sidecar = Path.Combine(_resources, "Mount", "VietnameseFonts.txt");
+        Assert.Contains("VietnameseFonts/VietnameseFonts_100_P,100,", File.ReadAllText(sidecar));
         Assert.Equal(stock, File.ReadAllText(_stockPak));
         Assert.Equal(original, File.ReadAllText(_officialMount));
         Assert.True(File.Exists(Path.Combine(_resources, "Mount", "MountLauncher.txt")));
@@ -87,7 +87,7 @@ public sealed class R29FontMountedPakTests : IDisposable
     public void InvalidFontFailsAndTamperedOwnedTargetIsNeverOverwritten()
     {
         Assert.True(InstallFixture(RealFont("Verdana_100_P.pak")).Success);
-        var ownPak = Path.Combine(_resources, "wahufont", "WahuFont_100_P.pak");
+        var ownPak = Path.Combine(_resources, "VietnameseFonts", "VietnameseFonts_100_P.pak");
         var hash = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(
             File.ReadAllBytes(ownPak)));
         var invalid = Path.Combine(_root, "Fake_100_P.pak");
@@ -98,7 +98,7 @@ public sealed class R29FontMountedPakTests : IDisposable
             File.ReadAllBytes(ownPak))));
         Assert.Equal("Verdana_100_P.pak", R29FontMountedPak.CurrentFontPak(_game));
 
-        var originalSidecar = Path.Combine(_resources, "Mount", "wahufont.txt");
+        var originalSidecar = Path.Combine(_resources, "Mount", "VietnameseFonts.txt");
         File.AppendAllText(originalSidecar, "TAMPER");
         var repaired = InstallFixture(RealFont("Arial_100_P.pak"));
         Assert.False(repaired.Success);
@@ -112,12 +112,12 @@ public sealed class R29FontMountedPakTests : IDisposable
     [Fact]
     public void UnknownWahuFontMount_IsNeverOverwrittenWithoutReceipt()
     {
-        var foreign = Path.Combine(_resources, "Mount", "wahufont.txt");
+        var foreign = Path.Combine(_resources, "Mount", "VietnameseFonts.txt");
         File.WriteAllText(foreign, "::Mount::\nFOREIGN\n");
         var result = InstallFixture(RealFont("Verdana_100_P.pak"));
         Assert.False(result.Success);
         Assert.Equal("::Mount::\nFOREIGN\n", File.ReadAllText(foreign));
-        Assert.False(File.Exists(Path.Combine(_resources, "wahufont", "WahuFont_100_P.pak")));
+        Assert.False(File.Exists(Path.Combine(_resources, "VietnameseFonts", "VietnameseFonts_100_P.pak")));
         Assert.True(File.Exists(_stockPak));
         Assert.Equal("IMMUTABLE_OFFICIAL_LANGUAGE_MOUNT", File.ReadAllText(_officialMount));
     }

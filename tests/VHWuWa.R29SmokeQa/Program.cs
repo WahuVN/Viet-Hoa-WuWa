@@ -7,7 +7,7 @@ if (args.Length is < 1 or > 2 || (args.Length == 2 && args[1] != "--auto-conflic
     throw new ArgumentException("Usage: VHWuWa.R29SmokeQa <real-R29-pak> [--auto-conflicts-only]");
 var onlyAutoConflicts = args.Length == 2;
 var realPak = Path.GetFullPath(args[0]);
-const string expected = "38527e34ffeb8ef7538206d3d4dbd5cbac54a1e6cd9d0957501035ff41a8e598";
+const string expected = "9f3503f4b7d742425ee27b20e220a1aa93c758f72f4ee25cd67e387682d3e1a3";
 using (var source = File.OpenRead(realPak))
 {
     var sha = Convert.ToHexString(SHA256.HashData(source)).ToLowerInvariant();
@@ -26,7 +26,7 @@ void Scenario(string mode, bool officialMount, bool englishSig, bool staleWahu,
     var app = Path.Combine(root, "portable-v321");
     var exe = Path.Combine(game, "Client", "Binaries", "Win64", "Client-Win64-Shipping.exe");
     var res = Path.Combine(game, "Client", "Saved", "Resources", "3.8.0");
-    var sig = Path.Combine(res, "Lang_en", mode == "base" ? "Base" : "3.8.11",
+    var sig = Path.Combine(res, "Lang_en", mode == "base" ? "Base" : "3.8.13",
         "pakchunk10-WindowsNoEditor_P.sig");
     Directory.CreateDirectory(Path.GetDirectoryName(exe)!);
     File.WriteAllBytes(exe, new byte[] { 1, 3, 3, 7 });
@@ -35,7 +35,7 @@ void Scenario(string mode, bool officialMount, bool englishSig, bool staleWahu,
         Directory.CreateDirectory(Path.GetDirectoryName(sig)!);
         File.WriteAllBytes(sig, new byte[] { 10, 20, 30, 40, 50 });
     }
-    var japaneseStockSig = Path.Combine(res, "Lang_ja", "3.8.11",
+    var japaneseStockSig = Path.Combine(res, "Lang_ja", "3.8.13",
         "pakchunk10-WindowsNoEditor_P.sig");
     if (japaneseSig)
     {
@@ -61,14 +61,14 @@ void Scenario(string mode, bool officialMount, bool englishSig, bool staleWahu,
         Directory.CreateDirectory(Path.GetDirectoryName(japaneseMount)!);
         var jaHash = Convert.ToHexString(SHA1.HashData(File.ReadAllBytes(japaneseStockSig)));
         var officialSha = tamperJapaneseMount ? new string('A', 40) : jaHash;
-        File.WriteAllText(japaneseMount, "::Mount::\r\nLang_ja/3.8.11/pakchunk10-WindowsNoEditor_P,10,PAKSHA,"
+        File.WriteAllText(japaneseMount, "::Mount::\r\nLang_ja/3.8.13/pakchunk10-WindowsNoEditor_P,10,PAKSHA,"
             + officialSha + ",,\r\n::Del::\r\n");
         originalJapaneseMount = File.ReadAllBytes(japaneseMount);
     }
 
-    var sidecar = Path.Combine(res, "Mount", "wahuviethoa.txt");
-    var dest = Path.Combine(res, "wahuviethoa", "WuWaVH_99_P.pak");
-    var destSig = Path.Combine(res, "wahuviethoa", "WuWaVH_99_P.sig");
+    var sidecar = Path.Combine(res, "Mount", "Vietnamese.txt");
+    var dest = Path.Combine(res, "Vietnamese", "Vietnamese_99_P.pak");
+    var destSig = Path.Combine(res, "Vietnamese", "Vietnamese_99_P.sig");
     if (staleWahu)
     {
         Directory.CreateDirectory(Path.GetDirectoryName(dest)!);
@@ -85,7 +85,7 @@ void Scenario(string mode, bool officialMount, bool englishSig, bool staleWahu,
     var oldSig = File.Exists(destSig) ? File.ReadAllBytes(destSig) : null;
     var oldSidecar = File.Exists(sidecar) ? File.ReadAllBytes(sidecar) : null;
 
-    var package = Path.Combine(app, "content", "3.8.11", "WuWaVH_PC_R29_99_P.pak");
+    var package = Path.Combine(app, "content", "3.8.13", "Vietnamese_R29_99_P.pak");
     Directory.CreateDirectory(Path.GetDirectoryName(package)!);
     File.Copy(realPak, package, overwrite: false);
 
@@ -170,12 +170,12 @@ void Scenario(string mode, bool officialMount, bool englishSig, bool staleWahu,
 // Negative QA: corrupt R29 must leave all managed files and mod preimages untouched.
 async Task InvalidPackagePreflightScenario()
 {
-    var source = Path.Combine(AppContext.BaseDirectory, "content", "3.8.11", "WuWaVH_PC_R29_99_P.pak");
+    var source = Path.Combine(AppContext.BaseDirectory, "content", "3.8.13", "Vietnamese_R29_99_P.pak");
     var previousExists = File.Exists(source);
     var previousBytes = previousExists ? File.ReadAllBytes(source) : null;
     var game = Path.Combine(work, "invalid-r29", "game");
     var exe = Path.Combine(game, "Client", "Binaries", "Win64", "Client-Win64-Shipping.exe");
-    var mount = Path.Combine(game, "Client", "Saved", "Resources", "3.8.0", "Mount", "wahuviethoa.txt");
+    var mount = Path.Combine(game, "Client", "Saved", "Resources", "3.8.0", "Mount", "Vietnamese.txt");
     Directory.CreateDirectory(Path.GetDirectoryName(source)!);
     Directory.CreateDirectory(Path.GetDirectoryName(exe)!);
     Directory.CreateDirectory(Path.GetDirectoryName(mount)!);
@@ -206,16 +206,16 @@ async Task InvalidPackagePreflightScenario()
 async Task ForceInstallScenario()
 {
     var baseDir = AppContext.BaseDirectory;
-    var package = Path.Combine(baseDir, "content", "3.8.11", "WuWaVH_PC_R29_99_P.pak");
+    var package = Path.Combine(baseDir, "content", "3.8.13", "Vietnamese_R29_99_P.pak");
     var releaseMarker = Path.Combine(baseDir, "content", "r29-release.json");
-    var fontDestination = Path.Combine(baseDir, "content", "font", "Lexend-660_100_P.pak");
+    var fontDestination = Path.Combine(baseDir, "content", "font", "VietnameseFonts_B119_100_P.pak");
     var fontExisted = File.Exists(fontDestination);
     var oldFont = fontExisted ? File.ReadAllBytes(fontDestination) : null;
     var ancestor = new DirectoryInfo(baseDir);
     string? realFont = null;
     while (ancestor is not null)
     {
-        var candidate = Path.Combine(ancestor.FullName, "content", "font", "Lexend-660_100_P.pak");
+        var candidate = Path.Combine(ancestor.FullName, "content", "font", "VietnameseFonts_B119_100_P.pak");
         if (File.Exists(candidate) && !candidate.Equals(fontDestination, StringComparison.OrdinalIgnoreCase))
         {
             realFont = candidate;
@@ -223,7 +223,7 @@ async Task ForceInstallScenario()
         }
         ancestor = ancestor.Parent;
     }
-    if (realFont is null) throw new FileNotFoundException("Missing packaged Lexend QA font");
+    if (realFont is null) throw new FileNotFoundException("Missing packaged B119 multi-font QA package");
     var packageExisted = File.Exists(package);
     var markerExisted = File.Exists(releaseMarker);
     byte[]? oldPackage = packageExisted ? File.ReadAllBytes(package) : null;
@@ -234,7 +234,7 @@ async Task ForceInstallScenario()
     var exe = Path.Combine(game, "Client", "Binaries", "Win64", "Client-Win64-Shipping.exe");
     var resources = Path.Combine(game, "Client", "Saved", "Resources", "3.8.0");
     var officialMount = Path.Combine(resources, "Mount", "MountLang_en.txt");
-    var stockSig = Path.Combine(resources, "Lang_en", "3.8.11", "pakchunk10-WindowsNoEditor_P.sig");
+    var stockSig = Path.Combine(resources, "Lang_en", "3.8.13", "pakchunk10-WindowsNoEditor_P.sig");
     var foreignLoader = Path.Combine(game, "Client", "Binaries", "Win64", "wuwaVietHoa", "plugin.dll");
     var foreignSidecar = Path.Combine(resources, "Mount", "othertranslation.txt");
     var foreignPak = Path.Combine(resources, "othertranslation", "Text_99_P.pak");
@@ -275,9 +275,8 @@ async Task ForceInstallScenario()
         File.SetAttributes(foreignPak, FileAttributes.ReadOnly);
 
         var installer = new ViethoaInstaller(new NullLog(), quarantineRoot: Path.Combine(work, "quarantine-force"), isGameRunning: () => false);
-        // Old WAHU R28/3.7 files, another translation loader, and a resource
-        // Mount sidecar all coexist. Auto install must remove all conflicts
-        // from the live game and retain verified backups for every file.
+        // Old WAHU R28/3.7 files are obsolete and must be deleted permanently.
+        // Unrelated third-party conflicts remain recoverable through quarantine.
         var oldMods = Path.Combine(game, "Client", "Content", "Paks", "~WuWaMods");
         Directory.CreateDirectory(oldMods);
         var legacyPak = Path.Combine(oldMods, "WuWaVH_99_P.pak");
@@ -285,31 +284,59 @@ async Task ForceInstallScenario()
         var legacyFont = Path.Combine(oldMods, "WahuFont_100_P.pak");
         var legacyFontSig = Path.Combine(oldMods, "WahuFont_100_P.sig");
         var oldWin64Loader = Path.Combine(game, "Client", "Binaries", "Win64", "version.dll");
-        var original = new Dictionary<string, string>();
-        foreach (var file in new[] { legacyPak, legacySig, legacyFont, legacyFontSig, oldWin64Loader,
-            foreignLoader, foreignPak, foreignSig, foreignSidecar })
+        var oldPublicText = Path.Combine(resources, "wahuviethoa");
+        var oldPublicFont = Path.Combine(resources, "wahufont");
+        Directory.CreateDirectory(oldPublicText);
+        Directory.CreateDirectory(oldPublicFont);
+        var oldPublicTextPak = Path.Combine(oldPublicText, "WuWaVH_99_P.pak");
+        var oldPublicTextSig = Path.Combine(oldPublicText, "WuWaVH_99_P.sig");
+        var oldPublicTextMount = Path.Combine(resources, "Mount", "wahuviethoa.txt");
+        var oldPublicFontPak = Path.Combine(oldPublicFont, "WahuFont_100_P.pak");
+        var oldPublicFontSig = Path.Combine(oldPublicFont, "WahuFont_100_P.sig");
+        var oldPublicFontReceipt = Path.Combine(oldPublicFont, "font-receipt.json");
+        var oldPublicFontMount = Path.Combine(resources, "Mount", "wahufont.txt");
+        var legacy = new[] { legacyPak, legacySig, legacyFont, legacyFontSig, oldWin64Loader,
+            oldPublicTextPak, oldPublicTextSig, oldPublicTextMount, oldPublicFontPak, oldPublicFontSig,
+            oldPublicFontReceipt, oldPublicFontMount };
+        var foreign = new[] { foreignLoader, foreignPak, foreignSig, foreignSidecar };
+        var foreignHashes = new Dictionary<string, string>();
+        foreach (var file in legacy)
+            if (!File.Exists(file)) File.WriteAllText(file, "LEGACY_WAHU_MOD");
+        foreach (var file in foreign)
         {
-            if (!File.Exists(file)) File.WriteAllText(file, "LEGACY_USER_MOD");
-            original[file] = Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(file)));
+            if (!File.Exists(file)) File.WriteAllText(file, "USER_FOREIGN_MOD");
+            foreignHashes[file] = Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(file)));
         }
 
         var result = await installer.InstallAsync(game, NameVariant.English, withFont: false);
         if (!result.Success) throw new Exception("Automatic conflict cleanup failed: " + result.Error);
         if (!R29MountedPak.IsInstalled(game)) throw new Exception("Automatic cleanup failed to activate R29");
-        if (installer.LastAutoDeletedConflictCount < original.Count)
-            throw new Exception("Not all conflicting user and legacy mods were cleared");
+        if (installer.LastAutoDeletedConflictCount < legacy.Length + foreign.Length)
+            throw new Exception("Not all old WAHU and conflicting user mods were cleared");
+
+        foreach (var file in legacy)
+            if (File.Exists(file))
+                throw new Exception("Old WAHU file was not permanently deleted: " + file);
+
         var backup = installer.LastQuarantineDirectory;
         if (backup is null || !File.Exists(Path.Combine(backup, "quarantine-manifest.json")))
-            throw new Exception("Missing automatic SHA-verified conflict backup");
-        foreach (var (file, hash) in original)
+            throw new Exception("Missing automatic SHA-verified backup for third-party conflicts");
+        foreach (var (file, hash) in foreignHashes)
         {
-            if (File.Exists(file)) throw new Exception("Conflicting mod still active: " + file);
+            if (File.Exists(file)) throw new Exception("Conflicting third-party mod still active: " + file);
             var saved = Path.Combine(backup, Path.GetRelativePath(game, file));
             if (!File.Exists(saved)
                 || Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(saved))) != hash)
-                throw new Exception("Missing or altered backup of conflicting mod: " + file);
+                throw new Exception("Missing or altered backup of third-party mod: " + file);
         }
-        Console.WriteLine("PASS R29_AUTO_CLEARS_ALL_CONFLICTING_USER_AND_OLD_MODS_WITH_BACKUPS=" + original.Count);
+        foreach (var file in legacy)
+        {
+            var saved = Path.Combine(backup, Path.GetRelativePath(game, file));
+            if (File.Exists(saved))
+                throw new Exception("Old WAHU file was quarantined instead of permanently deleted: " + file);
+        }
+        Console.WriteLine("PASS R29_PERMANENTLY_DELETES_OLD_WAHU_AND_QUARANTINES_EXTERNAL="
+            + legacy.Length + "/" + foreign.Length);
 
         if (!SHA256.HashData(File.ReadAllBytes(exe)).SequenceEqual(exeBefore))
             throw new Exception("Stock EXE changed during force install");
@@ -325,9 +352,11 @@ async Task ForceInstallScenario()
         Console.WriteLine("PASS R29_FORCE_INSTALL_CLEANS_CONFLICTS_PRESERVES_STOCK=true");
 
         var blockedRestore = installer.RestoreQuarantine(game, backup);
-        if (blockedRestore.Success || original.Keys.Any(File.Exists))
-            throw new Exception("Old loader/PAK was restored while R29 remained mounted");
-        Console.WriteLine("PASS R29_BLOCK_RESTORE_OLD_MODS_WHILE_ACTIVE=true");
+        if (blockedRestore.Success || foreign.Any(File.Exists))
+            throw new Exception("Third-party mods were restored while R29 remained mounted");
+        if (legacy.Any(File.Exists))
+            throw new Exception("Old WAHU files unexpectedly returned while R29 remained mounted");
+        Console.WriteLine("PASS R29_BLOCK_RESTORE_EXTERNAL_MODS_WHILE_ACTIVE=true");
 
         // No file in an active R29 installation may be touched while the
         // game/launcher is running, even if no third-party conflicts remain.
@@ -344,15 +373,51 @@ async Task ForceInstallScenario()
 
         var uninstalled = await installer.UninstallAsync(game);
         if (!uninstalled.Success)
-            throw new Exception("R29 uninstall before restoring old mods failed: " + uninstalled.Error);
+            throw new Exception("R29 uninstall before restoring external mods failed: " + uninstalled.Error);
         var recovered = installer.RestoreQuarantine(game, backup);
-        if (!recovered.Success || recovered.Value != original.Count)
-            throw new Exception("Restore after uninstall failed: " + recovered.Error);
-        foreach (var (file, hash) in original)
+        if (!recovered.Success || recovered.Value != foreign.Length)
+            throw new Exception("Restore external mods after uninstall failed: " + recovered.Error);
+        foreach (var (file, hash) in foreignHashes)
             if (!File.Exists(file)
                 || Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(file))) != hash)
-                throw new Exception("Restored mod SHA does not match original: " + file);
-        Console.WriteLine("PASS R29_UNINSTALL_THEN_RESTORE_OLD_MODS_EXACT_SHA=" + original.Count);
+                throw new Exception("Restored external mod SHA does not match original: " + file);
+        if (legacy.Any(File.Exists))
+            throw new Exception("Old WAHU files were restored after uninstall");
+        Console.WriteLine("PASS R29_UNINSTALL_RESTORES_ONLY_EXTERNAL_MODS_EXACT_SHA=" + foreign.Length);
+
+        // A broken font directory must not leave the user's old mod disabled
+        // after the one-click R29 install fails.
+        var failedRoot = Path.Combine(work, "r29-font-failure-rollback");
+        var failedGame = Path.Combine(failedRoot, "Wuthering Waves Game");
+        var failedResources = Path.Combine(failedGame, "Client", "Saved", "Resources", "3.8.0");
+        var failedExe = Path.Combine(failedGame, "Client", "Binaries", "Win64", "Client-Win64-Shipping.exe");
+        var failedSig = Path.Combine(failedResources, "Lang_en", "Base",
+            "pakchunk10-WindowsNoEditor_P.sig");
+        var failedOldMod = Path.Combine(failedGame, "Client", "Content", "Paks",
+            "~mods", "OlderVisual_99_P.pak");
+        var failedFontDir = Path.Combine(failedResources, "VietnameseFonts");
+        foreach (var file in new[] { failedExe, failedSig, failedOldMod, failedFontDir })
+            Directory.CreateDirectory(Path.GetDirectoryName(file)!);
+        File.WriteAllBytes(failedExe, new byte[] { 1, 3, 3, 7 });
+        File.WriteAllBytes(failedSig, new byte[] { 10, 20, 30, 40 });
+        File.WriteAllText(failedOldMod, "USER_PREEXISTING_MOD");
+        File.WriteAllText(failedFontDir, "BLOCK_FONT_DIRECTORY");
+        var oldModHash = SHA256.HashData(File.ReadAllBytes(failedOldMod));
+        var failingInstaller = new ViethoaInstaller(new NullLog(),
+            quarantineRoot: Path.Combine(work, "quarantine-font-fail"),
+            isGameRunning: () => false);
+        var failedInstall = await failingInstaller.InstallAsync(failedGame, NameVariant.English, withFont: false);
+        if (failedInstall.Success || R29MountedPak.IsInstalled(failedGame)
+            || R29FontMountedPak.IsInstalled(failedGame)
+            || !File.Exists(failedOldMod)
+            || !SHA256.HashData(File.ReadAllBytes(failedOldMod)).SequenceEqual(oldModHash)
+            || !failedInstall.Error!.Contains("tự khôi phục", StringComparison.OrdinalIgnoreCase))
+            throw new Exception("Failed one-click R29 install did not restore previous mod exactly");
+        var failedBackup = failingInstaller.LastQuarantineDirectory;
+        if (failedBackup is null || !File.Exists(Path.Combine(failedBackup, "quarantine-manifest.json"))
+            || !File.Exists(Path.Combine(failedBackup, Path.GetRelativePath(failedGame, failedOldMod))))
+            throw new Exception("Failed one-click R29 install discarded recoverable backup");
+        Console.WriteLine("PASS R29_FONT_FAIL_AUTO_RESTORES_OLD_MOD_SHA=true");
     }
     finally
     {

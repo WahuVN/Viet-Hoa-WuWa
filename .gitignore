@@ -1,4 +1,4 @@
-﻿# ---- .NET build ----
+# ---- .NET build ----
 bin/
 obj/
 [Dd]ebug/
@@ -45,6 +45,8 @@ Obfuscated/
 *.pak
 !Fonts/*.pak
 !content/font/Lexend-660_100_P.pak
+!content/font/Vietnamese-MultiFont-B119_100_P.pak
+!content/3.8.13/WuWaVH_PC_R29_99_P.pak
 Release/*.vhwpack
 /PackageSource/
 

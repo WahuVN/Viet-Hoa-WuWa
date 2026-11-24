@@ -42,7 +42,9 @@
     <Resource Include="..\..\Fonts\Lexend-Variable.ttf" Link="Fonts\Lexend-Variable.ttf" />
     <None Include="..\..\Fonts\Lexend-Variable.ttf" Link="Fonts\Lexend-Variable.ttf" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
     <None Include="..\..\Fonts\Lexend-660.ttf" Link="Fonts\Lexend-660.ttf" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
-    <None Include="..\..\content\font\Lexend-660_100_P.pak" Link="content\font\Lexend-660_100_P.pak" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
+    <None Include="..\..\content\font\VietnameseFonts_B119_100_P.pak" Link="content\font\VietnameseFonts_B119_100_P.pak" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
+    <None Include="..\..\content\3.8.13\Vietnamese_R29_99_P.pak" Link="content\3.8.13\Vietnamese_R29_99_P.pak" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
+    <None Include="..\..\content\r29-release.json" Link="content\r29-release.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
     <None Include="..\..\Fonts\OFL-Lexend.txt" Link="Fonts\OFL-Lexend.txt" CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\..\tools\repak.exe" Link="tools\repak.exe" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
     <None Include="..\..\tools\LICENSE-repak-APACHE.txt" Link="tools\LICENSE-repak-APACHE.txt" CopyToOutputDirectory="PreserveNewest" />

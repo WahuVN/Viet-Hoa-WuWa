@@ -128,7 +128,7 @@ public partial class HomeViewModel : ObservableObject
         var r28KnownFailure = v.DetectedVersion == "3.8.0" && resourceVersion == "3.8.11";
         var r29Present = R29MountedPak.ReleaseRequired(AppContext.BaseDirectory)
             || R29MountedPak.PackagePresent(AppContext.BaseDirectory);
-        // Số 3.8.12 là dữ liệu tải từ game; gói R29 đang phân phối được xác thực cho 3.8.11.
+        // So sánh resource chỉ để cảnh báo; cài đặt One-Click không bắt người dùng đối chiếu phiên bản thủ công.
         // Không tự kết luận hỏng/tương thích từ chênh lệch số; chỉ cảnh báo để đối soát.
         var r29ResourceDifferent = r29Present && PathOk
             && !string.IsNullOrWhiteSpace(resourceVersion)
@@ -183,7 +183,7 @@ public partial class HomeViewModel : ObservableObject
         StagedContentText = r29Present
             ? (!PathOk ? "Chọn thư mục game để cài."
                 : r29ResourceDifferent
-                    ? $"Gói R29 dùng dữ liệu {R29MountedPak.ResourceVersion}; game hiện {resourceVersion}. Chưa xác minh tương thích."
+                    ? $"Gói R29 dùng dữ liệu {R29MountedPak.ResourceVersion}; game hiện {resourceVersion}. Vẫn có thể cài One-Click, nên kiểm tra hiển thị sau khi vào game."
                     : "R29 sẵn sàng để cài.")
             : staged.ShaVerified
             ? (r28KnownFailure

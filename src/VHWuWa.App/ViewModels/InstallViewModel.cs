@@ -106,7 +106,7 @@ public partial class InstallViewModel : ObservableObject
                     + " mục nghi xung đột và file Việt hóa cũ (nếu có). "
                     + "Mod được sao lưu trước khi dọn.";
             VariantEnglish = true;
-            ApplyFont = true; // Install contract: R29 always includes Lexend 660.
+            ApplyFont = true; // Install contract: R29 always includes the verified B119 10-font Vietnamese package.
             FontAvailable = content.FontPak is not null;
             HasHanViet = false;
         }
@@ -179,8 +179,8 @@ public partial class InstallViewModel : ObservableObject
 
         var missingHanViet = VariantHanViet;
         OptionHelpText = missingHanViet
-            ? "R29 hiện dùng tên Anh. Khi cài, ứng dụng tự chuyển về tên Anh và áp font Lexend 660."
-            : "Mặc định cài kèm font Lexend 660; sau đó có thể đổi font mà không ảnh hưởng mod khác.";
+            ? "R29 hiện dùng tên Anh. Khi cài, ứng dụng tự chuyển về tên Anh và áp bộ font Việt đầy đủ B119 (10 font game)."
+            : "Mặc định cài bộ font Việt đầy đủ B119 (10 font game); sau đó vẫn có thể đổi font riêng.";
         CanInstall = _r29InstallReady;
         if (_r29InstallReady)
             Summary = _r29Installed ? "Đã cài R29. Có thể ghi đè lại hoặc gỡ." : "Sẵn sàng ghi đè Việt hóa.";
@@ -340,7 +340,9 @@ public partial class InstallViewModel : ObservableObject
         var mounts = Path.Combine(game, "Client", "Saved", "Resources", "3.8.0", "Mount");
         // Keep a restore button disabled while R29 is mounted, even when
         // a quarantine exists. Restoring now would reactivate the old mod.
-        return !File.Exists(Path.Combine(mounts, "wahuviethoa.txt"))
+        return !File.Exists(Path.Combine(mounts, "Vietnamese.txt"))
+            && !File.Exists(Path.Combine(mounts, "VietnameseFonts.txt"))
+            && !File.Exists(Path.Combine(mounts, "wahuviethoa.txt"))
             && !File.Exists(Path.Combine(mounts, "wahufont.txt"))
             && !_viet.GetStatus(game).Installed;
     }
@@ -565,8 +567,8 @@ public partial class InstallViewModel : ObservableObject
             if (r.Success)
             {
                 Summary = optionsAdjusted
-                    ? "✅ Đã cài R29 tên Anh + Lexend 660 (Hán Việt chưa có cho R29)."
-                    : "✅ Cài xong R29 + Lexend 660! Vào game đặt Text Language = English. Có thể dùng DirectX 11 hoặc 12.";
+                    ? "✅ Đã cài R29 tên Anh + bộ font Việt đầy đủ B119 (Hán Việt chưa có cho R29)."
+                    : "✅ Cài xong R29 + bộ font Việt đầy đủ B119! Vào game đặt Text Language = English. Có thể dùng DirectX 11 hoặc 12.";
                 if (_viet.LastAutoDeletedConflictCount > 0)
                     Summary += $" Đã tự dọn {_viet.LastAutoDeletedConflictCount} file mod xung đột (có sao lưu).";
             }

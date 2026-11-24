@@ -1,18 +1,18 @@
 #requires -Version 5.1
 param(
- [string]$Version = '3.0.24',
+ [string]$Version = '3.0.25',
  [string]$OutputRoot = '',
- [string]$R29TemplateStage = 'D:\WAHU_WORK\WUWA_PC_V321_ONECLICK_HOTFIX_RELEASE_WT_20261116\dist\V321_RELEASE_CANDIDATE\PATCH_STAGE',
+ [string]$R29TemplateStage = 'D:\WAHU_WORK\WAHU_V324_ONE_SCREEN_PUBLIC_RELEASE_20261118\stage',
  [switch]$VerifyOnly,
  [switch]$RequireAuthenticode
 )
 $ErrorActionPreference='Stop'
 $repo=Split-Path -Parent $PSScriptRoot
-if($Version -ne '3.0.24'){throw 'This prep branch is pinned to 3.0.24; review content hashes before changing version'}
+if($Version -ne '3.0.25'){throw 'This release script is pinned to 3.0.25; review content hashes before changing version'}
 
 if(-not $OutputRoot){
- if($VerifyOnly){$OutputRoot='C:\WAHU_VH_V324_STANDARD_VERIFY'}
- else{$OutputRoot='C:\WAHU_VH_V324_STANDARD_'+(Get-Date -Format yyyyMMdd_HHmmss)}
+ if($VerifyOnly){$OutputRoot='C:\WAHU_VH_V325_STANDARD_VERIFY'}
+ else{$OutputRoot='C:\WAHU_VH_V325_STANDARD_'+(Get-Date -Format yyyyMMdd_HHmmss)}
 }
 $out=[IO.Path]::GetFullPath($OutputRoot)
 $stage=Join-Path $out 'stage'
@@ -20,10 +20,10 @@ $app=Join-Path $out 'app'
 $up=Join-Path $out 'updater'
 $zip=Join-Path $out ("VietHoa-WuWa-v"+$Version+".zip")
 
-$pakSha='38527e34ffeb8ef7538206d3d4dbd5cbac54a1e6cd9d0957501035ff41a8e598'
+$pakSha='9f3503f4b7d742425ee27b20e220a1aa93c758f72f4ee25cd67e387682d3e1a3'
 $videoSha='022703c38d9d0d01e1106c959b7afc8c87bcdd6401aead77bb2e2d48b0fdf8d6'
 $fontSha='48a4e2d6cc06cc403a904279b88d9c5275ef304c66d300126cca2489ca7be168'
-$fontPakSha='6be60ffc39ce0ee0a31e7dfbda0acc9e243f395ef94a65609baa8146ba62ca68'
+$fontPakSha='e4d357c971e7b4c8d103042eb9a5f0c0a0fa385653add9733cff23fcdf53f1de'
 
 function CheckHash([string]$file,[string]$expected){
  if(-not (Test-Path $file -PathType Leaf)){throw "Missing file $file"}
@@ -75,12 +75,12 @@ function CheckStage(){
  CheckExe (Join-Path $stage 'VHWuWa.Updater.exe')
  CheckAuthenticode (Join-Path $stage 'VHWuWa.exe')
  CheckAuthenticode (Join-Path $stage 'VHWuWa.Updater.exe')
- CheckHash (Join-Path $stage 'content\3.8.11\WuWaVH_PC_R29_99_P.pak') $pakSha
+ CheckHash (Join-Path $stage 'content\3.8.13\Vietnamese_R29_99_P.pak') $pakSha
  CheckHash (Join-Path $stage 'Assets\bg-video.mp4') $videoSha
  CheckHash (Join-Path $stage 'Fonts\Lexend-660.ttf') $fontSha
- CheckHash (Join-Path $stage 'content\font\Lexend-660_100_P.pak') $fontPakSha
+ CheckHash (Join-Path $stage 'content\font\VietnameseFonts_B119_100_P.pak') $fontPakSha
  foreach($relative in @(
-   'editor\WahuPakEditor.exe',
+   'editor\WuWaPakEditor.exe',
    'Config\game.json',
    'tools\repak.exe',
    'tools\font-weight-instance.exe',
@@ -90,7 +90,7 @@ function CheckStage(){
   if(-not (Test-Path (Join-Path $stage $relative) -PathType Leaf)){throw "Missing $relative"}
  }
  $j=Get-Content (Join-Path $stage 'content\r29-release.json') -Raw | ConvertFrom-Json
- if($j.appVersion -ne $Version -or $j.translationRelease -ne 'R29'){throw 'Invalid release marker'}
+ if($j.appVersion -ne $Version -or $j.translationRelease -ne 'R29' -or $j.resourceVersion -ne '3.8.13' -or $j.pakSha256 -ne $pakSha -or $j.fontPakSha256 -ne $fontPakSha -or $j.fontAssets -ne 10){throw 'Invalid release marker'}
  $fonts=Get-Content (Join-Path $stage 'Fonts\fonts.json') -Raw | ConvertFrom-Json
  if($fonts.count -ne 73 -or @($fonts.fonts).Count -ne 73){throw 'Font catalog mismatch'}
 }
@@ -113,10 +113,10 @@ if((Test-Path $stage) -or (Test-Path $app) -or (Test-Path $up) -or (Test-Path $z
  throw "Output exists; never overwrite prior release candidate $out"
 }
 
-CheckHash (Join-Path $R29TemplateStage 'content\3.8.11\WuWaVH_PC_R29_99_P.pak') $pakSha
+CheckHash (Join-Path $repo 'content\3.8.13\Vietnamese_R29_99_P.pak') $pakSha
 CheckHash (Join-Path $repo 'Assets\bg-video.mp4') $videoSha
 CheckHash (Join-Path $repo 'Fonts\Lexend-660.ttf') $fontSha
-CheckHash (Join-Path $repo 'content\font\Lexend-660_100_P.pak') $fontPakSha
+CheckHash (Join-Path $repo 'content\font\VietnameseFonts_B119_100_P.pak') $fontPakSha
 
 [xml]$props=Get-Content (Join-Path $repo 'Directory.Build.props')
 if($props.Project.PropertyGroup.Version -ne $Version){throw 'Directory.Build.props mismatch'}
@@ -143,22 +143,34 @@ try{
 
  & robocopy $R29TemplateStage $stage /E /R:0 /W:0 /NFL /NDL /NJH /NJS /NP | Out-Null
  if($LASTEXITCODE -gt 7){throw 'Content overlay failed'}
+ $oldEditor=Join-Path $stage 'editor\WahuPakEditor.exe'
+ $newEditor=Join-Path $stage 'editor\WuWaPakEditor.exe'
+ if(Test-Path $oldEditor -PathType Leaf){ Move-Item $oldEditor $newEditor -Force }
  & robocopy $app $stage /E /R:0 /W:0 /NFL /NDL /NJH /NJS /NP | Out-Null
  if($LASTEXITCODE -gt 7){throw 'App overlay failed'}
  Copy-Item (Join-Path $up 'VHWuWa.Updater.exe') (Join-Path $stage 'VHWuWa.Updater.exe') -Force
 
+ # Remove stale R29/font payloads inherited from older template stages, then overlay v3.0.25 source payloads.
+ Remove-Item (Join-Path $stage 'content\3.8.11') -Recurse -Force -ErrorAction SilentlyContinue
+ Remove-Item (Join-Path $stage 'content\font\Lexend-660_100_P.pak') -Force -ErrorAction SilentlyContinue
+ Remove-Item (Join-Path $stage 'content\3.8.13\WuWaVH_PC_R29_99_P.pak') -Force -ErrorAction SilentlyContinue
+ Remove-Item (Join-Path $stage 'content\font\Vietnamese-MultiFont-B119_100_P.pak') -Force -ErrorAction SilentlyContinue
+ New-Item -ItemType Directory -Force (Join-Path $stage 'content\3.8.13'),(Join-Path $stage 'content\font') | Out-Null
+ Copy-Item (Join-Path $repo 'content\3.8.13\Vietnamese_R29_99_P.pak') (Join-Path $stage 'content\3.8.13\Vietnamese_R29_99_P.pak') -Force
+ Copy-Item (Join-Path $repo 'content\r29-release.json') (Join-Path $stage 'content\r29-release.json') -Force
+
  Remove-Item (Join-Path $stage 'Fonts\Lexend-650.ttf') -Force -ErrorAction SilentlyContinue
  Copy-Item (Join-Path $repo 'Fonts\Lexend-660.ttf') (Join-Path $stage 'Fonts\Lexend-660.ttf') -Force
  New-Item -ItemType Directory -Force (Join-Path $stage 'content\font') | Out-Null
- Copy-Item (Join-Path $repo 'content\font\Lexend-660_100_P.pak') (Join-Path $stage 'content\font\Lexend-660_100_P.pak') -Force
+ Copy-Item (Join-Path $repo 'content\font\VietnameseFonts_B119_100_P.pak') (Join-Path $stage 'content\font\VietnameseFonts_B119_100_P.pak') -Force
 
  $marker=Join-Path $stage 'content\r29-release.json'
  $j=Get-Content $marker -Raw | ConvertFrom-Json
- if($j.translationRelease -ne 'R29' -or $j.pakSha256 -ne $pakSha){throw 'Template content not R29'}
- $j.appVersion=$Version
- [IO.File]::WriteAllText($marker,($j | ConvertTo-Json -Depth 20),[Text.UTF8Encoding]::new($false))
+ if($j.appVersion -ne $Version -or $j.translationRelease -ne 'R29' -or $j.resourceVersion -ne '3.8.13' -or $j.pakSha256 -ne $pakSha -or $j.fontPakSha256 -ne $fontPakSha -or $j.fontAssets -ne 10){
+    throw 'Invalid v3.0.25 release marker'
+ }
 
- $notes="WAHU Viet Hoa PC $Version Windows x64: R29, 73-font catalog, Lexend 660, UI Kit, MP4. Install in its own app directory. Existing users can update through the bundled updater with SHA-256 verification and rollback."
+ $notes="Viet Hoa WuWa PC $Version Windows x64: R29 rebased to resource 3.8.13, B119 10-game-font Vietnamese glyph fix, raw-key screenshot fixes, One-Click conflict quarantine/rollback. Existing users can update through the bundled updater with SHA-256 verification and rollback."
  [IO.File]::WriteAllText((Join-Path $stage 'README_VIET_HOA.txt'),$notes,[Text.UTF8Encoding]::new($false))
 
  CheckStage

@@ -21,7 +21,7 @@ public sealed class R29MountedPakTests : IDisposable
 
         Assert.False(result.Success);
         Assert.False(Directory.Exists(Path.Combine(game, "Client", "Saved", "Resources", "3.8.0", "Mount")));
-        Assert.False(Directory.Exists(Path.Combine(game, "Client", "Saved", "Resources", "3.8.0", "wahuviethoa")));
+        Assert.False(Directory.Exists(Path.Combine(game, "Client", "Saved", "Resources", "3.8.0", "Vietnamese")));
         Assert.Empty(Directory.GetFileSystemEntries(game));
     }
 
@@ -31,10 +31,10 @@ public sealed class R29MountedPakTests : IDisposable
         var game = Path.Combine(_root, "Game");
         var dir = Path.Combine(game, "Client", "Saved", "Resources", "3.8.0", "Mount");
         Directory.CreateDirectory(dir);
-        File.WriteAllText(Path.Combine(dir, "wahuviethoa.txt"), "::Mount::\nexternal\n::Del::\n");
+        File.WriteAllText(Path.Combine(dir, "Vietnamese.txt"), "::Mount::\nexternal\n::Del::\n");
         Assert.False(R29MountedPak.IsInstalled(game));
         Assert.False(R29MountedPak.Uninstall(game).Success);
-        Assert.True(File.Exists(Path.Combine(dir, "wahuviethoa.txt")));
+        Assert.True(File.Exists(Path.Combine(dir, "Vietnamese.txt")));
     }
 
     [Fact]
@@ -130,7 +130,7 @@ public sealed class R29MountedPakTests : IDisposable
 
         Directory.CreateDirectory(resource);
         Assert.Null(R29MountedPak.StockSig(game));
-        Assert.False(File.Exists(Path.Combine(resource, "wahuviethoa", "WuWaVH_99_P.sig")));
+        Assert.False(File.Exists(Path.Combine(resource, "Vietnamese", "Vietnamese_99_P.sig")));
     }
 
     [Fact]

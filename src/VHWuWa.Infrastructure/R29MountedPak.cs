@@ -13,14 +13,14 @@ namespace VHWuWa.Infrastructure;
 public static class R29MountedPak
 {
     public const string Release = "R29";
-    public const string ResourceVersion = "3.8.11";
-    public const string ArchiveName = "WuWaVH_PC_R29_99_P.pak";
-    public const string ArchiveSha256 = "38527E34FFEB8EF7538206D3D4DBD5CBAC54A1E6CD9D0957501035FF41A8E598";
-    public const long ArchiveBytes = 125532999;
+    public const string ResourceVersion = "3.8.13";
+    public const string ArchiveName = "Vietnamese_R29_99_P.pak";
+    public const string ArchiveSha256 = "9F3503F4B7D742425EE27B20E220A1AA93C758F72F4EE25CD67E387682D3E1A3";
+    public const long ArchiveBytes = 124128071;
 
-    private const string StagedPakName = "WuWaVH_99_P.pak";
-    private const string StagedSigName = "WuWaVH_99_P.sig";
-    private const string SidecarName = "wahuviethoa.txt";
+    private const string StagedPakName = "Vietnamese_99_P.pak";
+    private const string StagedSigName = "Vietnamese_99_P.sig";
+    private const string SidecarName = "Vietnamese.txt";
 
     public static string Source(string appDirectory) =>
         Path.Combine(appDirectory, "content", ResourceVersion, ArchiveName);
@@ -32,7 +32,7 @@ public static class R29MountedPak
         Path.Combine(GameResourceDir(gameRoot), "Mount");
 
     private static string DestinationDir(string gameRoot) =>
-        Path.Combine(GameResourceDir(gameRoot), "wahuviethoa");
+        Path.Combine(GameResourceDir(gameRoot), "Vietnamese");
 
     private static string DestinationPak(string gameRoot) =>
         Path.Combine(DestinationDir(gameRoot), StagedPakName);
@@ -165,7 +165,7 @@ public static class R29MountedPak
             .Equals(expected, StringComparison.OrdinalIgnoreCase);
 
     private static string SidecarText(string pakSha1, string sigSha1) =>
-        "::Mount::\r\nwahuviethoa/WuWaVH_99_P,99,"
+        "::Mount::\r\nVietnamese/Vietnamese_99_P,99,"
         + pakSha1 + "," + sigSha1 + ",,\r\n::Del::\r\n";
 
     public static bool PackagePresent(string appDirectory) => File.Exists(Source(appDirectory));

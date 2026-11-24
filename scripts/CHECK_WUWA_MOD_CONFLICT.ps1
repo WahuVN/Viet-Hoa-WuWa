@@ -106,12 +106,12 @@ if ($markerInfo.present) {
 # R29 uses a different location from the old Win64 loader and ~WuWaMods.
 $r29Root=Join-Path $GameRoot 'Client\Saved\Resources\3.8.0'
 $r29Mount=Join-Path $r29Root 'Mount'
-$r29Pak=Join-Path $r29Root 'wahuviethoa\WuWaVH_99_P.pak'
-$r29Sig=Join-Path $r29Root 'wahuviethoa\WuWaVH_99_P.sig'
-$r29Txt=Join-Path $r29Mount 'wahuviethoa.txt'
-$r29FontPak=Join-Path $r29Root 'wahufont\WahuFont_100_P.pak'
-$r29FontSig=Join-Path $r29Root 'wahufont\WahuFont_100_P.sig'
-$r29FontTxt=Join-Path $r29Mount 'wahufont.txt'
+$r29Pak=Join-Path $r29Root 'Vietnamese\Vietnamese_99_P.pak'
+$r29Sig=Join-Path $r29Root 'Vietnamese\Vietnamese_99_P.sig'
+$r29Txt=Join-Path $r29Mount 'Vietnamese.txt'
+$r29FontPak=Join-Path $r29Root 'VietnameseFonts\VietnameseFonts_100_P.pak'
+$r29FontSig=Join-Path $r29Root 'VietnameseFonts\VietnameseFonts_100_P.sig'
+$r29FontTxt=Join-Path $r29Mount 'VietnameseFonts.txt'
 $oldPak=Test-Path -LiteralPath (Join-Path $paks '~WuWaMods\WuWaVH_99_P.pak') -PathType Leaf
 $oldFont=Test-Path -LiteralPath (Join-Path $paks '~WuWaMods\WahuFont_100_P.pak') -PathType Leaf
 $oldLoader=(Test-Path -LiteralPath (Join-Path $win64 'verorg.dll') -PathType Leaf) -or
@@ -147,7 +147,7 @@ if(($r29On -or $r29FontOn) -and ($names -contains 'version.dll') -and !$oldPak -
 $otherMounts=@()
 if(Test-Path -LiteralPath $r29Mount -PathType Container){
  $otherMounts=@(Get-ChildItem -LiteralPath $r29Mount -File -Filter '*.txt' |
-   Where-Object { $_.Name -notlike 'MountLang_*' -and $_.Name -notlike 'MountOption_Pack_*' -and $_.Name -notin @('MountLauncher.txt','wahuviethoa.txt','wahufont.txt') } |
+   Where-Object { $_.Name -notlike 'MountLang_*' -and $_.Name -notlike 'MountOption_Pack_*' -and $_.Name -notin @('MountLauncher.txt','Vietnamese.txt','VietnameseFonts.txt','wahuviethoa.txt','wahufont.txt') } |
    Select-Object -First 30 -ExpandProperty Name)
 }
 if($r29On -and $otherMounts.Count -gt 0){
