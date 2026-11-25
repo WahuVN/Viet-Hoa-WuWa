@@ -1,6 +1,6 @@
 #requires -Version 5.1
 param(
- [string]$Version = '3.0.25',
+ [string]$Version = '3.0.26',
  [string]$OutputRoot = '',
  [string]$R29TemplateStage = 'D:\WAHU_WORK\WAHU_V324_ONE_SCREEN_PUBLIC_RELEASE_20261118\stage',
  [switch]$VerifyOnly,
@@ -8,7 +8,7 @@ param(
 )
 $ErrorActionPreference='Stop'
 $repo=Split-Path -Parent $PSScriptRoot
-if($Version -ne '3.0.25'){throw 'This release script is pinned to 3.0.25; review content hashes before changing version'}
+if($Version -ne '3.0.26'){throw 'This release script is pinned to 3.0.26; review content hashes before changing version'}
 
 if(-not $OutputRoot){
  if($VerifyOnly){$OutputRoot='C:\WAHU_VH_V325_STANDARD_VERIFY'}
@@ -20,7 +20,7 @@ $app=Join-Path $out 'app'
 $up=Join-Path $out 'updater'
 $zip=Join-Path $out ("VietHoa-WuWa-v"+$Version+".zip")
 
-$pakSha='9f3503f4b7d742425ee27b20e220a1aa93c758f72f4ee25cd67e387682d3e1a3'
+$pakSha='c5b22fa5d4e9a3949adc6482789b2d9295af05274f2f58d5648ebf832a98e5b8'
 $videoSha='022703c38d9d0d01e1106c959b7afc8c87bcdd6401aead77bb2e2d48b0fdf8d6'
 $fontSha='48a4e2d6cc06cc403a904279b88d9c5275ef304c66d300126cca2489ca7be168'
 $fontPakSha='e4d357c971e7b4c8d103042eb9a5f0c0a0fa385653add9733cff23fcdf53f1de'
@@ -150,7 +150,7 @@ try{
  if($LASTEXITCODE -gt 7){throw 'App overlay failed'}
  Copy-Item (Join-Path $up 'VHWuWa.Updater.exe') (Join-Path $stage 'VHWuWa.Updater.exe') -Force
 
- # Remove stale R29/font payloads inherited from older template stages, then overlay v3.0.25 source payloads.
+ # Remove stale R29/font payloads inherited from older template stages, then overlay v3.0.26 source payloads.
  Remove-Item (Join-Path $stage 'content\3.8.11') -Recurse -Force -ErrorAction SilentlyContinue
  Remove-Item (Join-Path $stage 'content\font\Lexend-660_100_P.pak') -Force -ErrorAction SilentlyContinue
  Remove-Item (Join-Path $stage 'content\3.8.13\WuWaVH_PC_R29_99_P.pak') -Force -ErrorAction SilentlyContinue
@@ -167,7 +167,7 @@ try{
  $marker=Join-Path $stage 'content\r29-release.json'
  $j=Get-Content $marker -Raw | ConvertFrom-Json
  if($j.appVersion -ne $Version -or $j.translationRelease -ne 'R29' -or $j.resourceVersion -ne '3.8.13' -or $j.pakSha256 -ne $pakSha -or $j.fontPakSha256 -ne $fontPakSha -or $j.fontAssets -ne 10){
-    throw 'Invalid v3.0.25 release marker'
+    throw 'Invalid v3.0.26 release marker'
  }
 
  $notes="Viet Hoa WuWa PC $Version Windows x64: R29 rebased to resource 3.8.13, B119 10-game-font Vietnamese glyph fix, raw-key screenshot fixes, One-Click conflict quarantine/rollback. Existing users can update through the bundled updater with SHA-256 verification and rollback."

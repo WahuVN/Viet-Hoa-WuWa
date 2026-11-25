@@ -1,15 +1,15 @@
 {
   "schema": 2,
-  "appVersion": "3.0.25",
+  "appVersion": "3.0.26",
   "translationRelease": "R29",
   "resourceVersion": "3.8.13",
   "pakPath": "content/3.8.13/Vietnamese_R29_99_P.pak",
-  "pakSha256": "9f3503f4b7d742425ee27b20e220a1aa93c758f72f4ee25cd67e387682d3e1a3",
-  "pakBytes": 124128071,
+  "pakSha256": "c5b22fa5d4e9a3949adc6482789b2d9295af05274f2f58d5648ebf832a98e5b8",
+  "pakBytes": 125954887,
   "fontPakPath": "content/font/VietnameseFonts_B119_100_P.pak",
   "fontPakSha256": "e4d357c971e7b4c8d103042eb9a5f0c0a0fa385653add9733cff23fcdf53f1de",
   "fontPakBytes": 21916272,
   "fontAssets": 10,
   "fontProfile": "B119_STYLED_VI_REAL_INK",
-  "notes": "PC 3.0.25 full hotfix: R29 rebased to stock resource 3.8.13, screenshot raw-key fixes, PC UID hide preserved, B119 10-font Vietnamese glyph package."
+  "notes": "PC 3.0.26 placeholder/fallback hotfix: recovered 8,897 previously over-conservative English fallbacks, restored dynamic {PlayerName} usage, fixed 7 source-drift rows and markup edge cases; R29 resource 3.8.13, PC UID hide and B119 preserved."
 }

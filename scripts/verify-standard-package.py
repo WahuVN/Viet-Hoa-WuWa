@@ -9,7 +9,7 @@ import zipfile
 
 EXPECT = {
     "content/3.8.13/Vietnamese_R29_99_P.pak":
-        "9f3503f4b7d742425ee27b20e220a1aa93c758f72f4ee25cd67e387682d3e1a3",
+        "c5b22fa5d4e9a3949adc6482789b2d9295af05274f2f58d5648ebf832a98e5b8",
     "Assets/bg-video.mp4":
         "022703c38d9d0d01e1106c959b7afc8c87bcdd6401aead77bb2e2d48b0fdf8d6",
     "Fonts/Lexend-660.ttf":

@@ -7,7 +7,7 @@ if (args.Length is < 1 or > 2 || (args.Length == 2 && args[1] != "--auto-conflic
     throw new ArgumentException("Usage: VHWuWa.R29SmokeQa <real-R29-pak> [--auto-conflicts-only]");
 var onlyAutoConflicts = args.Length == 2;
 var realPak = Path.GetFullPath(args[0]);
-const string expected = "9f3503f4b7d742425ee27b20e220a1aa93c758f72f4ee25cd67e387682d3e1a3";
+const string expected = "c5b22fa5d4e9a3949adc6482789b2d9295af05274f2f58d5648ebf832a98e5b8";
 using (var source = File.OpenRead(realPak))
 {
     var sha = Convert.ToHexString(SHA256.HashData(source)).ToLowerInvariant();

@@ -11,7 +11,7 @@ import os
 from pathlib import Path
 import zipfile
 
-R29_SHA256 = "9f3503f4b7d742425ee27b20e220a1aa93c758f72f4ee25cd67e387682d3e1a3"
+R29_SHA256 = "c5b22fa5d4e9a3949adc6482789b2d9295af05274f2f58d5648ebf832a98e5b8"
 R29_ENTRY = "content/3.8.13/Vietnamese_R29_99_P.pak"
 MEDIA_SHA256 = "022703c38d9d0d01e1106c959b7afc8c87bcdd6401aead77bb2e2d48b0fdf8d6"
 FONT660_SHA256 = "48a4e2d6cc06cc403a904279b88d9c5275ef304c66d300126cca2489ca7be168"
@@ -59,7 +59,7 @@ def package(stage: Path, output: Path, version: str, expected_files: int):
         actual = [f.filename for f in z.infolist() if not f.is_dir()]
         if actual != names or any("\\" in name for name in actual):
             raise RuntimeError("Canonical paths or content changed")
-        if z.getinfo(R29_ENTRY).file_size != 124128071:
+        if z.getinfo(R29_ENTRY).file_size != 125954887:
             raise RuntimeError("R29 size incorrect in ZIP")
         with z.open(R29_ENTRY) as pak_stream:
             pak_sha = digest_stream(pak_stream)
@@ -81,7 +81,7 @@ def package(stage: Path, output: Path, version: str, expected_files: int):
             or marker.get("pakSha256") != R29_SHA256
             or marker.get("fontPakSha256") != B119_PAK_SHA256
             or marker.get("fontAssets") != 10):
-            raise RuntimeError("Release marker does not match v3.0.25 R29/3.8.13/B119")
+            raise RuntimeError("Release marker does not match v3.0.26 R29/3.8.13/B119")
         if any(z.getinfo(x).file_size == 0 for x in REQUIRED):
             raise RuntimeError("Empty required release entry")
     with temp.open("rb") as archive_stream:

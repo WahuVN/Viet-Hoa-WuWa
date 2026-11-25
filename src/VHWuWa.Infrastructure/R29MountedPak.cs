@@ -15,8 +15,8 @@ public static class R29MountedPak
     public const string Release = "R29";
     public const string ResourceVersion = "3.8.13";
     public const string ArchiveName = "Vietnamese_R29_99_P.pak";
-    public const string ArchiveSha256 = "9F3503F4B7D742425EE27B20E220A1AA93C758F72F4EE25CD67E387682D3E1A3";
-    public const long ArchiveBytes = 124128071;
+    public const string ArchiveSha256 = "C5B22FA5D4E9A3949ADC6482789B2D9295AF05274F2F58D5648EBF832A98E5B8";
+    public const long ArchiveBytes = 125954887;
 
     private const string StagedPakName = "Vietnamese_99_P.pak";
     private const string StagedSigName = "Vietnamese_99_P.sig";
